@@ -2,8 +2,8 @@
 
 > Современная образовательная платформа с интеграцией Telegram Bot для изучения программирования и IT-навыков.
 
-[![Deploy to VPS](https://github.com/your-username/gongbu-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-username/gongbu-platform/actions/workflows/deploy.yml)
-[![Tests](https://github.com/your-username/gongbu-platform/actions/workflows/test.yml/badge.svg)](https://github.com/your-username/gongbu-platform/actions/workflows/test.yml)
+[![Deploy to VPS](https://github.com/appletownworld/gongbu-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/appletownworld/gongbu-platform/actions/workflows/deploy.yml)
+[![Tests](https://github.com/appletownworld/gongbu-platform/actions/workflows/test.yml/badge.svg)](https://github.com/appletownworld/gongbu-platform/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Быстрый старт
@@ -16,7 +16,7 @@ curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER && newgrp docker
 
 # 2. Клонирование проекта
-git clone https://github.com/your-username/gongbu-platform.git
+git clone https://github.com/appletownworld/gongbu-platform.git
 cd gongbu-platform
 
 # 3. Настройка окружения
@@ -135,7 +135,7 @@ nano .env  # Заполните ваши данные
 
 ```bash
 # Клонирование
-git clone https://github.com/your-username/gongbu-platform.git
+git clone https://github.com/appletownworld/gongbu-platform.git
 cd gongbu-platform
 
 # Запуск инфраструктуры
@@ -221,7 +221,7 @@ npm run test:integration
 
 - 📧 Email: support@gongbu.app
 - 💬 Telegram: [@gongbu_support](https://t.me/gongbu_support)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/gongbu-platform/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/appletownworld/gongbu-platform/issues)
 
 ---
 
