@@ -1,0 +1,182 @@
+// Gongbu Platform - Auth Service Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User roles enum
+enum UserRole {
+  STUDENT
+  CREATOR
+  ADMIN
+}
+
+// Subscription plans enum
+enum SubscriptionPlan {
+  FREE
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+// User status enum
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+  PENDING_VERIFICATION
+}
+
+// Main user entity
+model User {
+  id                    String             @id @default(cuid())
+  
+  // Telegram integration
+  telegramId            BigInt             @unique @map("telegram_id")
+  username              String?            @db.VarChar(100)
+  firstName             String?            @map("first_name") @db.VarChar(100)
+  lastName              String?            @map("last_name") @db.VarChar(100)
+  
+  // Additional user info
+  email                 String?            @unique @db.VarChar(255)
+  phone                 String?            @db.VarChar(20)
+  avatarUrl             String?            @map("avatar_url") @db.Text
+  
+  // User status and role
+  role                  UserRole           @default(STUDENT)
+  status                UserStatus         @default(ACTIVE)
+  isVerified            Boolean            @default(false) @map("is_verified")
+  
+  // Subscription info
+  subscriptionPlan      SubscriptionPlan   @default(FREE) @map("subscription_plan")
+  subscriptionExpiresAt DateTime?          @map("subscription_expires_at")
+  subscriptionCanceledAt DateTime?         @map("subscription_canceled_at")
+  
+  // User preferences
+  language              String             @default("ru") @db.VarChar(10)
+  timezone              String             @default("UTC") @db.VarChar(50)
+  notificationPrefs     Json               @default("{}") @map("notification_preferences")
+  
+  // Activity tracking
+  lastLoginAt           DateTime?          @map("last_login_at")
+  loginCount            Int                @default(0) @map("login_count")
+  
+  // Timestamps
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+  deletedAt             DateTime?          @map("deleted_at")
+  
+  // Relations
+  sessions              UserSession[]
+  
+  // Indexes
+  @@index([telegramId])
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@index([subscriptionPlan])
+  @@index([createdAt])
+  
+  @@map("users")
+}
+
+// User sessions for refresh token management
+model UserSession {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  
+  // Token info
+  refreshToken    String    @unique @map("refresh_token") @db.VarChar(255)
+  
+  // Device info
+  deviceInfo      Json      @default("{}") @map("device_info")
+  ipAddress       String?   @map("ip_address") @db.Inet
+  userAgent       String?   @map("user_agent") @db.Text
+  
+  // Session lifecycle
+  expiresAt       DateTime  @map("expires_at")
+  lastUsedAt      DateTime  @default(now()) @map("last_used_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([userId])
+  @@index([refreshToken])
+  @@index([expiresAt])
+  
+  @@map("user_sessions")
+}
+
+// Permissions system
+model Permission {
+  id          String              @id @default(cuid())
+  name        String              @unique @db.VarChar(100)
+  resource    String              @db.VarChar(50)
+  action      String              @db.VarChar(50)
+  description String?             @db.Text
+  createdAt   DateTime            @default(now()) @map("created_at")
+  
+  // Relations
+  rolePermissions RolePermission[]
+  
+  @@index([resource, action])
+  @@map("permissions")
+}
+
+// Role permissions junction table
+model RolePermission {
+  id           String     @id @default(cuid())
+  role         UserRole
+  permissionId String     @map("permission_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  
+  // Relations
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  // Unique constraint
+  @@unique([role, permissionId])
+  @@index([role])
+  @@map("role_permissions")
+}
+
+// User verification tokens (email, phone, etc.)
+model VerificationToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  type      String    @db.VarChar(50) // 'email', 'phone', 'password_reset'
+  token     String    @db.VarChar(255)
+  code      String?   @db.VarChar(10) // For 6-digit codes
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  
+  // Indexes
+  @@index([userId])
+  @@index([token])
+  @@index([type, expiresAt])
+  
+  @@map("verification_tokens")
+}
+
+// Audit log for important user actions
+model UserAuditLog {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  action    String   @db.VarChar(100)
+  details   Json     @default("{}")
+  ipAddress String?  @map("ip_address") @db.Inet
+  userAgent String?  @map("user_agent") @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Indexes
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  
+  @@map("user_audit_logs")
+}

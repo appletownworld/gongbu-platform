@@ -1,0 +1,5 @@
+---
+description: you can edit '.env' file, but not send to github
+globs: - ".env"
+alwaysApply: true
+---

@@ -1,0 +1,88 @@
+# Gongbu Platform - Development Rules
+
+## TypeScript Code Style
+
+### ✅ МОЖНО
+- Используй strict mode TypeScript
+- Явная типизация для всех public API
+- interface для объектов, type для unions
+- camelCase для переменных и функций
+- PascalCase для классы и интерфейсы
+- kebab-case для файлов и папок
+- JSDoc для всех public методов
+
+### ❌ НЕЛЬЗЯ
+- Использовать any тип (используй unknown)
+- var (только const/let)
+- console.log в production коде
+- Файлы больше 300 строк
+- Функции больше 50 строк
+- Циклическая сложность больше 10
+
+## NestJS Patterns
+
+### ✅ МОЖНО
+- Dependency Injection для всех зависимостей
+- DTO с class-validator для валидации
+- Repository pattern для работы с БД
+- Guards для аутентификации и авторизации
+- Interceptors для cross-cutting concerns
+- Exception filters для обработки ошибок
+
+### ❌ НЕЛЬЗЯ
+- Прямое создание экземпляров в конструкторах
+- Бизнес-логика в контроллерах
+- Игнорирование ошибок валидации
+- Множественная ответственность в сервисах
+- Использование декораторов без понимания
+
+## Testing
+
+### ✅ МОЖНО
+- 80%+ code coverage
+- Unit tests для бизнес-логики
+- Integration tests для API endpoints
+- E2E tests для критичных user flows
+- Mocking внешних зависимостей
+- Test factories для создания test data
+
+### ❌ НЕЛЬЗЯ
+- Тесты без assertions
+- Тесты зависящие от внешних сервисов
+- Shared state между тестами
+- Тесты без cleanup
+- Игнорирование failing tests
+
+## Database
+
+### ✅ МОЖНО
+- UUID для primary keys
+- created_at, updated_at для всех таблиц
+- Soft delete через deleted_at
+- JSONB для гибких данных
+- Indexes для foreign keys и queries
+- Transactions для связанных операций
+
+### ❌ НЕЛЬЗЯ
+- Auto-increment IDs
+- NULL в обязательных полях
+- Queries без WHERE для updates/deletes
+- N+1 query problems
+- Загрузка всех записей без pagination
+- Raw SQL без parameterization
+
+## Development Process
+
+### ✅ МОЖНО
+- Ведение devlog.md файла для всех действий
+- Использование ТОЛЬКО системного времени в devlog (date +%Y-%m-%d\ %H:%M)
+- Документирование всех изменений в архитектуре
+- Записывание проблем и их решений
+- Отслеживание прогресса разработки
+- Commit'ы с обновлением devlog
+
+### ❌ НЕЛЬЗЯ
+- Разработка без документирования в devlog
+- Использование произвольного времени в devlog (только системное время)
+- Игнорирование записи важных решений
+- Работа без обновления статуса прогресса

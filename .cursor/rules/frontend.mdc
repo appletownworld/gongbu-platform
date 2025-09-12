@@ -1,0 +1,102 @@
+# Gongbu Platform - Frontend Rules
+
+## React Development
+
+### ✅ МОЖНО
+- Functional components с hooks
+- TypeScript для всех компонентов
+- Custom hooks для reusable logic
+- useMemo/useCallback для optimization
+- Error boundaries для error handling
+- Lazy loading для code splitting
+- React DevTools для debugging
+- Storybook для component documentation
+
+### ❌ НЕЛЬЗЯ
+- Class components (используй functional)
+- Inline styles (используй CSS modules или styled-components)  
+- Props drilling больше 2 уровней
+- useEffect без cleanup
+- State mutations (всегда immutable updates)
+- Keys как array indexes для динамических списков
+- Memory leaks через event listeners
+
+## State Management
+
+### ✅ МОЖНО
+- Redux Toolkit для global state
+- RTK Query для server state
+- Local state для component-specific data
+- Context API для theme и user preferences
+- Normalized state structure
+- Action creators с type safety
+- Selectors для derived state
+
+### ❌ НЕЛЬЗЯ
+- Redux без Redux Toolkit
+- Putting everything в global state
+- Mutating state directly
+- Large objects в component state
+- Async operations в reducers
+- Complex state logic в components
+- State updates без proper batching
+
+## UI/UX Guidelines
+
+### ✅ МОЖНО
+- Material-UI (MUI) components
+- Responsive design (mobile-first)
+- Loading states для async operations
+- Error states с retry options
+- Accessibility (WCAG guidelines)
+- Consistent spacing и typography
+- Theme provider для consistent styling
+
+### ❌ НЕЛЬЗЯ
+- Custom UI components без необходимости
+- Desktop-only design
+- Missing loading indicators
+- Poor error messages
+- Inaccessible components (missing ARIA)
+- Inconsistent visual hierarchy
+- Hardcoded colors или spacing
+
+## Performance
+
+### ✅ МОЖНО
+- Code splitting по routes
+- Lazy loading для heavy components  
+- Image optimization и lazy loading
+- Bundle analysis (webpack-bundle-analyzer)
+- Virtualization для long lists
+- Memoization для expensive calculations
+- Service workers для caching
+
+### ❌ НЕЛЬЗЯ
+- Large bundle sizes без optimization
+- Unnecessary re-renders
+- Loading all images at once
+- Blocking main thread
+- Memory leaks в components
+- Unused dependencies в bundle
+- Synchronous operations в UI
+
+## Forms & Validation
+
+### ✅ МОЖНО
+- React Hook Form для form handling
+- Yup или Zod для validation schemas
+- Controlled components для critical inputs
+- Debounced validation для better UX
+- Clear error messages
+- Form state persistence где нужно
+- Accessibility для form controls
+
+### ❌ НЕЛЬЗЯ
+- Uncontrolled forms для complex scenarios
+- Client-side only validation
+- Poor validation error messaging
+- Forms без loading states
+- Missing form labels
+- Auto-submit без user confirmation
+- Form data в URL parameters

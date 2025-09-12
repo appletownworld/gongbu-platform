@@ -1,0 +1,98 @@
+# Gongbu Platform - Database Rules
+
+## Schema Design
+
+### ✅ МОЖНО
+- UUID для всех primary keys
+- created_at, updated_at для всех таблиц
+- deleted_at для soft delete важных данных
+- JSONB для настроек и metadata
+- Enum types для ограниченных значений
+- Foreign key constraints
+- Check constraints для data integrity
+- Indexes для всех FK и frequent queries
+
+### ❌ НЕЛЬЗЯ
+- Auto-increment IDs для business entities  
+- Nullable поля без default значений
+- Cascading deletes без careful consideration
+- JSONB для relational data
+- Text fields без length limits
+- Tables без primary key
+- Missing indexes на foreign keys
+
+## Query Patterns
+
+### ✅ МОЖНО
+- Используй Prisma для type-safe queries
+- Select только нужные поля
+- Include relations осознанно
+- Pagination для всех списков (take/skip)
+- Where clause для security (user ownership)
+- Transactions для связанных операций
+- Proper error handling для unique constraints
+
+### ❌ НЕЛЬЗЯ
+- SELECT * queries
+- N+1 query patterns
+- Loading all records без pagination
+- Raw SQL без parameters
+- Queries без WHERE в updates/deletes
+- Transactions для single operations
+- Игнорирование database errors
+
+## Performance
+
+### ✅ МОЖНО
+- Database connection pooling
+- Query result caching в Redis
+- Batch operations для multiple records
+- Async queries где возможно
+- Database migrations для schema changes
+- Query analysis и optimization
+- Proper indexing strategy
+
+### ❌ НЕЛЬЗЯ
+- Opening new connection для каждого query
+- Synchronous database calls в hot paths
+- Complex joins без indexes
+- Full table scans
+- Missing database indexes
+- Schema changes без migrations
+- Long-running transactions
+
+## Data Consistency
+
+### ✅ МОЖНО
+- ACID transactions для critical operations
+- Optimistic locking для concurrent updates
+- Event-driven updates между сервисами
+- Data validation на database level
+- Referential integrity через FK constraints
+- Audit trail для important changes
+
+### ❌ НЕЛЬЗЯ
+- Dirty reads в production
+- Lost updates без locking
+- Cross-service transactions
+- Data inconsistency between services
+- Manual data synchronization
+- Untracked data changes
+
+## Security
+
+### ✅ МОЖНО
+- Row-level security где applicable
+- Encrypted columns для sensitive data
+- Database user с minimum permissions
+- Connection string в environment variables
+- SSL connections к database
+- Regular security audits
+
+### ❌ НЕЛЬЗЯ
+- Root database access в application
+- Plain text passwords в database
+- SQL injection vulnerabilities
+- Database credentials в code
+- Unencrypted connections
+- Missing access controls

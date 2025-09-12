@@ -1,0 +1,75 @@
+# Gongbu Platform - API Design Rules
+
+## REST API Design
+
+### ✅ МОЖНО
+- GET /courses - список ресурсов
+- GET /courses/:id - получение ресурса
+- POST /courses - создание ресурса
+- PUT /courses/:id - полное обновление
+- PATCH /courses/:id - частичное обновление
+- DELETE /courses/:id - удаление ресурса
+- POST /courses/:id/publish - действие над ресурсом
+- Используй HTTP status codes правильно (200, 201, 400, 401, 403, 404, 500)
+
+### ❌ НЕЛЬЗЯ
+- GET запросы для изменения данных
+- Глаголы в URL (GET /getCourses)
+- Нестандартные HTTP методы без причины
+- Возвращать HTML из REST API
+- Множественные действия в одном endpoint
+- Игнорирование HTTP semantic
+
+## Request/Response Format
+
+### ✅ МОЖНО
+- JSON для request/response body
+- Consistent response structure
+- Pagination для списков (page, limit, total)
+- Error responses с error code и message
+- Request ID для tracing
+- ISO 8601 для дат
+- OpenAPI/Swagger документация
+
+### ❌ НЕЛЬЗЯ
+- XML или другие форматы без necessity
+- Разные форматы responses в одном API
+- Passwords или sensitive data в logs
+- Nested pagination больше 2 уровней
+- Response без metadata для списков
+
+## Validation & Security
+
+### ✅ МОЖНО
+- Validate все input parameters
+- Sanitize HTML content
+- Rate limiting для всех endpoints
+- Authorization checks для protected resources
+- CORS для web clients
+- Content-Type validation
+
+### ❌ НЕЛЬЗЯ
+- Trust user input без validation
+- Expose internal errors в API responses
+- Allow unlimited requests без rate limiting
+- SQL injection возможности
+- XSS vulnerabilities в responses
+- Sensitive data в URL parameters
+
+## Service Communication
+
+### ✅ МОЖНО
+- Internal service tokens для service-to-service calls
+- Standard HTTP headers (Authorization, Content-Type)
+- Retry logic с exponential backoff
+- Circuit breaker для external dependencies
+- Timeout configuration для всех calls
+- Health check endpoints (/health)
+
+### ❌ НЕЛЬЗЯ
+- Synchronous calls для non-critical operations
+- Cascade failures без protection
+- Blocking operations в request handlers
+- Infinite retry loops
+- Service calls без authentication
+- Hard-coded service URLs

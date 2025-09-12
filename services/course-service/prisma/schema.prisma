@@ -1,0 +1,384 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Course management models
+model Course {
+  id                String            @id @default(uuid())
+  title             String
+  slug              String            @unique
+  description       String?
+  shortDescription  String?
+  coverImageUrl     String?
+  thumbnailUrl      String?
+  
+  // Course content
+  category          CourseCategory
+  difficulty        CourseDifficulty  @default(BEGINNER)
+  language          String            @default("ru")
+  estimatedDuration Int?              // in minutes
+  
+  // Pricing and access
+  price             Decimal?          @db.Decimal(10, 2)
+  currency          String            @default("USD")
+  isPremium         Boolean           @default(false)
+  isPublished       Boolean           @default(false)
+  publishedAt       DateTime?
+  
+  // SEO and tags
+  tags              String[]
+  metaTitle         String?
+  metaDescription   String?
+  
+  // Creator info
+  creatorId         String
+  collaboratorIds   String[]          @default([])
+  
+  // Course structure
+  lessons           Lesson[]
+  assignments       Assignment[]
+  modules           CourseModule[]
+  
+  // Student interactions
+  enrollments       Enrollment[]
+  reviews           CourseReview[]
+  
+  // Analytics
+  viewCount         Int               @default(0)
+  enrollmentCount   Int               @default(0)
+  completionCount   Int               @default(0)
+  averageRating     Decimal?          @db.Decimal(3, 2)
+  
+  // Course settings
+  settings          Json              @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+  
+  @@map("courses")
+}
+
+model CourseModule {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  order       Int
+  
+  courseId    String
+  course      Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  lessons     Lesson[]
+  assignments Assignment[]
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  @@unique([courseId, order])
+  @@map("course_modules")
+}
+
+model Lesson {
+  id               String            @id @default(uuid())
+  title            String
+  slug             String
+  content          String            // Rich text content
+  contentType      LessonContentType @default(TEXT)
+  
+  // Lesson media
+  videoUrl         String?
+  audioUrl         String?
+  attachments      Json              @default("[]") // Array of file objects
+  
+  // Lesson structure
+  order            Int
+  duration         Int?              // in minutes
+  
+  // Relations
+  courseId         String
+  course           Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  moduleId         String?
+  module           CourseModule?     @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  
+  // Prerequisites
+  prerequisiteIds  String[]          @default([])
+  
+  // Student interactions
+  progress         LessonProgress[]
+  
+  // Settings
+  isPreview        Boolean           @default(false)
+  settings         Json              @default("{}")
+  
+  // Timestamps
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  
+  @@unique([courseId, slug])
+  @@unique([courseId, order])
+  @@map("lessons")
+}
+
+model Assignment {
+  id             String               @id @default(uuid())
+  title          String
+  description    String
+  instructions   String
+  
+  // Assignment type and content
+  type           AssignmentType
+  content        Json                 // Assignment-specific data
+  
+  // Grading
+  maxScore       Int                  @default(100)
+  passingScore   Int                  @default(60)
+  
+  // Timing
+  timeLimit      Int?                 // in minutes
+  dueDate        DateTime?
+  
+  // Relations
+  courseId       String
+  course         Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  moduleId       String?
+  module         CourseModule?        @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  
+  lessonId       String?
+  lesson         Lesson?              @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  
+  // Student submissions
+  submissions    AssignmentSubmission[]
+  
+  // Order and settings
+  order          Int
+  settings       Json                 @default("{}")
+  
+  // Timestamps
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  deletedAt      DateTime?
+  
+  @@unique([courseId, order])
+  @@map("assignments")
+}
+
+model Enrollment {
+  id              String             @id @default(uuid())
+  studentId       String             // User ID from auth service
+  
+  courseId        String
+  course          Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  // Enrollment status
+  status          EnrollmentStatus   @default(ACTIVE)
+  enrolledAt      DateTime           @default(now())
+  completedAt     DateTime?
+  
+  // Progress tracking
+  progress        StudentProgress[]
+  lessonProgress  LessonProgress[]
+  submissions     AssignmentSubmission[]
+  
+  // Payment info
+  paymentId       String?            // Payment transaction ID
+  discountCode    String?
+  paidAmount      Decimal?           @db.Decimal(10, 2)
+  
+  // Settings
+  settings        Json               @default("{}")
+  
+  // Timestamps
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  
+  @@unique([studentId, courseId])
+  @@map("enrollments")
+}
+
+model StudentProgress {
+  id             String       @id @default(uuid())
+  studentId      String       // User ID from auth service
+  
+  courseId       String
+  enrollmentId   String
+  enrollment     Enrollment   @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  
+  // Progress metrics
+  completedLessons    Int         @default(0)
+  totalLessons        Int         @default(0)
+  completedAssignments Int        @default(0)
+  totalAssignments    Int         @default(0)
+  
+  progressPercentage  Decimal     @default(0) @db.Decimal(5, 2)
+  
+  // Time tracking
+  timeSpent          Int         @default(0) // in minutes
+  lastAccessedAt     DateTime?
+  
+  // Performance
+  averageScore       Decimal?    @db.Decimal(5, 2)
+  
+  // Timestamps
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  
+  @@unique([studentId, courseId])
+  @@map("student_progress")
+}
+
+model LessonProgress {
+  id            String         @id @default(uuid())
+  studentId     String         // User ID from auth service
+  
+  lessonId      String
+  lesson        Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  enrollmentId  String
+  enrollment    Enrollment     @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  
+  // Progress status
+  status        LessonStatus   @default(NOT_STARTED)
+  progressPercentage Decimal   @default(0) @db.Decimal(5, 2)
+  
+  // Time tracking
+  startedAt     DateTime?
+  completedAt   DateTime?
+  timeSpent     Int           @default(0) // in minutes
+  
+  // Video/audio progress
+  watchTime     Int           @default(0) // in seconds
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  @@unique([studentId, lessonId])
+  @@map("lesson_progress")
+}
+
+model AssignmentSubmission {
+  id            String            @id @default(uuid())
+  studentId     String            // User ID from auth service
+  
+  assignmentId  String
+  assignment    Assignment        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  
+  enrollmentId  String
+  enrollment    Enrollment        @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  
+  // Submission content
+  content       Json              // Student's answers/work
+  attachments   Json              @default("[]") // Uploaded files
+  
+  // Grading
+  status        SubmissionStatus  @default(PENDING)
+  score         Decimal?          @db.Decimal(5, 2)
+  maxScore      Int
+  
+  // Feedback
+  feedback      String?
+  gradedBy      String?           // Grader user ID
+  gradedAt      DateTime?
+  
+  // Timing
+  submittedAt   DateTime          @default(now())
+  attemptNumber Int               @default(1)
+  
+  // Timestamps
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  @@unique([studentId, assignmentId, attemptNumber])
+  @@map("assignment_submissions")
+}
+
+model CourseReview {
+  id          String       @id @default(uuid())
+  studentId   String       // User ID from auth service
+  
+  courseId    String
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  rating      Int          // 1-5 stars
+  comment     String?
+  
+  isVerified  Boolean      @default(false) // Verified purchase
+  isVisible   Boolean      @default(true)
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  @@unique([studentId, courseId])
+  @@map("course_reviews")
+}
+
+// Enums
+enum CourseCategory {
+  PROGRAMMING
+  DESIGN
+  BUSINESS
+  MARKETING
+  LANGUAGE
+  SCIENCE
+  ARTS
+  HEALTH
+  LIFESTYLE
+  OTHER
+}
+
+enum CourseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum LessonContentType {
+  TEXT
+  VIDEO
+  AUDIO
+  INTERACTIVE
+  QUIZ
+  DOCUMENT
+  MIXED
+}
+
+enum AssignmentType {
+  QUIZ
+  ESSAY
+  CODE
+  PROJECT
+  UPLOAD
+  PEER_REVIEW
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  SUSPENDED
+  REFUNDED
+}
+
+enum LessonStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum SubmissionStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+  NEEDS_REVISION
+  APPROVED
+}

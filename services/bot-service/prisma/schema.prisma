@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Bot User management
+model BotUser {
+  id              String             @id @default(uuid())
+  telegramId      BigInt             @unique
+  username        String?
+  firstName       String?
+  lastName        String?
+  languageCode    String?            @default("ru")
+  isBot           Boolean            @default(false)
+  isActive        Boolean            @default(true)
+  
+  // User preferences
+  notifications   Boolean            @default(true)
+  timezone        String             @default("UTC")
+  
+  // Bot interaction data
+  lastInteraction DateTime?
+  messageCount    Int                @default(0)
+  commandsUsed    Int                @default(0)
+  
+  // User state and context
+  currentState    String?
+  contextData     Json?              @default("{}")
+  
+  // Relations
+  sessions        BotSession[]
+  messages        BotMessage[]
+  commands        BotCommand[]
+  
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  
+  @@map("bot_users")
+}
+
+// Bot Sessions for conversation state management
+model BotSession {
+  id           String       @id @default(uuid())
+  telegramId   BigInt
+  user         BotUser      @relation(fields: [telegramId], references: [telegramId], onDelete: Cascade)
+  
+  // Session state
+  state        String       @default("idle")
+  context      Json         @default("{}")
+  
+  // Conversation flow
+  currentFlow  String?
+  flowStep     Int          @default(0)
+  flowData     Json         @default("{}")
+  
+  // Session metadata
+  chatType     String       // private, group, supergroup, channel
+  chatId       BigInt
+  
+  // Expiration
+  expiresAt    DateTime?
+  isActive     Boolean      @default(true)
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  
+  @@unique([telegramId, chatId])
+  @@map("bot_sessions")
+}
+
+// Bot Messages for analytics and debugging
+model BotMessage {
+  id             String       @id @default(uuid())
+  telegramId     BigInt
+  user           BotUser      @relation(fields: [telegramId], references: [telegramId], onDelete: Cascade)
+  
+  // Message metadata
+  messageId      Int
+  chatId         BigInt
+  chatType       String
+  
+  // Message content
+  messageType    MessageType  @default(TEXT)
+  text           String?
+  caption        String?
+  
+  // Message direction
+  direction      MessageDirection
+  
+  // Bot response data
+  responseTime   Int?         // in milliseconds
+  botResponse    String?
+  
+  // Processing info
+  isProcessed    Boolean      @default(false)
+  processingTime Int?         // in milliseconds
+  errorMessage   String?
+  
+  createdAt      DateTime     @default(now())
+  
+  @@index([telegramId, createdAt])
+  @@index([chatId, createdAt])
+  @@map("bot_messages")
+}
+
+// Bot Commands tracking
+model BotCommand {
+  id           String       @id @default(uuid())
+  telegramId   BigInt
+  user         BotUser      @relation(fields: [telegramId], references: [telegramId], onDelete: Cascade)
+  
+  // Command data
+  command      String
+  arguments    String?
+  chatId       BigInt
+  chatType     String
+  
+  // Execution info
+  isSuccessful Boolean      @default(false)
+  responseTime Int?         // in milliseconds
+  errorMessage String?
+  
+  // Command result
+  result       Json?        @default("{}")
+  
+  createdAt    DateTime     @default(now())
+  
+  @@index([command, createdAt])
+  @@index([telegramId, createdAt])
+  @@map("bot_commands")
+}
+
+// Bot Webhook events for debugging
+model BotWebhook {
+  id            String       @id @default(uuid())
+  
+  // Webhook metadata
+  updateId      BigInt       @unique
+  updateType    String       // message, callback_query, etc.
+  
+  // Source info
+  telegramId    BigInt?
+  chatId        BigInt?
+  chatType      String?
+  
+  // Raw data
+  rawData       Json
+  
+  // Processing info
+  isProcessed   Boolean      @default(false)
+  processingTime Int?        // in milliseconds
+  errorMessage  String?
+  
+  // Response info
+  responseData  Json?
+  responseTime  Int?         // in milliseconds
+  
+  createdAt     DateTime     @default(now())
+  
+  @@index([updateType, createdAt])
+  @@index([isProcessed, createdAt])
+  @@map("bot_webhooks")
+}
+
+// Bot Configuration for dynamic settings
+model BotConfig {
+  id              String       @id @default(uuid())
+  key             String       @unique
+  value           String
+  description     String?
+  category        String       @default("general")
+  
+  // Validation
+  valueType       ConfigValueType @default(STRING)
+  isRequired      Boolean      @default(false)
+  defaultValue    String?
+  
+  // Metadata
+  isActive        Boolean      @default(true)
+  lastModified    DateTime     @updatedAt
+  modifiedBy      String?      // User ID who modified
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  @@map("bot_config")
+}
+
+// Bot Analytics for performance tracking
+model BotAnalytics {
+  id               String       @id @default(uuid())
+  
+  // Time period
+  date             DateTime     @db.Date
+  hour             Int?         // 0-23, null for daily stats
+  
+  // Metrics
+  totalUsers       Int          @default(0)
+  activeUsers      Int          @default(0)
+  newUsers         Int          @default(0)
+  totalMessages    Int          @default(0)
+  totalCommands    Int          @default(0)
+  
+  // Performance metrics
+  avgResponseTime  Int?         // in milliseconds
+  errorCount       Int          @default(0)
+  successfulCommands Int        @default(0)
+  failedCommands   Int          @default(0)
+  
+  // Popular commands (JSON array of {command, count})
+  popularCommands  Json         @default("[]")
+  
+  // Chat types distribution
+  privateChatCount Int          @default(0)
+  groupChatCount   Int          @default(0)
+  
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  
+  @@unique([date, hour])
+  @@index([date])
+  @@map("bot_analytics")
+}
+
+// Bot Notifications queue
+model BotNotification {
+  id            String           @id @default(uuid())
+  telegramId    BigInt
+  
+  // Notification content
+  type          NotificationType
+  title         String?
+  message       String
+  
+  // Delivery options
+  chatId        BigInt?
+  parseMode     String?          @default("HTML")
+  disablePreview Boolean         @default(false)
+  
+  // Scheduling
+  scheduledFor  DateTime?        
+  priority      NotificationPriority @default(NORMAL)
+  
+  // Status
+  status        NotificationStatus @default(PENDING)
+  attempts      Int              @default(0)
+  maxAttempts   Int              @default(3)
+  
+  // Delivery info
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  errorMessage  String?
+  
+  // Metadata
+  metadata      Json             @default("{}")
+  
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  @@index([status, scheduledFor])
+  @@index([telegramId, status])
+  @@map("bot_notifications")
+}
+
+// Enums
+enum MessageType {
+  TEXT
+  PHOTO
+  VIDEO
+  AUDIO
+  DOCUMENT
+  STICKER
+  VOICE
+  VIDEO_NOTE
+  LOCATION
+  CONTACT
+  POLL
+  DICE
+  UNKNOWN
+}
+
+enum MessageDirection {
+  INCOMING
+  OUTGOING
+}
+
+enum ConfigValueType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+enum NotificationType {
+  COURSE_REMINDER
+  LESSON_AVAILABLE
+  ASSIGNMENT_DUE
+  PAYMENT_REMINDER
+  SYSTEM_ANNOUNCEMENT
+  PERSONAL_MESSAGE
+  PROMOTIONAL
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NotificationStatus {
+  PENDING
+  SCHEDULED
+  SENDING
+  SENT
+  DELIVERED
+  FAILED
+  CANCELLED
+}

@@ -1,0 +1,48 @@
+# Gongbu Platform - Architecture Rules
+
+## Микросервисы
+
+### ✅ МОЖНО
+- Каждый сервис имеет собственную базу данных
+- Сервисы взаимодействуют только через API или события
+- Используй NestJS + TypeScript для всех сервисов
+- Порты сервисов: Gateway(3000), Auth(3001), Course(3002), Bot(3003), Payment(3004), Plugin(3005), Notification(3006), Analytics(3007)
+- Используй Prisma ORM для типобезопасности
+
+### ❌ НЕЛЬЗЯ
+- Прямые SQL joins между базами разных сервисов
+- Shared database между сервисами
+- Синхронные вызовы для некритичных операций
+- Циклические зависимости между сервисами
+- Использование any типа в TypeScript
+
+## События и коммуникация
+
+### ✅ МОЖНО
+- HTTP/gRPC для синхронных операций (получение данных)
+- Kafka/Redis Pub/Sub для асинхронных событий
+- Circuit Breaker для защиты от cascade failures
+- Retry с exponential backoff
+- Event Sourcing для критичных операций
+
+### ❌ НЕЛЬЗЯ
+- Синхронные вызовы для уведомлений
+- Прямые вызовы между сервисами без API Gateway
+- Блокирующие операции в event handlers
+- События без схемы и версионирования
+
+## Безопасность
+
+### ✅ МОЖНО
+- JWT токены для аутентификации
+- Rate limiting на всех endpoints
+- Input validation и sanitization
+- HTTPS для всех соединений
+- Telegram WebApp data validation
+
+### ❌ НЕЛЬЗЯ
+- Хранение паролей в plaintext
+- Передача токенов в URL parameters
+- Прямой доступ к БД без ORM
+- Выполнение raw SQL с user input
+- Игнорирование CORS настроек

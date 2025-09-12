@@ -1,0 +1,95 @@
+# Gongbu Platform - Telegram Rules
+
+## Bot Development
+
+### ✅ МОЖНО
+- Используй Telegraf.js для bot framework
+- Один уникальный бот для каждого курса
+- Webhook для production, polling для development
+- Middleware для logging, auth, analytics
+- State management через Redis sessions
+- Command handlers для /start, /help, /progress
+- Inline keyboards для navigation
+- Message templates для consistent UX
+
+### ❌ НЕЛЬЗЯ
+- Один бот для всех курсов
+- Long polling в production
+- Хранение state в памяти приложения
+- Отправка сообщений без rate limiting
+- Игнорирование webhook signature validation
+- Bot tokens в client-side коде
+- Spam пользователей сообщениями
+
+## WebApp Integration
+
+### ✅ МОЖНО
+- Валидировать initData от Telegram
+- Используй HTTPS для Mini-App URLs
+- Telegram Web App SDK для native функций
+- Responsive design для разных экранов
+- MainButton и BackButton API
+- HapticFeedback для better UX
+- Theme-aware UI (light/dark)
+
+### ❌ НЕЛЬЗЯ
+- Trust Telegram data без validation
+- HTTP для Mini-App (только HTTPS)
+- Desktop-only design
+- Игнорировать Telegram UI guidelines
+- Блокирующие операции в UI
+- Сложная навигация (больше 3 уровней)
+
+## Payments & Security
+
+### ✅ МОЖНО
+- Telegram Payments API для платежей
+- Pre-checkout query validation
+- Webhook signature verification
+- Payment confirmation через successful_payment
+- Error handling для failed payments
+- Invoice с detailed description
+
+### ❌ НЕЛЬЗЯ
+- Custom payment forms в Mini-App
+- Игнорировать pre_checkout_query
+- Сохранять payment tokens
+- Обрабатывать платежи без validation
+- Автоматическое списание без user consent
+
+## Message Design
+
+### ✅ МОЖНО
+- Markdown для text formatting
+- Emoji для visual elements
+- Progress bars для course completion
+- Clear call-to-action buttons
+- Contextual help messages
+- Error messages в понятном формате
+- Локализация для разных языков
+
+### ❌ НЕЛЬЗЯ
+- Длинные сообщения (больше 4096 символов)
+- Сложный HTML без необходимости
+- Много inline buttons в одной строке (больше 3)
+- Сообщения без context
+- Технический jargon для пользователей
+- Спам уведомлений
+
+## Performance & Limits
+
+### ✅ МОЖНО
+- Batch operations для multiple users
+- Rate limiting: 30 msg/sec per bot
+- Message queues для bulk sending
+- Caching для frequently accessed data
+- Pagination для long lists
+- Lazy loading для heavy content
+
+### ❌ НЕЛЬЗЯ
+- Превышать Telegram API limits
+- Синхронная отправка множества сообщений
+- Загружать все данные сразу
+- Игнорировать 429 (Too Many Requests) responses
+- Memory leaks в bot handlers
+- Блокировать event loop

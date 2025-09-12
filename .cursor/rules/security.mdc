@@ -1,0 +1,101 @@
+# Gongbu Platform - Security Rules
+
+## Authentication & Authorization
+
+### ✅ МОЖНО
+- JWT tokens с коротким TTL (15 минут)
+- Refresh tokens с длинным TTL (30 дней)
+- Role-based access control (RBAC)
+- Telegram OAuth для user authentication
+- Service-to-service tokens для internal APIs
+- Token revocation mechanism
+- Session management с Redis
+
+### ❌ НЕЛЬЗЯ
+- Long-lived access tokens (больше 1 часа)
+- Tokens в localStorage (используй httpOnly cookies)
+- Password authentication (только Telegram OAuth)
+- Hardcoded secrets в коде
+- Admin privileges по умолчанию
+- Tokens в URL parameters
+- Shared service credentials
+
+## Input Validation
+
+### ✅ МОЖНО
+- Validate все user inputs
+- Sanitize HTML content (DOMPurify)
+- Use allowlists для validation
+- Type validation с TypeScript
+- Length limits для всех string fields
+- File type и size validation
+- Rate limiting для all endpoints
+
+### ❌ НЕЛЬЗЯ
+- Trust any user input
+- Client-side only validation
+- Blacklist-based validation
+- Execute user-provided code
+- Direct database queries с user input
+- File uploads без validation
+- Unlimited requests без throttling
+
+## Data Protection
+
+### ✅ МОЖНО
+- HTTPS для всех connections
+- Encrypt sensitive data at rest
+- Hash passwords если используются (bcrypt)
+- PII data minimization
+- Secure headers (helmet.js)
+- CORS configuration
+- Environment variables для secrets
+
+### ❌ НЕЛЬЗЯ
+- HTTP в production
+- Plain text sensitive data
+- Weak password hashing (MD5, SHA1)
+- Collecting unnecessary PII
+- Missing security headers
+- CORS wildcard в production  
+- Secrets в code или logs
+
+## API Security
+
+### ✅ МОЖНО
+- Authentication для всех protected endpoints
+- Request size limits
+- SQL injection protection (через ORM)
+- XSS protection
+- CSRF protection
+- Content-Type validation
+- Error handling без sensitive info disclosure
+
+### ❌ НЕЛЬЗЯ
+- Public endpoints для sensitive data
+- Unlimited request sizes
+- Raw SQL с user input
+- Unescaped user content в responses
+- Missing CSRF protection для state-changing operations
+- Generic error messages revealing system info
+- Stack traces в production responses
+
+## Deployment Security
+
+### ✅ МОЖНО
+- Container security scanning
+- Dependency vulnerability scanning  
+- Secrets management (vault, k8s secrets)
+- Network security (VPC, firewalls)
+- Regular security updates
+- Monitoring и alerting для security events
+- Backup encryption
+
+### ❌ НЕЛЬЗЯ
+- Root access в containers
+- Vulnerable dependencies
+- Plain text secrets в deployment configs
+- Open network ports
+- Outdated system packages
+- Missing security monitoring
+- Unencrypted backups

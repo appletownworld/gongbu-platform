@@ -1,0 +1,80 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "alert.rules"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API Gateway metrics
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Auth Service metrics
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:3001']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Course Service metrics
+  - job_name: 'course-service'
+    static_configs:
+      - targets: ['course-service:3002']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Bot Service metrics
+  - job_name: 'bot-service'
+    static_configs:
+      - targets: ['bot-service:3003']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Payment Service metrics
+  - job_name: 'payment-service'
+    static_configs:
+      - targets: ['payment-service:3004']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Plugin Service metrics
+  - job_name: 'plugin-service'
+    static_configs:
+      - targets: ['plugin-service:3005']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Notification Service metrics
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:3006']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Analytics Service metrics
+  - job_name: 'analytics-service'
+    static_configs:
+      - targets: ['analytics-service:3007']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # PostgreSQL metrics (if postgres_exporter is added)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Redis metrics (if redis_exporter is added)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s

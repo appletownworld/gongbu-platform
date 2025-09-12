@@ -1,0 +1,242 @@
+name: 🧪 Test & Quality Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Lint and format check
+  lint:
+    name: 🔍 Lint & Format Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - course-service
+          - bot-service
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: services/${{ matrix.service }}
+        run: npm ci
+
+      - name: 🔍 Run ESLint
+        working-directory: services/${{ matrix.service }}
+        run: npm run lint
+
+      - name: 📝 Check Prettier formatting
+        working-directory: services/${{ matrix.service }}
+        run: npm run format:check
+
+      - name: 🔧 TypeScript check
+        working-directory: services/${{ matrix.service }}
+        run: npm run type-check
+
+  # Unit tests
+  test:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - course-service
+          - bot-service
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: services/${{ matrix.service }}
+        run: npm ci
+
+      - name: 🧪 Run tests
+        working-directory: services/${{ matrix.service }}
+        run: npm test
+        env:
+          NODE_ENV: test
+
+      - name: 📊 Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: services/${{ matrix.service }}/coverage/lcov.info
+          flags: ${{ matrix.service }}
+          name: ${{ matrix.service }}-coverage
+
+  # Frontend tests
+  test-frontend:
+    name: 🌐 Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: apps/web-app/package-lock.json
+
+      - name: 📦 Install dependencies
+        working-directory: apps/web-app
+        run: npm ci
+
+      - name: 🔍 Run ESLint
+        working-directory: apps/web-app
+        run: npm run lint
+
+      - name: 🔧 TypeScript check
+        working-directory: apps/web-app
+        run: npm run type-check
+
+      - name: 🧪 Run tests
+        working-directory: apps/web-app
+        run: npm test
+
+      - name: 🏗️ Build check
+        working-directory: apps/web-app
+        run: npm run build
+
+  # Integration tests
+  integration-test:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: gongbu_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 📦 Install dependencies
+        run: |
+          cd services/auth-service && npm ci
+          cd ../course-service && npm ci
+          cd ../bot-service && npm ci
+
+      - name: 🗄️ Setup test databases
+        run: |
+          cd services/auth-service && npx prisma migrate deploy
+          cd ../course-service && npx prisma migrate deploy
+          cd ../bot-service && npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/gongbu_test
+
+      - name: 🧪 Run integration tests
+        run: npm run test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/gongbu_test
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
+
+  # Security scan
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 📊 Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: 🔐 Run npm audit
+        run: |
+          services=("auth-service" "course-service" "bot-service")
+          for service in "${services[@]}"; do
+            echo "🔍 Auditing $service..."
+            cd services/$service
+            npm audit --audit-level moderate
+            cd ../..
+          done
+
+          echo "🔍 Auditing web app..."
+          cd apps/web-app
+          npm audit --audit-level moderate
+
+  # Docker image security scan
+  docker-security:
+    name: 🐳 Docker Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Build Docker image for scanning
+        run: |
+          docker build -f services/auth-service/Dockerfile.prod -t gongbu/auth-service:test .
+
+      - name: 🔍 Run Trivy on Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'gongbu/auth-service:test'
+          format: 'sarif'
+          output: 'docker-trivy-results.sarif'
+
+      - name: 📊 Upload Docker scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'docker-trivy-results.sarif'

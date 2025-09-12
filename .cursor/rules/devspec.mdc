@@ -1,0 +1,10 @@
+---
+description: |
+  Always read and follow the file `docs/devspec.md` 
+  — this is the project specification and must be strictly followed.  
+  If there are any critical changes in the project, 
+  you must propose updates or additions to this documentation.
+globs:
+  - "docs/devspec.md"
+alwaysApply: true
+---
