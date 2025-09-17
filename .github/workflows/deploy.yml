@@ -1,9 +1,12 @@
 name: Deploy to VPS
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
-  workflow_dispatch:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 jobs:
   deploy:
@@ -20,9 +23,9 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          cd /home/${{ secrets.VPS_USER }}/gongbu-platform
+          cd /home/deploy/gongbu-platform || (git clone https://github.com/appletownworld/gongbu-platform.git /home/deploy/gongbu-platform && cd /home/deploy/gongbu-platform)
           git pull origin main
-          docker-compose -f docker-compose.prod.yml down
+          docker-compose -f docker-compose.prod.yml down || true
           docker-compose -f docker-compose.prod.yml build --no-cache
           docker-compose -f docker-compose.prod.yml up -d
           docker system prune -f
