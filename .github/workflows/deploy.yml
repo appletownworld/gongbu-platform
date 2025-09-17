@@ -23,7 +23,7 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          cd /home/deploy/gongbu-platform || (git clone https://github.com/appletownworld/gongbu-platform.git /home/deploy/gongbu-platform && cd /home/deploy/gongbu-platform)
+          cd /root/gongbu-platform || (git clone https://github.com/appletownworld/gongbu-platform.git /root/gongbu-platform && cd /root/gongbu-platform)
           git pull origin main
           docker-compose -f docker-compose.prod.yml down || true
           docker-compose -f docker-compose.prod.yml build --no-cache
