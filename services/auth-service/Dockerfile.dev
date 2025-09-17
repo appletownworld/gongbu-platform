@@ -1,14 +1,17 @@
 # Gongbu Auth Service - Development Dockerfile
 
-FROM node:20-alpine
+FROM node:20-slim
 
 # Install dependencies for building native modules
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
     postgresql-client \
-    openssl1.1-compat
+    openssl \
+    libssl-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
