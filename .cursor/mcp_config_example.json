@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "title": "MCP Configuration for Cursor - Gongbu Platform",
+  "description": "Configuration for MCP GitHub Server integration with Cursor.ai",
+  "mcpServers": {
+    "github-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y", 
+        "github-mcp-server"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "cwd": "/home/zebracoder/projects/gongbu_app",
+      "description": "GitHub MCP Server - 30+ Git operations with CLI aliases",
+      "capabilities": [
+        "git-status", "git-log", "git-branch", "git-commit", "git-push", 
+        "git-pull", "git-add", "git-diff", "git-remote-list", "git-clone",
+        "git-flow", "git-merge", "git-rebase", "git-tag", "git-cherry-pick"
+      ]
+    },
+    "unified-github-mcp": {
+      "command": "npx", 
+      "args": [
+        "-y",
+        "unified-github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here",
+        "GITHUB_OWNER": "appletownworld",
+        "GITHUB_REPO": "gongbu-platform"
+      },
+      "cwd": "/home/zebracoder/projects/gongbu_app",
+      "description": "Unified GitHub MCP - Advanced GitHub API operations",
+      "capabilities": [
+        "create_issue", "list_issues", "create_pull_request", "list_repositories",
+        "get_file_contents", "create_gist", "manage_secrets", "trigger_workflow"
+      ]
+    },
+    "python-mcp": {
+      "command": "python3",
+      "args": [
+        "-m", "mcp.server",
+        "--port", "8080"
+      ],
+      "env": {
+        "PYTHONPATH": "/home/zebracoder/projects/gongbu_app"
+      },
+      "cwd": "/home/zebracoder/projects/gongbu_app",
+      "description": "Custom Python MCP Server for project-specific tools",
+      "capabilities": [
+        "project_analysis", "code_generation", "documentation_update"
+      ]
+    }
+  },
+  "examples": {
+    "git_operations": [
+      "Покажи статус репозитория",
+      "Создай коммит с сообщением 'fix: исправление бага'",
+      "Отправь изменения на GitHub",
+      "Создай новую ветку feature/new-auth",
+      "Слей ветку в main"
+    ],
+    "github_api": [
+      "Создай новую Issue с заголовком 'Добавить аутентификацию'",
+      "Покажи список всех Pull Request'ов",
+      "Получи содержимое файла package.json",
+      "Запусти GitHub Action для деплоя"
+    ],
+    "ai_prompts": [
+      "@mcp Проанализируй изменения в последнем коммите",
+      "@mcp Создай Pull Request из текущей ветки", 
+      "@mcp Покажи статистику коммитов за последнюю неделю",
+      "@mcp Синхронизируй репозиторий (git pull + git push)"
+    ]
+  }
+}

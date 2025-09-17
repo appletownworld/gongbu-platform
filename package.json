@@ -15,38 +15,30 @@
     "dev:logs": "docker-compose -f docker-compose.dev.yml logs -f",
     "dev:down": "docker-compose -f docker-compose.dev.yml down",
     "dev:clean": "docker-compose -f docker-compose.dev.yml down -v && docker system prune -f",
-    
     "install:all": "npm install && npm run install:services && npm run install:apps && npm run install:libs",
     "install:services": "npm run install --workspaces --if-present",
     "install:apps": "npm run install --workspace=apps/*",
     "install:libs": "npm run install --workspace=libs/*",
-    
     "build": "npm run build --workspaces --if-present",
     "build:services": "npm run build --workspace=services/*",
     "build:apps": "npm run build --workspace=apps/*",
-    
     "test": "npm run test --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
     "test:integration": "npm run test:integration --workspaces --if-present",
     "test:e2e": "npm run test:e2e --workspace=apps/web",
-    
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    
     "type-check": "tsc --noEmit --skipLibCheck",
     "type-check:watch": "npm run type-check -- --watch",
-    
     "migrate": "npm run migrate --workspace=services/*",
     "migrate:reset": "npm run migrate:reset --workspace=services/*",
     "seed": "npm run seed --workspace=services/*",
-    
     "docker:build": "docker-compose -f docker-compose.dev.yml build",
     "docker:push": "docker-compose -f docker-compose.prod.yml push",
-    
     "health": "curl -f http://localhost:3000/health || exit 1",
-    "monitor": "open http://localhost:3030", 
+    "monitor": "open http://localhost:3030",
     "logs:gateway": "docker-compose -f docker-compose.dev.yml logs -f api-gateway",
     "logs:auth": "docker-compose -f docker-compose.dev.yml logs -f auth-service",
     "logs:course": "docker-compose -f docker-compose.dev.yml logs -f course-service",
@@ -99,5 +91,13 @@
     "typescript"
   ],
   "author": "Gongbu Team",
-  "license": "MIT"
+  "license": "MIT",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "bugs": {
+    "url": "https://github.com/appletownworld/gongbu-platform/issues"
+  },
+  "homepage": "https://github.com/appletownworld/gongbu-platform#readme"
 }
