@@ -15,7 +15,7 @@ export class EnvironmentVariables {
   @Transform(({ value }) => parseInt(value, 10))
   PORT: number = 3001;
 
-  @IsUrl({ require_tld: false })
+  @IsString()
   DATABASE_URL: string;
 
   @IsString()
