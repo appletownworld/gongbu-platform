@@ -8,7 +8,8 @@ import {
   AcademicCapIcon,
   BookOpenIcon,
   ChartBarIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -76,6 +77,15 @@ const Header: React.FC = () => {
           {/* User Menu / Auth */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
+              <>
+                {/* Create Course Button */}
+                <Link
+                  to="/create-course"
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  <span className="hidden sm:block">Создать курс</span>
+                </Link>
               <Menu as="div" className="relative">
                 <Menu.Button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-secondary-100 transition-colors">
                   <UserCircleIcon className="h-8 w-8 text-secondary-500" />
@@ -139,6 +149,7 @@ const Header: React.FC = () => {
                   </Menu.Items>
                 </Transition>
               </Menu>
+              </>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link
@@ -193,6 +204,15 @@ const Header: React.FC = () => {
               
               {isAuthenticated && (
                 <>
+                  <hr className="my-2 border-secondary-200" />
+                  <Link
+                    to="/create-course"
+                    className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-primary-600 hover:bg-primary-50 transition-colors font-semibold"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    <span>Создать курс</span>
+                  </Link>
                   <hr className="my-2 border-secondary-200" />
                   {userNavigation.map((item) => (
                     <Link

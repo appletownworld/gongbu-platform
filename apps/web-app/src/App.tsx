@@ -10,6 +10,8 @@ import Footer from '@/components/layout/Footer'
 import HomePage from '@/pages/HomePage'
 import CoursesPage from '@/pages/CoursesPage'
 import CourseDetailPage from '@/pages/CourseDetailPage'
+import CreateCoursePage from '@/pages/CreateCoursePage'
+import MyCoursesPage from '@/pages/MyCoursesPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import ProfilePage from '@/pages/ProfilePage'
@@ -35,6 +37,8 @@ function App() {
             {/* Protected routes */}
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/create-course" element={<CreateCoursePage />} />
+            <Route path="/my-courses" element={<MyCoursesPage />} />
             
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

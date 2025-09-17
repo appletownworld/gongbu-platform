@@ -347,6 +347,11 @@ const DashboardPage: React.FC = () => {
               </h3>
               
               <div className="space-y-3">
+                <Link to="/create-course" className="btn-primary w-full justify-start">
+                  <BookOpenIcon className="mr-2 h-4 w-4" />
+                  Создать курс
+                </Link>
+                
                 <Link to="/courses" className="btn-outline w-full justify-start">
                   <BookOpenIcon className="mr-2 h-4 w-4" />
                   Найти новый курс
