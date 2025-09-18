@@ -25,38 +25,129 @@ jobs:
         script: |
           # Деплой в домашней директории пользователя (БЕЗ SUDO!)
           cd ~/gongbu-platform || (git clone https://github.com/appletownworld/gongbu-platform.git ~/gongbu-platform && cd ~/gongbu-platform)
-          git pull origin main
+          
+          # Принудительное обновление (решает конфликты)
+          git fetch origin
+          git reset --hard origin/main
           
           # Создание .env из секретов GitHub
           cat > .env << 'EOF'
           NODE_ENV=production
+          PORT=3000
+          
+          # Database
           DATABASE_URL=${{ secrets.DATABASE_URL }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}
-          WEBAPP_URL=${{ secrets.APP_URL }}
-          CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
           DB_USER=${{ secrets.DB_USER }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}
+          
+          # Redis
           REDIS_URL=redis://localhost:6379
+          REDIS_PASSWORD=
+          
+          # JWT
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=7d
+          
+          # Telegram
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}
+          TELEGRAM_WEBAPP_SECRET=${{ secrets.TELEGRAM_WEBAPP_SECRET }}
+          WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}
+          ADMIN_USER_IDS=${{ secrets.ADMIN_USER_IDS }}
+          TELEGRAM_PAYMENT_TOKEN=
+          
+          # URLs
+          WEBAPP_URL=${{ secrets.APP_URL }}
+          APP_URL=${{ secrets.APP_URL }}
+          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          WEBSOCKET_URL=wss://${{ secrets.DOMAIN_NAME }}/ws
+          DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
+          
+          # CORS
+          CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+          
+          # Payment
+          STRIPE_SECRET_KEY=
+          STRIPE_WEBHOOK_SECRET=
+          
+          # Email
+          SENDGRID_API_KEY=
+          EMAIL_FROM=noreply@${{ secrets.DOMAIN_NAME }}
+          
+          # Monitoring
+          GRAFANA_ADMIN_PASSWORD=admin
+          
+          # Services URLs (internal)
+          AUTH_SERVICE_URL=http://auth-service:3001
+          COURSE_SERVICE_URL=http://course-service:3002
+          BOT_SERVICE_URL=http://bot-service:3003
+          PAYMENT_SERVICE_URL=http://payment-service:3004
+          NOTIFICATION_SERVICE_URL=http://notification-service:3005
+          ANALYTICS_SERVICE_URL=http://analytics-service:3006
           EOF
           
           # Добавление пользователя в docker группу (если еще не добавлен)
           groups $USER | grep -q docker || (echo "⚠️ Пользователь не в группе docker. Добавьте: sudo usermod -aG docker $USER && exit")
           
+          # Создание базового nginx.conf
+          cat > nginx.conf << 'EOF'
+          events {
+              worker_connections 1024;
+          }
+          
+          http {
+              upstream web-app {
+                  server web-app:3000;
+              }
+              
+              upstream bot-service {
+                  server bot-service:3003;
+              }
+              
+              server {
+                  listen 80;
+                  server_name _;
+                  
+                  location /health {
+                      return 200 'OK';
+                      add_header Content-Type text/plain;
+                  }
+                  
+                  location /api/bots {
+                      proxy_pass http://bot-service;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                  }
+                  
+                  location /webhook {
+                      proxy_pass http://bot-service;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                  }
+                  
+                  location / {
+                      proxy_pass http://web-app;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                  }
+              }
+          }
+          EOF
+          
           # Остановка старых контейнеров
-          docker-compose -f docker-compose.prod.yml down || true
+          docker-compose -f docker-compose.simple.yml down || true
           
           # Очистка системы Docker
           docker system prune -f || echo "⚠️ Docker system prune failed, continuing..."
           
-          # Запуск продакшн системы
-          docker-compose -f docker-compose.prod.yml up -d --build
+          # Запуск упрощенной системы (только существующие сервисы)
+          docker-compose -f docker-compose.simple.yml up -d --build
           
           # Ожидание готовности системы
           echo "⏳ Ожидание запуска системы..."
           for i in {1..30}; do
-            if docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+            if docker-compose -f docker-compose.simple.yml ps | grep -q "Up"; then
               echo "✅ Контейнеры запущены"
               break
             fi
@@ -66,12 +157,12 @@ jobs:
           
           # Проверка статуса всех сервисов
           echo "📊 Статус сервисов:"
-          docker-compose -f docker-compose.prod.yml ps
+          docker-compose -f docker-compose.simple.yml ps
           
           # Проверка логов при ошибках
-          if ! docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+          if ! docker-compose -f docker-compose.simple.yml ps | grep -q "Up"; then
             echo "❌ Есть проблемы с контейнерами. Логи:"
-            docker-compose -f docker-compose.prod.yml logs --tail=50
+            docker-compose -f docker-compose.simple.yml logs --tail=50
           fi
 
     - name: Wait for HTTPS (smart retry)

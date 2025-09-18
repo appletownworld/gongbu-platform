@@ -55,6 +55,9 @@ Value: YOUR_PRIVATE_SSH_KEY (полный приватный SSH ключ)
 Name: DOMAIN_NAME
 Value: your-domain.com
 
+Name: TELEGRAM_BOT_USERNAME
+Value: @your_bot_username
+
 Name: API_BASE_URL
 Value: https://your-domain.com/api
 
@@ -123,7 +126,7 @@ Name: TELEGRAM_CHAT_ID
 Value: [ВАШ_CHAT_ID_ДЛЯ_УВЕДОМЛЕНИЙ]
 
 Name: TELEGRAM_WEBAPP_SECRET
-Value: [СГЕНЕРИРУЙТЕ_СЛУЧАЙНУЮ_СТРОКУ_32_СИМВОЛА]
+Value: [СГЕНЕРИРУЙТЕ_OPENSSL: openssl rand -hex 32]
 
 Name: ADMIN_USER_IDS
 Value: [ВАШ_TELEGRAM_USER_ID,ДРУГИЕ_АДМИНЫ]

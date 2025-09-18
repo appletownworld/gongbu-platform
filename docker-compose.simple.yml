@@ -1,0 +1,160 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: gongbu_postgres
+    environment:
+      POSTGRES_DB: gongbu_platform
+      POSTGRES_USER: ${DB_USER:-gongbu_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-gongbu_user}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - gongbu_network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: gongbu_redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - gongbu_network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: gongbu_auth_service
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - gongbu_network
+
+  # Course Service
+  course-service:
+    build:
+      context: ./services/course-service
+      dockerfile: Dockerfile
+    container_name: gongbu_course_service
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - gongbu_network
+    volumes:
+      - ./uploads:/app/uploads
+
+  # Bot Service (основной компонент)
+  bot-service:
+    build:
+      context: ./services/bot-service
+      dockerfile: Dockerfile
+    container_name: gongbu_bot_service
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - DATABASE_URL=${DATABASE_URL}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}
+      - COURSE_SERVICE_URL=http://course-service:3002
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - REDIS_URL=redis://redis:6379
+      - WEBAPP_URL=${WEBAPP_URL}
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
+      - redis
+      - course-service
+      - auth-service
+    restart: unless-stopped
+    networks:
+      - gongbu_network
+
+  # Web App (React frontend)
+  web-app:
+    build:
+      context: ./apps/web-app
+      dockerfile: Dockerfile
+    container_name: gongbu_web_app
+    environment:
+      - NODE_ENV=production
+      - REACT_APP_API_BASE_URL=${API_BASE_URL}
+      - REACT_APP_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
+      - REACT_APP_WEBAPP_URL=${WEBAPP_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - course-service
+      - bot-service
+    restart: unless-stopped
+    networks:
+      - gongbu_network
+
+  # Nginx (Reverse Proxy)
+  nginx:
+    image: nginx:alpine
+    container_name: gongbu_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web-app
+      - auth-service
+      - course-service
+      - bot-service
+    restart: unless-stopped
+    networks:
+      - gongbu_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  uploads:
+    driver: local
+
+networks:
+  gongbu_network:
+    driver: bridge
