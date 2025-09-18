@@ -392,7 +392,7 @@ export class BotInstanceManager {
     const bot = await this.createBotInstance(config);
     
     // Запускаем в режиме polling для разработки
-    bot.launch({ polling: true });
+    bot.launch();
     
     this.logger.log(`Bot instance started: ${botId}`);
     return bot;

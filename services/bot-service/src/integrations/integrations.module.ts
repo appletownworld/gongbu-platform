@@ -8,7 +8,6 @@ import { CourseClientService } from './course-client.service';
     HttpModule.register({
       timeout: 10000,
       maxRedirects: 3,
-      retryDelay: 1000,
     }),
   ],
   providers: [

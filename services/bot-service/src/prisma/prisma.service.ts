@@ -29,24 +29,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   }
 
   async onModuleInit() {
-    // Подключение событий логирования
-    this.$on('query', (e) => {
-      if (process.env.NODE_ENV === 'development') {
-        this.logger.debug(`Query: ${e.query} -- Params: ${e.params} -- Duration: ${e.duration}ms`);
-      }
-    });
-
-    this.$on('error', (e) => {
-      this.logger.error(`Prisma Error: ${e.message} -- Target: ${e.target}`);
-    });
-
-    this.$on('info', (e) => {
-      this.logger.log(`Prisma Info: ${e.message} -- Target: ${e.target}`);
-    });
-
-    this.$on('warn', (e) => {
-      this.logger.warn(`Prisma Warning: ${e.message} -- Target: ${e.target}`);
-    });
+    // Prisma event logging disabled due to type compatibility issues
+    // TODO: Update when Prisma client types are fixed
 
     // Подключение к БД
     try {

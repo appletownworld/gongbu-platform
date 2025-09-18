@@ -147,7 +147,7 @@ export class BotBusinessLogic {
 
       // Получение урока с квизом
       const step = await this.getLesson(stepId);
-      const question = step?.content?.questions?.[questionIndex];
+      const question = (step?.content as any)?.questions?.[questionIndex];
       
       if (!question) {
         await ctx.reply('Вопрос не найден.');
@@ -178,7 +178,7 @@ export class BotBusinessLogic {
       }
 
       // Переход к следующему вопросу или завершение квиза
-      if (questionIndex + 1 < step.content.questions.length) {
+      if (questionIndex + 1 < (step.content as any).questions?.length) {
         await this.sendQuizQuestion(ctx, step, questionIndex + 1);
       } else {
         await this.completeQuizStep(ctx, botUser.platformUserId, stepId);
