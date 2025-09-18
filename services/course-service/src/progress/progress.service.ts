@@ -364,14 +364,25 @@ export class ProgressService {
       throw new BadRequestException('Course not completed or certificate already issued');
     }
 
+    // Получаем данные курса для сертификата
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      select: { title: true }
+    });
+
     const certificate = await this.prisma.courseCertificate.create({
       data: {
         userId,
-        courseId,
         certificateId: this.generateCertificateNumber(userId, courseId),
         certificateNumber: this.generateCertificateNumber(userId, courseId),
+        title: `Сертификат о завершении курса: ${course?.title || 'Неизвестный курс'}`,
         issueDate: new Date(),
-        enrollmentId: progress.enrollmentId,
+        course: {
+          connect: { id: courseId }
+        },
+        enrollment: {
+          connect: { id: progress.enrollmentId }
+        }
       },
     });
 
