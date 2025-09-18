@@ -44,22 +44,31 @@ Name: APP_URL
 Value: https://your-domain.com
 ```
 
-#### 🔒 Безопасность
+#### 🔒 Безопасность и База данных
 ```
-Name: POSTGRES_PASSWORD
+Name: DATABASE_URL
+Value: postgresql://gongbu_user:super_secure_password@localhost:5432/gongbu_platform
+
+Name: DB_USER
+Value: gongbu_user
+
+Name: DB_PASSWORD
 Value: super_secure_password_123!
 
 Name: REDIS_PASSWORD
 Value: redis_password_456!
 
 Name: JWT_SECRET
-Value: your_32_character_jwt_secret_key_789!
+Value: your_64_character_jwt_secret_key_minimum_length_for_security!
 ```
 
 #### 🤖 Telegram
 ```
 Name: TELEGRAM_BOT_TOKEN
 Value: 1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefgh
+
+Name: TELEGRAM_CHAT_ID
+Value: -1001234567890
 
 Name: TELEGRAM_WEBAPP_SECRET
 Value: your_webapp_secret_here
@@ -80,29 +89,35 @@ Name: GRAFANA_ADMIN_PASSWORD
 Value: secure_grafana_password
 ```
 
-### 🚀 Шаг 3: Запустить автоматический деплой
+### 🚀 Шаг 3: Автоматический деплой теперь ВКЛЮЧЕН!
 
-После добавления всех секретов:
+✅ **Автодеплой настроен и активен!** После добавления секретов:
 
-1. **Перейдите в Actions** → **Deploy Gongbu Platform to VPS**
+**Вариант 1: Автоматический деплой (рекомендуется)**
+```bash
+# Любые изменения в main ветке запустят деплой
+git add .
+git commit -m "🚀 Deploy to production"
+git push origin main
+# → Деплой запустится автоматически!
+```
+
+**Вариант 2: Ручной запуск**
+1. **Перейдите в Actions** → **Deploy to VPS**
 2. **Нажмите "Run workflow"** → **"Run workflow"**
-3. **Или сделайте git push** для автоматического запуска:
-   ```bash
-   git add .
-   git commit -m "🚀 Deploy to production"
-   git push origin main
-   ```
 
 ### ⏱️ Что произойдет дальше
 
 GitHub Actions автоматически:
-- ✅ Соберет все Docker образы
-- ✅ Загрузит их на VPS
-- ✅ Запустит все сервисы
-- ✅ Настроит SSL сертификаты
-- ✅ Проверит здоровье системы
+- ✅ Клонирует код в `/var/www/gongbu-platform`
+- ✅ Создаст `.env` файл из секретов GitHub
+- ✅ Соберет все 8 микросервисов через `docker-compose.prod.yml`
+- ✅ Запустит полную продакшн систему
+- ✅ Дождется прохождения health checks
+- ✅ Проверит доступность HTTPS endpoints
+- ✅ Уведомит в Telegram о статусе деплоя
 
-**Время деплоя: ~15 минут**
+**Время деплоя: ~10-15 минут**
 
 ### 🎉 Результат
 

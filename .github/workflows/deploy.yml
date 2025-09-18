@@ -1,12 +1,12 @@
 name: Deploy to VPS
 
 on:
-  workflow_dispatch:  # Только ручной запуск через GitHub UI
-  # push:             # Автоматический деплой отключен
-  #   branches: [ main ]
-  #   paths-ignore:
-  #     - '**.md'
-  #     - 'docs/**'
+  workflow_dispatch:  # Ручной запуск через GitHub UI
+  push:               # ✅ Автоматический деплой включен!
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 jobs:
   deploy:
@@ -23,30 +23,59 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          cd /home/deploy/gongbu-platform || (git clone https://github.com/appletownworld/gongbu-platform.git /home/deploy/gongbu-platform && cd /home/deploy/gongbu-platform)
-          git pull origin main
-          docker-compose -f docker-compose.simple.yml down || true
-          docker-compose -f docker-compose.simple.yml build --no-cache
-          docker-compose -f docker-compose.simple.yml up -d
-          # Wait for healthcheck to be ready (Docker Compose v1.29 compatibility)
-          echo "⏳ Waiting for containers to be healthy..."
+          # Деплой в стандартную продакшн директорию
+          cd /var/www/gongbu-platform || (sudo git clone https://github.com/appletownworld/gongbu-platform.git /var/www/gongbu-platform && cd /var/www/gongbu-platform)
+          sudo git pull origin main
+          
+          # Создание .env из секретов GitHub
+          sudo tee .env << 'EOF'
+          NODE_ENV=production
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}
+          WEBAPP_URL=${{ secrets.APP_URL }}
+          CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          EOF
+          
+          # Остановка старых контейнеров
+          sudo docker-compose -f docker-compose.prod.yml down || true
+          
+          # Очистка и пересборка
+          sudo docker system prune -f
+          sudo docker-compose -f docker-compose.prod.yml build --no-cache
+          
+          # Запуск продакшн системы
+          sudo docker-compose -f docker-compose.prod.yml up -d
+          
+          # Ожидание готовности системы
+          echo "⏳ Ожидание запуска системы..."
           for i in {1..60}; do
-            if docker inspect --format='{{.State.Health.Status}}' gongbu_nginx 2>/dev/null | grep -q "healthy"; then
-              echo "✅ Nginx is healthy"; break
+            if sudo docker-compose -f docker-compose.prod.yml ps | grep -q "Up (healthy)"; then
+              echo "✅ Система запущена и здорова"; break
             fi
-            echo "⏳ Waiting for nginx healthcheck ($i/60)..."
-            sleep 2
+            echo "⏳ Ожидание health checks ($i/60)..."
+            sleep 3
           done
-          docker system prune -f
+          
+          # Проверка статуса всех сервисов
+          echo "📊 Статус сервисов:"
+          sudo docker-compose -f docker-compose.prod.yml ps
 
     - name: Wait for HTTPS (smart retry)
       run: |
-        echo "🔍 Waiting for HTTPS endpoint to be ready..."
-        curl -fsS https://gongbu.appletownworld.com/health \
+        echo "🔍 Ожидание готовности HTTPS endpoint..."
+        APP_URL="${{ secrets.APP_URL }}"
+        DOMAIN_URL="${APP_URL:-https://gongbu.appletownworld.com}"
+        
+        curl -fsS "$DOMAIN_URL/health" \
           --retry 20 --retry-all-errors --retry-delay 5 --max-time 10 \
           --retry-connrefused || {
-          echo "❌ HTTPS health check failed, trying HTTP fallback..."
-          curl -fsS http://gongbu.appletownworld.com/health \
+          echo "❌ HTTPS health check не удался, пробуем HTTP..."
+          HTTP_URL=$(echo "$DOMAIN_URL" | sed 's/https:/http:/')
+          curl -fsS "$HTTP_URL/health" \
             --retry 10 --retry-all-errors --retry-delay 3 --max-time 8
         }
 
