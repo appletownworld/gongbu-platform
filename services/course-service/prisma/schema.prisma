@@ -118,6 +118,7 @@ model Lesson {
   // Settings
   isPreview        Boolean           @default(false)
   isPublished      Boolean           @default(false)
+  isFree           Boolean           @default(false)
   settings         Json              @default("{}")
   
   // Timestamps
@@ -356,6 +357,7 @@ model CourseCertificate {
   
   // Certificate details
   certificateId String      @unique // Public certificate ID
+  certificateNumber String  @unique // Certificate number
   issueDate     DateTime    @default(now())
   expiryDate    DateTime?
   
@@ -421,6 +423,7 @@ enum EnrollmentStatus {
   COMPLETED
   SUSPENDED
   REFUNDED
+  DROPPED
 }
 
 enum LessonStatus {
