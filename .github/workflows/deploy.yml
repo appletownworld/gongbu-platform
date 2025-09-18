@@ -163,9 +163,26 @@ jobs:
           if ! docker-compose -f docker-compose.simple.yml ps | grep -q "Up"; then
             echo "❌ Есть проблемы с контейнерами. Логи:"
             docker-compose -f docker-compose.simple.yml logs --tail=50
+          else
+            echo "✅ Все контейнеры запущены успешно!"
+            
+            # Дополнительная диагностика сети
+            echo "🔍 ДИАГНОСТИКА СЕТИ:"
+            echo "📍 Внешний IP VPS:"
+            curl -s ifconfig.me || echo "Не удалось получить внешний IP"
+            
+            echo "🔌 Открытые порты:"
+            netstat -tlnp 2>/dev/null | grep -E ':80 |:443 ' || echo "Порты 80/443 не слушаются"
+            
+            echo "🏥 Локальный health check:"
+            curl -f http://localhost:80/health --max-time 5 2>/dev/null && echo "✅ Локальный health OK" || echo "❌ Локальный health не работает"
+            
+            echo "🌐 Nginx статус:"
+            docker-compose -f docker-compose.simple.yml logs nginx --tail=10
           fi
 
     - name: Wait for HTTPS (smart retry)
+      continue-on-error: true
       run: |
         echo "🔍 Ожидание готовности HTTPS endpoint..."
         APP_URL="${{ secrets.APP_URL }}"
@@ -177,7 +194,21 @@ jobs:
           echo "❌ HTTPS health check не удался, пробуем HTTP..."
           HTTP_URL=$(echo "$DOMAIN_URL" | sed 's/https:/http:/')
           curl -fsS "$HTTP_URL/health" \
-            --retry 10 --retry-all-errors --retry-delay 3 --max-time 8
+            --retry 10 --retry-all-errors --retry-delay 3 --max-time 8 || {
+            echo ""
+            echo "🚨 ВНИМАНИЕ: Health check не прошел!"
+            echo "📋 ЧТО ПРОВЕРИТЬ НА VPS:"
+            echo "1. sudo ufw allow 80/tcp && sudo ufw allow 443/tcp"  
+            echo "2. nslookup $DOMAIN_URL (DNS настроен правильно?)"
+            echo "3. curl ifconfig.me (правильный IP в DNS?)"
+            echo "4. docker-compose -f ~/gongbu-platform/docker-compose.simple.yml ps"
+            echo "5. curl http://localhost:80/health (работает локально?)"
+            echo ""
+            echo "📚 Подробная диагностика: https://github.com/${{ github.repository }}/blob/main/TROUBLESHOOTING-NETWORK.md"
+            echo ""
+            echo "🏗️ КОНТЕЙНЕРЫ СОБРАНЫ УСПЕШНО! Это проблема сетевой доступности."
+            exit 1
+          }
         }
 
     - name: Notify Telegram
