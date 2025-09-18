@@ -12,6 +12,31 @@ lerna-debug.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+.env.staging
+
+# Security-sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets.json
+secrets/
+config/secrets/
+
+# Database dumps and backups
+*.sql
+*.dump
+backup/
+backups/
+
+# SSH keys
+id_rsa
+id_ed25519
+*.pub
+known_hosts
+authorized_keys
 
 # Runtime data
 pids
