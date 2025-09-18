@@ -38,7 +38,7 @@ services:
   auth-service:
     build:
       context: ./services/auth-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod.prod
     container_name: gongbu_auth_service
     environment:
       - NODE_ENV=production
@@ -59,7 +59,7 @@ services:
   course-service:
     build:
       context: ./services/course-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: gongbu_course_service
     environment:
       - NODE_ENV=production
@@ -81,7 +81,7 @@ services:
   bot-service:
     build:
       context: ./services/bot-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: gongbu_bot_service
     environment:
       - NODE_ENV=production
@@ -108,7 +108,7 @@ services:
   web-app:
     build:
       context: ./apps/web-app
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: gongbu_web_app
     environment:
       - NODE_ENV=production
