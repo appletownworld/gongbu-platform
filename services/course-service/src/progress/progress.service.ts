@@ -89,6 +89,7 @@ export class ProgressService {
     const progress = await this.prisma.studentProgress.create({
       data: {
         studentId: userId,
+        courseId,
         enrollmentId: enrollment.id,
         completedLessons: 0,
         totalLessons: course.lessons.length,
@@ -158,6 +159,7 @@ export class ProgressService {
       create: {
         studentId: userId,
         lessonId,
+        enrollmentId: enrollment.id,
         timeSpent,
         completed,
         score,
@@ -366,9 +368,10 @@ export class ProgressService {
       data: {
         userId,
         courseId,
-        issueDate: new Date(),
+        certificateId: this.generateCertificateNumber(userId, courseId),
         certificateNumber: this.generateCertificateNumber(userId, courseId),
-        validationCode: this.generateValidationCode(),
+        issueDate: new Date(),
+        enrollmentId: progress.enrollmentId,
       },
     });
 
@@ -454,6 +457,7 @@ export class ProgressService {
       },
       create: {
         studentId: userId,
+        courseId,
         enrollmentId: enrollment.id,
         completedLessons,
         totalLessons,

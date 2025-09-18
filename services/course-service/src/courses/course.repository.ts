@@ -407,21 +407,11 @@ export class CourseRepository {
     const [
       totalCourses,
       publishedCourses,
-      categoriesStats,
-      difficultyStats,
       totalEnrollments,
       avgRating,
     ] = await this.prisma.$transaction([
       this.prisma.course.count(),
       this.prisma.course.count({ where: { isPublished: true } }),
-      this.prisma.course.groupBy({
-        by: ['category'],
-        _count: { category: true },
-      }),
-      this.prisma.course.groupBy({
-        by: ['difficulty'],
-        _count: { difficulty: true },
-      }),
       this.prisma.enrollment.count(),
       this.prisma.courseReview.aggregate({
         _avg: { rating: true },
@@ -435,7 +425,7 @@ export class CourseRepository {
       },
     });
 
-    // Преобразуем статистику в удобный формат
+    // Простая статистика без группировки (избегаем циркулярных ссылок)
     const categoriesStatsObj = {
       PROGRAMMING: 0,
       DATA_SCIENCE: 0,
@@ -448,9 +438,6 @@ export class CourseRepository {
       LANGUAGES: 0,
       OTHER: 0,
     };
-    categoriesStats.forEach(stat => {
-      categoriesStatsObj[stat.category] = stat._count.category;
-    });
 
     const difficultyStatsObj = {
       BEGINNER: 0,
@@ -458,9 +445,6 @@ export class CourseRepository {
       ADVANCED: 0,
       EXPERT: 0,
     };
-    difficultyStats.forEach(stat => {
-      difficultyStatsObj[stat.difficulty] = stat._count.difficulty;
-    });
 
     return {
       totalCourses,
