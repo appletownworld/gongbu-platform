@@ -112,6 +112,7 @@ model Lesson {
   
   // Student interactions
   progress         LessonProgress[]
+  assignments      Assignment[]
   
   // Settings
   isPreview        Boolean           @default(false)
