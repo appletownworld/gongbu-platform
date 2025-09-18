@@ -1,18 +1,25 @@
 name: Deploy to VPS
 
 on:
-  workflow_dispatch:  # Ручной запуск через GitHub UI
-  push:               # ✅ Автоматический деплой включен!
-    branches: [ main ]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
+  workflow_dispatch:  # 🔄 ТОЛЬКО ручной запуск через GitHub UI
+    inputs:
+      reason:
+        description: 'Причина деплоя'
+        required: false
+        default: 'Ручной деплой'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
+    - name: 🔄 Ручной деплой
+      run: |
+        echo "🔄 РУЧНОЙ ДЕПЛОЙ ЗАПУЩЕН"
+        echo "📝 Причина: ${{ github.event.inputs.reason }}"
+        echo "👤 Запустил: ${{ github.actor }}"
+        echo "🕒 Время: $(date)"
+        
     - name: Checkout code
       uses: actions/checkout@v4
 
