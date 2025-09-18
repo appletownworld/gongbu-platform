@@ -38,7 +38,7 @@ services:
   auth-service:
     build:
       context: ./services/auth-service
-      dockerfile: Dockerfile.prod.prod
+      dockerfile: Dockerfile.prod
     container_name: gongbu_auth_service
     environment:
       - NODE_ENV=production
