@@ -86,3 +86,50 @@
 - Использование произвольного времени в devlog (только системное время)
 - Игнорирование записи важных решений
 - Работа без обновления статуса прогресса
+
+## GitHub Secrets Configuration
+
+### ✅ ОФИЦИАЛЬНЫЕ ИМЕНА СЕКРЕТОВ В ЭТОМ ПРОЕКТЕ
+**ВАЖНО:** Используй только эти имена! НЕ создавай новые имена секретов!
+
+#### 🔐 Аутентификация и безопасность:
+- `JWT_SECRET` - секретный ключ для JWT токенов
+- `TELEGRAM_BOT_TOKEN` - токен Telegram бота от @BotFather
+- `TELEGRAM_WEBAPP_SECRET` - секрет для Telegram WebApp
+- `ADMIN_USER_IDS` - список Telegram ID администраторов
+
+#### 🗄️ База данных:
+- `POSTGRES_PASSWORD` - пароль PostgreSQL (используется для DB_PASSWORD)
+- `REDIS_PASSWORD` - пароль Redis
+
+#### 🌐 URL и сеть:
+- `APP_URL` - основной URL приложения  
+- `API_BASE_URL` - базовый URL для API
+- `WEBHOOK_URL` - URL для Telegram webhook
+- `WEBSOCKET_URL` - URL для WebSocket соединений
+- `DOMAIN_NAME` - доменное имя проекта
+- `CORS_ORIGIN` - разрешенные CORS origins
+
+#### 🖥️ VPS и мониторинг:
+- `VPS_HOST` - IP адрес VPS сервера
+- `VPS_USER` - пользователь для SSH подключения
+- `VPS_SSH_KEY` - приватный SSH ключ для доступа к VPS
+- `GRAFANA_ADMIN_PASSWORD` - пароль админа Grafana
+
+### ❌ НЕ СОЗДАВАЙ НОВЫЕ ИМЕНА:
+- `DATABASE_URL` (генерируется из POSTGRES_PASSWORD)
+- `DB_USER` (статично: gongbu_user)
+- `DB_PASSWORD` (используется POSTGRES_PASSWORD)
+- Любые другие имена без согласования
+
+### 📝 При создании .env в deploy.yml используй:
+```yaml
+DATABASE_URL=postgresql://gongbu_user:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/gongbu_platform
+DB_USER=gongbu_user
+DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+JWT_SECRET=${{ secrets.JWT_SECRET }}
+TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+WEBSOCKET_URL=${{ secrets.WEBSOCKET_URL }}
+# и т.д. используя точные имена из списка выше
+```
