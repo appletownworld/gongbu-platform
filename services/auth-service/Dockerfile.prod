@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY prisma/ ./prisma/
 
 # Install ALL dependencies first (needed for build)
-RUN npm ci && npm cache clean --force
+RUN npm install && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -20,7 +20,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Install only production dependencies for final image
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Production stage
 FROM node:18-alpine AS production
