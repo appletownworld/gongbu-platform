@@ -160,9 +160,39 @@ jobs:
           echo "JWT_SECRET установлен: $([ -n "$JWT_SECRET" ] && echo "✅ Да" || echo "❌ Нет")"
           echo "TELEGRAM_BOT_TOKEN установлен: $([ -n "$TELEGRAM_BOT_TOKEN" ] && echo "✅ Да" || echo "❌ Нет")"
           
+          echo ""
+          echo "🔍 СОДЕРЖИМОЕ .env ФАЙЛА (первые 50 строк, секреты скрыты):"
+          head -50 .env | sed 's/\(SECRET\|TOKEN\|PASSWORD\)=.*/\1=***HIDDEN***/' || echo "Не удалось прочитать .env"
+          
+          echo ""
+          echo "🔍 ПРОВЕРКА GITHUB SECRETS В .env:"
+          echo "Строк с JWT_SECRET: $(grep -c "JWT_SECRET=" .env || echo "0")"  
+          echo "Строк с TELEGRAM_BOT_TOKEN: $(grep -c "TELEGRAM_BOT_TOKEN=" .env || echo "0")"
+          echo "Строк с DATABASE_URL: $(grep -c "DATABASE_URL=" .env || echo "0")"
+          
+          # Попытка загрузить переменные из .env файла  
+          echo "🔄 Загрузка переменных из .env файла:"
+          export $(cat .env | grep -v '^#' | xargs) || echo "Не удалось загрузить .env"
+          
+          echo "🔍 ПОВТОРНАЯ ПРОВЕРКА переменных после загрузки .env:"
+          echo "DATABASE_URL установлен: $([ -n "$DATABASE_URL" ] && echo "✅ Да" || echo "❌ Нет")"
+          echo "JWT_SECRET установлен: $([ -n "$JWT_SECRET" ] && echo "✅ Да" || echo "❌ Нет")"  
+          echo "TELEGRAM_BOT_TOKEN установлен: $([ -n "$TELEGRAM_BOT_TOKEN" ] && echo "✅ Да" || echo "❌ Нет")"
+          
           # Запуск упрощенной системы (только существующие сервисы)
           echo "🚀 Запуск Docker Compose..."
-          docker-compose -f docker-compose.simple.yml up -d --build
+          docker-compose -f docker-compose.simple.yml up -d --build 2>&1 | head -100
+          
+          # Небольшая пауза для инициализации контейнеров
+          sleep 10
+          
+          # Проверка что контейнеры хотя бы пытались запуститься
+          echo "🔍 ПРОВЕРКА СТАТУСА КОНТЕЙНЕРОВ:"
+          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "Не удалось получить статус контейнеров"
+          
+          echo ""
+          echo "🔍 DOCKER COMPOSE статус:"
+          docker-compose -f docker-compose.simple.yml ps || echo "docker-compose ps не удался"
           
           # Ожидание готовности системы
           echo "⏳ Ожидание запуска системы..."
@@ -198,31 +228,31 @@ jobs:
             
             echo ""
             echo "🗄️ PostgreSQL логи:"
-            docker-compose -f docker-compose.simple.yml logs postgres --tail=30 || echo "PostgreSQL логи недоступны"
+            docker-compose -f docker-compose.simple.yml logs --tail=30 postgres || echo "PostgreSQL логи недоступны"
             
             echo ""
             echo "🔑 Auth Service логи:"
-            docker-compose -f docker-compose.simple.yml logs auth-service --tail=20 || echo "Auth Service логи недоступны"
+            docker-compose -f docker-compose.simple.yml logs --tail=20 auth-service || echo "Auth Service логи недоступны"
             
             echo ""
             echo "📚 Course Service логи:"  
-            docker-compose -f docker-compose.simple.yml logs course-service --tail=20 || echo "Course Service логи недоступны"
+            docker-compose -f docker-compose.simple.yml logs --tail=20 course-service || echo "Course Service логи недоступны"
             
             echo ""
             echo "🤖 Bot Service логи:"
-            docker-compose -f docker-compose.simple.yml logs bot-service --tail=20 || echo "Bot Service логи недоступны"
+            docker-compose -f docker-compose.simple.yml logs --tail=20 bot-service || echo "Bot Service логи недоступны"
             
             echo ""
             echo "🌐 Web App логи:"
-            docker-compose -f docker-compose.simple.yml logs web-app --tail=20 || echo "Web App логи недоступны"
+            docker-compose -f docker-compose.simple.yml logs --tail=20 web-app || echo "Web App логи недоступны"
             
             echo ""
             echo "🔄 Redis логи:"
-            docker-compose -f docker-compose.simple.yml logs redis --tail=10 || echo "Redis логи недоступны"
+            docker-compose -f docker-compose.simple.yml logs --tail=10 redis || echo "Redis логи недоступны"
             
             echo ""
             echo "🌍 Nginx логи:"
-            docker-compose -f docker-compose.simple.yml logs nginx --tail=15 || echo "Nginx логи недоступны"
+            docker-compose -f docker-compose.simple.yml logs --tail=15 nginx || echo "Nginx логи недоступны"
             
             echo ""
             echo "📊 ОБЩИЕ ЛОГИ (последние 100 строк):"
