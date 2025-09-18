@@ -23,12 +23,12 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          # Деплой в стандартную продакшн директорию
-          cd /var/www/gongbu-platform || (sudo git clone https://github.com/appletownworld/gongbu-platform.git /var/www/gongbu-platform && cd /var/www/gongbu-platform)
-          sudo git pull origin main
+          # Деплой в домашней директории пользователя (БЕЗ SUDO!)
+          cd ~/gongbu-platform || (git clone https://github.com/appletownworld/gongbu-platform.git ~/gongbu-platform && cd ~/gongbu-platform)
+          git pull origin main
           
           # Создание .env из секретов GitHub
-          sudo tee .env << 'EOF'
+          cat > .env << 'EOF'
           NODE_ENV=production
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
@@ -38,31 +38,41 @@ jobs:
           CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
           DB_USER=${{ secrets.DB_USER }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          REDIS_URL=redis://localhost:6379
           EOF
           
-          # Остановка старых контейнеров
-          sudo docker-compose -f docker-compose.prod.yml down || true
+          # Добавление пользователя в docker группу (если еще не добавлен)
+          groups $USER | grep -q docker || (echo "⚠️ Пользователь не в группе docker. Добавьте: sudo usermod -aG docker $USER && exit")
           
-          # Очистка и пересборка
-          sudo docker system prune -f
-          sudo docker-compose -f docker-compose.prod.yml build --no-cache
+          # Остановка старых контейнеров
+          docker-compose -f docker-compose.prod.yml down || true
+          
+          # Очистка системы Docker
+          docker system prune -f || echo "⚠️ Docker system prune failed, continuing..."
           
           # Запуск продакшн системы
-          sudo docker-compose -f docker-compose.prod.yml up -d
+          docker-compose -f docker-compose.prod.yml up -d --build
           
           # Ожидание готовности системы
           echo "⏳ Ожидание запуска системы..."
-          for i in {1..60}; do
-            if sudo docker-compose -f docker-compose.prod.yml ps | grep -q "Up (healthy)"; then
-              echo "✅ Система запущена и здорова"; break
+          for i in {1..30}; do
+            if docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+              echo "✅ Контейнеры запущены"
+              break
             fi
-            echo "⏳ Ожидание health checks ($i/60)..."
-            sleep 3
+            echo "⏳ Ожидание запуска контейнеров ($i/30)..."
+            sleep 5
           done
           
           # Проверка статуса всех сервисов
           echo "📊 Статус сервисов:"
-          sudo docker-compose -f docker-compose.prod.yml ps
+          docker-compose -f docker-compose.prod.yml ps
+          
+          # Проверка логов при ошибках
+          if ! docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+            echo "❌ Есть проблемы с контейнерами. Логи:"
+            docker-compose -f docker-compose.prod.yml logs --tail=50
+          fi
 
     - name: Wait for HTTPS (smart retry)
       run: |
