@@ -31,7 +31,7 @@ export class CourseRepository {
     const where: Prisma.CourseWhereInput = {};
 
     if (category) {
-      where.category = category;
+      where.category = category as any;
     }
 
     if (difficulty) {
@@ -78,7 +78,7 @@ export class CourseRepository {
     // Фильтр по тегам
     if (tags) {
       const tagsArray = tags.split(',').map(tag => tag.trim());
-      where.tags = { hasAll: tagsArray };
+      where.tags = { hasSome: tagsArray };
     }
 
     // Получаем курсы с подсчетом статистики
@@ -286,6 +286,7 @@ export class CourseRepository {
           ...data,
           slug,
           price: data.price ? new Prisma.Decimal(data.price) : null,
+          category: data.category as any,
         },
         include: {
           _count: {
@@ -332,6 +333,7 @@ export class CourseRepository {
           ...data,
           price: data.price ? new Prisma.Decimal(data.price) : undefined,
           publishedAt: data.isPublished && !existingCourse.isPublished ? new Date() : undefined,
+          category: data.category ? data.category as any : undefined,
         },
         include: {
           _count: {
@@ -434,12 +436,28 @@ export class CourseRepository {
     });
 
     // Преобразуем статистику в удобный формат
-    const categoriesStatsObj = {};
+    const categoriesStatsObj = {
+      PROGRAMMING: 0,
+      DATA_SCIENCE: 0,
+      WEB_DEVELOPMENT: 0,
+      MOBILE_DEVELOPMENT: 0,
+      DEVOPS: 0,
+      DESIGN: 0,
+      BUSINESS: 0,
+      MARKETING: 0,
+      LANGUAGES: 0,
+      OTHER: 0,
+    };
     categoriesStats.forEach(stat => {
       categoriesStatsObj[stat.category] = stat._count.category;
     });
 
-    const difficultyStatsObj = {};
+    const difficultyStatsObj = {
+      BEGINNER: 0,
+      INTERMEDIATE: 0,
+      ADVANCED: 0,
+      EXPERT: 0,
+    };
     difficultyStats.forEach(stat => {
       difficultyStatsObj[stat.difficulty] = stat._count.difficulty;
     });

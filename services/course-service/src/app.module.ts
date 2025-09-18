@@ -36,8 +36,10 @@ import { validateEnv } from './config/env.validation';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        ttl: configService.get('THROTTLE_TTL', 60),
-        limit: configService.get('THROTTLE_LIMIT', 100),
+        throttlers: [{
+          ttl: configService.get('THROTTLE_TTL', 60000),
+          limit: configService.get('THROTTLE_LIMIT', 100),
+        }],
       }),
       inject: [ConfigService],
     }),

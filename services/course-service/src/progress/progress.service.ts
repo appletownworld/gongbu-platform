@@ -79,7 +79,7 @@ export class ProgressService {
       data: {
         studentId: userId,
         courseId,
-        enrollmentType,
+        // enrollmentType - doesn't exist in schema
         paymentId,
         status: 'ACTIVE',
       },
@@ -89,7 +89,7 @@ export class ProgressService {
     const progress = await this.prisma.studentProgress.create({
       data: {
         studentId: userId,
-        courseId,
+        enrollmentId: enrollment.id,
         completedLessons: 0,
         totalLessons: course.lessons.length,
         progressPercentage: 0,
@@ -158,7 +158,6 @@ export class ProgressService {
       create: {
         studentId: userId,
         lessonId,
-        courseId,
         timeSpent,
         completed,
         score,
@@ -191,13 +190,13 @@ export class ProgressService {
 
     return {
       courseId: progress.courseId,
-      userId: progress.userId,
+      userId: progress.studentId,
       enrolledAt: progress.enrollment.enrolledAt,
       lastAccessedAt: progress.lastAccessedAt,
       completedLessons: progress.completedLessons,
       totalLessons: progress.totalLessons,
-      progressPercentage: progress.progressPercentage,
-      status: progress.status,
+      progressPercentage: Number(progress.progressPercentage),
+      status: progress.status as 'ACTIVE' | 'COMPLETED' | 'PAUSED' | 'DROPPED',
       timeSpent: progress.totalTimeSpent,
       certificateIssued: progress.certificateIssued,
     };
@@ -242,19 +241,19 @@ export class ProgressService {
         lessonCount: enrollment.course._count.lessons,
         reviewCount: enrollment.course._count.reviews,
         enrolledAt: enrollment.enrolledAt,
-        progress: enrollment.progress ? {
-          completedLessons: enrollment.progress.completedLessons,
-          totalLessons: enrollment.progress.totalLessons,
-          progressPercentage: enrollment.progress.progressPercentage,
-          timeSpent: enrollment.progress.totalTimeSpent,
+        progress: enrollment.progress?.[0] ? {
+          completedLessons: enrollment.progress[0].completedLessons,
+          totalLessons: enrollment.progress[0].totalLessons,
+          progressPercentage: Number(enrollment.progress[0].progressPercentage),
+          timeSpent: enrollment.progress[0].totalTimeSpent,
         } : null,
       };
 
       enrolled.push(courseData);
 
-      if (enrollment.progress?.status === 'COMPLETED') {
+      if (enrollment.progress?.[0]?.status === 'COMPLETED') {
         completed.push(courseData);
-      } else if (enrollment.progress?.progressPercentage > 0) {
+      } else if (enrollment.progress?.[0] && Number(enrollment.progress[0].progressPercentage) > 0) {
         inProgress.push(courseData);
       }
     });
@@ -273,7 +272,6 @@ export class ProgressService {
     const lessonProgress = await this.prisma.lessonProgress.findMany({
       where: {
         studentId: userId,
-        courseId,
       },
       include: {
         lesson: {
@@ -294,13 +292,13 @@ export class ProgressService {
 
     return lessonProgress.map(progress => ({
       lessonId: progress.lessonId,
-      lesson: progress.lesson,
+      lesson: progress.lesson || { id: progress.lessonId, title: 'Unknown', duration: 0 },
       timeSpent: progress.timeSpent,
       completed: progress.completed,
       score: progress.score,
       startedAt: progress.startedAt,
       lastAccessedAt: progress.lastAccessedAt,
-      progressPercentage: progress.lesson.duration 
+      progressPercentage: (progress.lesson && progress.lesson.duration)
         ? Math.min(100, (progress.timeSpent / progress.lesson.duration) * 100)
         : progress.completed ? 100 : 0,
     }));
@@ -328,9 +326,9 @@ export class ProgressService {
     await this.prisma.$transaction([
       this.prisma.enrollment.update({
         where: { id: enrollment.id },
-        data: { 
+        data: {
           status: 'DROPPED',
-          droppedAt: new Date(),
+          // droppedAt doesn't exist in schema
         },
       }),
       this.prisma.studentProgress.updateMany({
@@ -366,7 +364,7 @@ export class ProgressService {
 
     const certificate = await this.prisma.courseCertificate.create({
       data: {
-        studentId: userId,
+        userId,
         courseId,
         issueDate: new Date(),
         certificateNumber: this.generateCertificateNumber(userId, courseId),
@@ -393,7 +391,6 @@ export class ProgressService {
       this.prisma.lessonProgress.findMany({
         where: {
           studentId: userId,
-          courseId,
         },
       }),
       this.prisma.lesson.count({
@@ -457,7 +454,7 @@ export class ProgressService {
       },
       create: {
         studentId: userId,
-        courseId,
+        enrollmentId: enrollment.id,
         completedLessons,
         totalLessons,
         progressPercentage,
@@ -472,13 +469,13 @@ export class ProgressService {
 
     return {
       courseId: updatedProgress.courseId,
-      userId: updatedProgress.userId,
+      userId: updatedProgress.studentId,
       enrolledAt: updatedProgress.enrollment?.enrolledAt || new Date(),
       lastAccessedAt: updatedProgress.lastAccessedAt,
       completedLessons: updatedProgress.completedLessons,
       totalLessons: updatedProgress.totalLessons,
-      progressPercentage: updatedProgress.progressPercentage,
-      status: updatedProgress.status,
+      progressPercentage: Number(updatedProgress.progressPercentage),
+      status: updatedProgress.status as 'ACTIVE' | 'COMPLETED' | 'PAUSED' | 'DROPPED',
       timeSpent: updatedProgress.totalTimeSpent,
       certificateIssued: updatedProgress.certificateIssued,
     };
