@@ -242,7 +242,6 @@ model StudentProgress {
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
   
-  @@unique([studentId, courseId])
   @@unique([studentId, courseId], name: "userId_courseId")
   @@map("student_progress")
 }
@@ -278,7 +277,6 @@ model LessonProgress {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   
-  @@unique([studentId, lessonId])
   @@unique([studentId, lessonId], name: "userId_lessonId")
   @@map("lesson_progress")
 }
