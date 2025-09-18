@@ -1,81 +1,38 @@
 version: '3.8'
 
 services:
-  # Reverse Proxy & SSL
-  nginx:
-    image: nginx:alpine
-    container_name: gongbu_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./infrastructure/nginx/ssl:/etc/nginx/ssl
-      - web_static:/var/www/html
-    networks:
-      - gongbu_network
-    depends_on:
-      - web-app
-      - api-gateway
-    restart: unless-stopped
-
-  # PostgreSQL Database
+  # Database
   postgres:
     image: postgres:15-alpine
     container_name: gongbu_postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-gongbu_prod}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_MULTIPLE_DATABASES: "auth_service,course_service,bot_service,payment_service,notification_service,analytics_service"
+      POSTGRES_DB: gongbu_platform
+      POSTGRES_USER: ${DB_USER:-gongbu_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/postgres/init:/docker-entrypoint-initdb.d
-      - ./backups/postgres:/backups
-    networks:
-      - gongbu_network
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-gongbu_user}"]
       interval: 30s
       timeout: 10s
       retries: 3
-    restart: unless-stopped
 
-  # Redis Cache
+  # Redis for caching
   redis:
     image: redis:7-alpine
     container_name: gongbu_redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/data
-      - ./infrastructure/redis/redis.conf:/usr/local/etc/redis/redis.conf
-    networks:
-      - gongbu_network
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
-    restart: unless-stopped
-
-  # Elasticsearch for Search
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
-    container_name: gongbu_elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    networks:
-      - gongbu_network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
-      interval: 60s
-      timeout: 30s
-      retries: 3
-    restart: unless-stopped
 
   # API Gateway
   api-gateway:
@@ -84,28 +41,26 @@ services:
       dockerfile: Dockerfile.prod
     container_name: gongbu_api_gateway
     environment:
-      NODE_ENV: production
-      PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/gongbu_prod
-      REDIS_URL: redis://redis:6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      CORS_ORIGIN: ${CORS_ORIGIN}
-      LOG_LEVEL: info
-    networks:
-      - gongbu_network
+      - NODE_ENV=production
+      - PORT=3007
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - COURSE_SERVICE_URL=http://course-service:3002
+      - BOT_SERVICE_URL=http://bot-service:3003
+      - PAYMENT_SERVICE_URL=http://payment-service:3004
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3005
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3006
+    ports:
+      - "3007:3007"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - auth-service
+      - course-service
+      - bot-service
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Auth Service
   auth-service:
@@ -114,32 +69,22 @@ services:
       dockerfile: Dockerfile.prod
     container_name: gongbu_auth_service
     environment:
-      NODE_ENV: production
-      PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/auth_service
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: 15m
-      REFRESH_TOKEN_EXPIRES_IN: 30d
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_WEBAPP_SECRET: ${TELEGRAM_WEBAPP_SECRET}
-      LOG_LEVEL: info
-    networks:
-      - gongbu_network
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3001:3001"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Course Service
   course-service:
@@ -148,68 +93,53 @@ services:
       dockerfile: Dockerfile.prod
     container_name: gongbu_course_service
     environment:
-      NODE_ENV: production
-      PORT: 3002
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/course_service
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      ELASTICSEARCH_URL: http://elasticsearch:9200
-      AUTH_SERVICE_URL: http://auth-service:3001
-      FILE_STORAGE_PATH: /app/uploads
-      LOG_LEVEL: info
-    volumes:
-      - course_uploads:/app/uploads
-    networks:
-      - gongbu_network
+      - NODE_ENV=production
+      - PORT=3002
+      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3002:3002"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
+      - postgres
+      - redis
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./uploads:/app/uploads
 
-  # Bot Service
+  # Bot Service (основной компонент)
   bot-service:
     build:
       context: ./services/bot-service
       dockerfile: Dockerfile.prod
     container_name: gongbu_bot_service
     environment:
-      NODE_ENV: production
-      PORT: 3003
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/bot_service
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      WEBHOOK_URL: ${WEBHOOK_URL}
-      AUTH_SERVICE_URL: http://auth-service:3001
-      COURSE_SERVICE_URL: http://course-service:3002
-      ADMIN_USER_IDS: ${ADMIN_USER_IDS}
-      LOG_LEVEL: info
-    networks:
-      - gongbu_network
+      - NODE_ENV=production
+      - PORT=3003
+      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}
+      - COURSE_SERVICE_URL=http://course-service:3002
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - REDIS_URL=redis://redis:6379
+      - WEBAPP_URL=${WEBAPP_URL:-https://yourdomain.com}
+    ports:
+      - "3003:3003"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
+      - course-service
+      - auth-service
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Payment Service
   payment-service:
@@ -218,30 +148,23 @@ services:
       dockerfile: Dockerfile.prod
     container_name: gongbu_payment_service
     environment:
-      NODE_ENV: production
-      PORT: 3004
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/payment_service
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      TELEGRAM_PAYMENT_TOKEN: ${TELEGRAM_PAYMENT_TOKEN}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      LOG_LEVEL: info
-    networks:
-      - gongbu_network
+      - NODE_ENV=production
+      - PORT=3004
+      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
+      - REDIS_URL=redis://redis:6379
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - YOOKASSA_SECRET_KEY=${YOOKASSA_SECRET_KEY}
+    ports:
+      - "3004:3004"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Notification Service
   notification-service:
@@ -250,118 +173,54 @@ services:
       dockerfile: Dockerfile.prod
     container_name: gongbu_notification_service
     environment:
-      NODE_ENV: production
-      PORT: 3006
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/notification_service
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
-      EMAIL_FROM: ${EMAIL_FROM}
-      LOG_LEVEL: info
-    networks:
-      - gongbu_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
-
-  # Web Application
-  web-app:
-    build:
-      context: ./apps/web-app
-      dockerfile: Dockerfile.prod
-      args:
-        - VITE_API_BASE_URL=${API_BASE_URL}
-        - VITE_WEBSOCKET_URL=${WEBSOCKET_URL}
-    container_name: gongbu_web_app
-    environment:
-      NODE_ENV: production
-    volumes:
-      - web_static:/app/dist
-    networks:
-      - gongbu_network
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
-
-  # Monitoring Services
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: gongbu_prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-    volumes:
-      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    networks:
-      - gongbu_network
-    restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: gongbu_grafana
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-      - GF_SERVER_DOMAIN=${DOMAIN_NAME}
-      - GF_SERVER_ROOT_URL=https://${DOMAIN_NAME}/grafana/
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./infrastructure/monitoring/grafana:/etc/grafana/provisioning
-    networks:
-      - gongbu_network
-    restart: unless-stopped
-
-  # Log Management
-  loki:
-    image: grafana/loki:latest
-    container_name: gongbu_loki
+      - NODE_ENV=production
+      - PORT=3005
+      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
+      - REDIS_URL=redis://redis:6379
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     ports:
-      - "3100:3100"
-    volumes:
-      - ./infrastructure/logging/loki.yml:/etc/loki/loki.yml
-      - loki_data:/loki
-    networks:
-      - gongbu_network
+      - "3005:3005"
+    depends_on:
+      - postgres
+      - redis
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: ./services/analytics-service
+      dockerfile: Dockerfile.prod
+    container_name: gongbu_analytics_service
+    environment:
+      - NODE_ENV=production
+      - PORT=3006
+      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3006:3006"
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:
     driver: local
-  redis_data:
-    driver: local
-  elasticsearch_data:
-    driver: local
-  course_uploads:
-    driver: local
-  web_static:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
-    driver: local
-  loki_data:
+  uploads:
     driver: local
 
 networks:
-  gongbu_network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.30.0.0/16
+  default:
+    name: gongbu_network
