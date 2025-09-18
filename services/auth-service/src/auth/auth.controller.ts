@@ -60,6 +60,22 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
+  private transformUserProfile(profile: any): UserProfileResponseDto {
+    return {
+      ...profile,
+      subscriptionExpiresAt: profile.subscriptionExpiresAt?.toISOString(),
+      lastLoginAt: profile.lastLoginAt?.toISOString(),
+      createdAt: profile.createdAt?.toISOString(),
+      updatedAt: profile.updatedAt?.toISOString(),
+      // Add missing fields with defaults
+      status: profile.status || 'ACTIVE',
+      isVerified: profile.isVerified || false,
+      language: profile.language || 'en',
+      timezone: profile.timezone || 'UTC',
+      loginCount: profile.loginCount || 0,
+    };
+  }
+
   @Post('login')
   @ApiOperation({ summary: 'Login with Telegram WebApp data' })
   @ApiResponse({
@@ -80,7 +96,10 @@ export class AuthController {
       loginDto.userAgent,
     );
 
-    return result;
+    return {
+      ...result,
+      user: this.transformUserProfile(result.user),
+    };
   }
 
   @Post('refresh')
@@ -135,7 +154,8 @@ export class AuthController {
   async getProfile(@GetUser() user: UserContext): Promise<UserProfileResponseDto> {
     this.logger.debug('GET /auth/me');
     
-    return await this.userService.getUserProfile(user.userId);
+    const profile = await this.userService.getUserProfile(user.userId);
+    return this.transformUserProfile(profile);
   }
 
   @Put('me')
@@ -153,7 +173,8 @@ export class AuthController {
   ): Promise<UserProfileResponseDto> {
     this.logger.debug('PUT /auth/me');
     
-    return await this.userService.updateUserProfile(user.userId, updateDto);
+    const profile = await this.userService.updateUserProfile(user.userId, updateDto);
+    return this.transformUserProfile(profile);
   }
 
   @Delete('me')
@@ -181,7 +202,13 @@ export class AuthController {
   async getActiveSessions(@GetUser() user: UserContext): Promise<UserSessionDto[]> {
     this.logger.debug('GET /auth/sessions');
     
-    return await this.authService.getUserActiveSessions(user.userId);
+    const sessions = await this.authService.getUserActiveSessions(user.userId);
+    return sessions.map(session => ({
+      ...session,
+      lastUsedAt: session.lastUsedAt?.toISOString(),
+      createdAt: session.createdAt?.toISOString(),
+      expiresAt: session.expiresAt?.toISOString(),
+    }));
   }
 
   @Delete('sessions/:sessionId')
@@ -226,7 +253,7 @@ export class AuthController {
   ): Promise<UserListResponseDto> {
     this.logger.debug('GET /auth/users');
     
-    return await this.userService.getUsers(
+    const result = await this.userService.getUsers(
       {
         page: page || 1,
         limit: limit || 20,
@@ -235,6 +262,11 @@ export class AuthController {
       },
       user.userId,
     );
+    
+    return {
+      ...result,
+      users: result.users.map(u => this.transformUserProfile(u)),
+    };
   }
 
   @Get('users/stats')
@@ -271,7 +303,8 @@ export class AuthController {
   ): Promise<UserProfileResponseDto> {
     this.logger.debug(`PUT /auth/users/${userId}/role`);
     
-    return await this.userService.updateUserRole(userId, roleDto.role, admin.userId);
+    const result = await this.userService.updateUserRole(userId, roleDto.role, admin.userId);
+    return this.transformUserProfile(result);
   }
 
   @Put('users/:userId/ban')
@@ -293,7 +326,8 @@ export class AuthController {
   ): Promise<UserProfileResponseDto> {
     this.logger.debug(`PUT /auth/users/${userId}/ban`);
     
-    return await this.userService.banUser(userId, reason, admin.userId);
+    const result = await this.userService.banUser(userId, reason, admin.userId);
+    return this.transformUserProfile(result);
   }
 
   @Delete('users/:userId/ban')
@@ -313,7 +347,8 @@ export class AuthController {
   ): Promise<UserProfileResponseDto> {
     this.logger.debug(`DELETE /auth/users/${userId}/ban`);
     
-    return await this.userService.unbanUser(userId, admin.userId);
+    const result = await this.userService.unbanUser(userId, admin.userId);
+    return this.transformUserProfile(result);
   }
 
   // Service endpoints
