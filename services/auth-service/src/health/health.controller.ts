@@ -107,7 +107,7 @@ export class HealthController {
     };
   }
 
-  private async checkDatabase() {
+  private async checkDatabase(): Promise<{ database: { status: string; [key: string]: any } }> {
     try {
       await this.prisma.$queryRaw`SELECT 1`;
       return {
@@ -116,7 +116,12 @@ export class HealthController {
         },
       };
     } catch (error) {
-      throw new Error(`Database connection failed: ${error.message}`);
+      return {
+        database: {
+          status: 'down',
+          message: error.message,
+        },
+      };
     }
   }
 }

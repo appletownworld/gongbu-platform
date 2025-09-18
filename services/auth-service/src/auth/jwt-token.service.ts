@@ -87,7 +87,7 @@ export class JwtTokenService {
 
     const payload: AccessTokenPayload = {
       sub: user.id,
-      telegram_id: user.telegramId,
+      telegram_id: Number(user.telegramId),
       email: user.email || undefined,
       role: user.role,
       subscription_plan: user.subscriptionPlan,
