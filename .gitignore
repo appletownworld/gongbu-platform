@@ -187,3 +187,9 @@ temp/
 
 # Production secrets (keep template)
 # .env.production (keep as template)
+
+# Server configuration files (contains sensitive infrastructure info)
+nginx.conf
+nginx-*.conf
+apache2.conf
+httpd.conf
