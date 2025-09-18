@@ -29,6 +29,7 @@ describe('AuthService', () => {
     isVerified: false,
     subscriptionPlan: SubscriptionPlan.FREE,
     subscriptionExpiresAt: null,
+    subscriptionCanceledAt: null,
     language: 'en',
     timezone: 'UTC',
     notificationPrefs: {},

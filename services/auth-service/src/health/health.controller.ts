@@ -45,7 +45,19 @@ export class HealthController {
   check() {
     return this.health.check([
       // Database connectivity
-      () => this.checkDatabase(),
+      async () => {
+        try {
+          await this.prisma.$queryRaw`SELECT 1`;
+          return {
+            database: {
+              status: 'up',
+              message: 'Database connection successful',
+            },
+          };
+        } catch (error) {
+          throw new Error(`Database connection failed: ${error.message}`);
+        }
+      },
       
       // Memory usage (heap should not exceed 512MB)
       () => this.memory.checkHeap('memory_heap', 512 * 1024 * 1024),
@@ -107,21 +119,4 @@ export class HealthController {
     };
   }
 
-  private async checkDatabase(): Promise<{ database: { status: string; [key: string]: any } }> {
-    try {
-      await this.prisma.$queryRaw`SELECT 1`;
-      return {
-        database: {
-          status: 'up',
-        },
-      };
-    } catch (error) {
-      return {
-        database: {
-          status: 'down',
-          message: error.message,
-        },
-      };
-    }
-  }
 }

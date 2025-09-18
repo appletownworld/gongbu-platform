@@ -51,6 +51,7 @@ jobs:
           
           # Telegram
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_BOT_USERNAME=gongbu_platform_bot
           TELEGRAM_WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}
           TELEGRAM_WEBAPP_SECRET=${{ secrets.TELEGRAM_WEBAPP_SECRET }}
           WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}
