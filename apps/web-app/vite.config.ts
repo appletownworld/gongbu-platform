@@ -10,17 +10,27 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api/auth': {
-        target: 'http://auth-service:3001',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/auth/, '')
       },
       '/api/courses': {
-        target: 'http://course-service:3002',
+        target: 'http://localhost:3002',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/courses/, '')
       },
+      '/api/lessons': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/lessons/, '')
+      },
+      '/api/progress': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/progress/, '')
+      },
       '/api/bot': {
-        target: 'http://bot-service:3003',
+        target: 'http://localhost:3003',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/bot/, '')
       }

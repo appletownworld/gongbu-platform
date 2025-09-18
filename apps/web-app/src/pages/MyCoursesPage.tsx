@@ -213,13 +213,21 @@ const MyCoursesPage: React.FC = () => {
 
                   {/* Actions */}
                   <div className="flex items-center space-x-2 pt-4 border-t border-secondary-200">
-                    <Link
-                      to={`/courses/${course.slug}`}
-                      className="btn-outline btn-sm flex-1"
-                    >
-                      <EyeIcon className="h-4 w-4 mr-1" />
-                      Просмотр
-                    </Link>
+                      <Link
+                        to={`/courses/${course.slug}/edit`}
+                        className="btn-primary btn-sm flex-1"
+                      >
+                        <PencilIcon className="h-4 w-4 mr-1" />
+                        Редактировать
+                      </Link>
+                      
+                      <Link
+                        to={`/courses/${course.slug}`}
+                        className="btn-outline btn-sm flex-1"
+                      >
+                        <EyeIcon className="h-4 w-4 mr-1" />
+                        Просмотр
+                      </Link>
                     
                     <button
                       onClick={() => handleTogglePublish(course)}

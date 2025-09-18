@@ -197,6 +197,31 @@ export const coursesApi = {
     const response = await apiClient.get<UserCourses>(`/api/courses/users/${userId}`)
     return response.data
   },
+
+  // Lessons management
+  getLessons: async (courseId: string): Promise<any[]> => {
+    const response = await apiClient.get(`/api/lessons/course/${courseId}`)
+    return response.data
+  },
+
+  createLesson: async (data: any): Promise<any> => {
+    const response = await apiClient.post('/api/lessons', data)
+    return response.data
+  },
+
+  updateLesson: async (id: string, data: any): Promise<any> => {
+    const response = await apiClient.put(`/api/lessons/${id}`, data)
+    return response.data
+  },
+
+  deleteLesson: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/lessons/${id}`)
+  },
+
+  getCourseBySlug: async (slug: string): Promise<Course> => {
+    const response = await apiClient.get<Course>(`/api/courses/slug/${slug}`)
+    return response.data
+  },
 }
 
 // Progress API

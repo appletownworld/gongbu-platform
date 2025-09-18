@@ -35,6 +35,32 @@ export interface CourseCreator {
   avatar?: string
 }
 
+export interface Lesson {
+  id: string
+  title: string
+  slug: string
+  content: string
+  contentType: LessonContentType
+  videoUrl?: string
+  audioUrl?: string
+  attachments?: any[]
+  order: number
+  duration?: number
+  isPreview: boolean
+  isRequired: boolean
+  courseId: string
+  moduleId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export enum LessonContentType {
+  TEXT = 'TEXT',
+  VIDEO = 'VIDEO',
+  AUDIO = 'AUDIO',
+  INTERACTIVE = 'INTERACTIVE'
+}
+
 export enum CourseCategory {
   PROGRAMMING = 'PROGRAMMING',
   DATA_SCIENCE = 'DATA_SCIENCE',

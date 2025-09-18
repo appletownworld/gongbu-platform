@@ -1,12 +1,12 @@
 name: Deploy to VPS
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
+  workflow_dispatch:  # Только ручной запуск через GitHub UI
+  # push:             # Автоматический деплой отключен
+  #   branches: [ main ]
+  #   paths-ignore:
+  #     - '**.md'
+  #     - 'docs/**'
 
 jobs:
   deploy:

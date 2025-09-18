@@ -12,6 +12,8 @@ import CoursesPage from '@/pages/CoursesPage'
 import CourseDetailPage from '@/pages/CourseDetailPage'
 import CreateCoursePage from '@/pages/CreateCoursePage'
 import MyCoursesPage from '@/pages/MyCoursesPage'
+import CourseEditorPage from '@/pages/CourseEditorPage'
+import StudentApp from '@/pages/StudentApp'
 import LoginPage from '@/pages/auth/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
 import ProfilePage from '@/pages/ProfilePage'
@@ -39,6 +41,10 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/create-course" element={<CreateCoursePage />} />
             <Route path="/my-courses" element={<MyCoursesPage />} />
+            <Route path="/courses/:slug/edit" element={<CourseEditorPage />} />
+            
+            {/* Student Telegram WebApp */}
+            <Route path="/student/:slug" element={<StudentApp />} />
             
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
