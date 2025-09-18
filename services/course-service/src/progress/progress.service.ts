@@ -64,7 +64,7 @@ export class ProgressService {
     // Проверяем, не записан ли уже студент
     const existingEnrollment = await this.prisma.enrollment.findFirst({
       where: {
-        userId,
+        studentId: userId,
         courseId,
         status: { not: 'DROPPED' },
       },
@@ -77,7 +77,7 @@ export class ProgressService {
     // Создаем запись на курс
     const enrollment = await this.prisma.enrollment.create({
       data: {
-        userId,
+        studentId: userId,
         courseId,
         enrollmentType,
         paymentId,
@@ -88,7 +88,7 @@ export class ProgressService {
     // Создаем запись прогресса
     const progress = await this.prisma.studentProgress.create({
       data: {
-        userId,
+        studentId: userId,
         courseId,
         completedLessons: 0,
         totalLessons: course.lessons.length,
@@ -122,7 +122,7 @@ export class ProgressService {
     // Проверяем запись на курс
     const enrollment = await this.prisma.enrollment.findFirst({
       where: {
-        userId,
+        studentId: userId,
         courseId,
         status: 'ACTIVE',
       },
@@ -145,7 +145,7 @@ export class ProgressService {
     await this.prisma.lessonProgress.upsert({
       where: {
         userId_lessonId: {
-          userId,
+          studentId: userId,
           lessonId,
         },
       },
@@ -156,7 +156,7 @@ export class ProgressService {
         lastAccessedAt: new Date(),
       },
       create: {
-        userId,
+        studentId: userId,
         lessonId,
         courseId,
         timeSpent,
@@ -177,7 +177,7 @@ export class ProgressService {
   async getStudentProgress(userId: string, courseId: string): Promise<ProgressSummary | null> {
     const progress = await this.prisma.studentProgress.findFirst({
       where: {
-        userId,
+        studentId: userId,
         courseId,
       },
       include: {
@@ -213,7 +213,7 @@ export class ProgressService {
   }> {
     const enrollments = await this.prisma.enrollment.findMany({
       where: {
-        userId,
+        studentId: userId,
         status: { not: 'DROPPED' },
       },
       include: {
@@ -272,7 +272,7 @@ export class ProgressService {
   async getLessonProgress(userId: string, courseId: string): Promise<any[]> {
     const lessonProgress = await this.prisma.lessonProgress.findMany({
       where: {
-        userId,
+        studentId: userId,
         courseId,
       },
       include: {
@@ -314,7 +314,7 @@ export class ProgressService {
 
     const enrollment = await this.prisma.enrollment.findFirst({
       where: {
-        userId,
+        studentId: userId,
         courseId,
         status: { not: 'DROPPED' },
       },
@@ -335,7 +335,7 @@ export class ProgressService {
       }),
       this.prisma.studentProgress.updateMany({
         where: {
-          userId,
+          studentId: userId,
           courseId,
         },
         data: {
@@ -353,7 +353,7 @@ export class ProgressService {
   async issueCertificate(userId: string, courseId: string): Promise<any> {
     const progress = await this.prisma.studentProgress.findFirst({
       where: {
-        userId,
+        studentId: userId,
         courseId,
         status: 'COMPLETED',
         certificateIssued: false,
@@ -366,7 +366,7 @@ export class ProgressService {
 
     const certificate = await this.prisma.courseCertificate.create({
       data: {
-        userId,
+        studentId: userId,
         courseId,
         issueDate: new Date(),
         certificateNumber: this.generateCertificateNumber(userId, courseId),
@@ -392,7 +392,7 @@ export class ProgressService {
     const [lessonProgress, totalLessons, enrollment] = await this.prisma.$transaction([
       this.prisma.lessonProgress.findMany({
         where: {
-          userId,
+          studentId: userId,
           courseId,
         },
       }),
@@ -404,7 +404,7 @@ export class ProgressService {
       }),
       this.prisma.enrollment.findFirst({
         where: {
-          userId,
+          studentId: userId,
           courseId,
           status: 'ACTIVE',
         },
@@ -443,7 +443,7 @@ export class ProgressService {
     const updatedProgress = await this.prisma.studentProgress.upsert({
       where: {
         userId_courseId: {
-          userId,
+          studentId: userId,
           courseId,
         },
       },
@@ -456,7 +456,7 @@ export class ProgressService {
         lastAccessedAt: new Date(),
       },
       create: {
-        userId,
+        studentId: userId,
         courseId,
         completedLessons,
         totalLessons,

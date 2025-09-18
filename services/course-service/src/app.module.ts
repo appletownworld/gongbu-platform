@@ -46,7 +46,7 @@ import { validateEnv } from './config/env.validation';
     CacheModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        store: redisStore,
+        store: redisStore as any,
         host: configService.get('REDIS_HOST', 'localhost'),
         port: configService.get('REDIS_PORT', 6379),
         password: configService.get('REDIS_PASSWORD'),
