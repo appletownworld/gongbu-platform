@@ -47,6 +47,7 @@ model Course {
   // Student interactions
   enrollments       Enrollment[]
   reviews           CourseReview[]
+  certificates      CourseCertificate[]
   
   // Analytics
   viewCount         Int               @default(0)
@@ -116,6 +117,7 @@ model Lesson {
   
   // Settings
   isPreview        Boolean           @default(false)
+  isPublished      Boolean           @default(false)
   settings         Json              @default("{}")
   
   // Timestamps
@@ -161,6 +163,7 @@ model Assignment {
   
   // Order and settings
   order          Int
+  isPublished    Boolean              @default(false)
   settings       Json                 @default("{}")
   
   // Timestamps
@@ -188,6 +191,8 @@ model Enrollment {
   progress        StudentProgress[]
   lessonProgress  LessonProgress[]
   submissions     AssignmentSubmission[]
+  reviews         CourseReview[]
+  certificate     CourseCertificate?
   
   // Payment info
   paymentId       String?            // Payment transaction ID
@@ -228,11 +233,17 @@ model StudentProgress {
   // Performance
   averageScore       Decimal?    @db.Decimal(5, 2)
   
+  // Additional fields for compatibility
+  status             String      @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, DROPPED
+  totalTimeSpent     Int         @default(0) // in minutes
+  certificateIssued  Boolean     @default(false)
+  
   // Timestamps
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
   
   @@unique([studentId, courseId])
+  @@unique([studentId, courseId], name: "userId_courseId")
   @@map("student_progress")
 }
 
@@ -249,6 +260,7 @@ model LessonProgress {
   // Progress status
   status        LessonStatus   @default(NOT_STARTED)
   progressPercentage Decimal   @default(0) @db.Decimal(5, 2)
+  completed     Boolean        @default(false)
   
   // Time tracking
   startedAt     DateTime?
@@ -258,11 +270,16 @@ model LessonProgress {
   // Video/audio progress
   watchTime     Int           @default(0) // in seconds
   
+  // Additional progress fields
+  score         Decimal?      @db.Decimal(5, 2)
+  lastAccessedAt DateTime?
+  
   // Timestamps
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   
   @@unique([studentId, lessonId])
+  @@unique([studentId, lessonId], name: "userId_lessonId")
   @@map("lesson_progress")
 }
 
@@ -303,23 +320,62 @@ model AssignmentSubmission {
 }
 
 model CourseReview {
-  id          String       @id @default(uuid())
-  studentId   String       // User ID from auth service
+  id            String      @id @default(uuid())
+  userId        String      // User ID from auth service
   
-  courseId    String
-  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
   
-  rating      Int          // 1-5 stars
-  comment     String?
+  enrollmentId  String
+  enrollment    Enrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   
-  isVerified  Boolean      @default(false) // Verified purchase
-  isVisible   Boolean      @default(true)
+  // Review content
+  rating        Int         // 1-5 stars
+  title         String?
+  comment       String?
   
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  // Status
+  isVerified    Boolean     @default(false)
+  isPublic      Boolean     @default(true)
   
-  @@unique([studentId, courseId])
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@unique([userId, courseId])
   @@map("course_reviews")
+}
+
+model CourseCertificate {
+  id            String      @id @default(uuid())
+  userId        String      // User ID from auth service
+  
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  enrollmentId  String      @unique
+  enrollment    Enrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  
+  // Certificate details
+  certificateId String      @unique // Public certificate ID
+  issueDate     DateTime    @default(now())
+  expiryDate    DateTime?
+  
+  // Content
+  title         String
+  description   String?
+  skills        String[]    @default([])
+  
+  // Status
+  status        String      @default("ACTIVE") // ACTIVE, REVOKED, EXPIRED
+  isPublic      Boolean     @default(true)
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@unique([userId, courseId])
+  @@map("course_certificates")
 }
 
 // Enums
