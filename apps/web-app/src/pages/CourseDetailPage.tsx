@@ -14,7 +14,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from '@heroicons/react/24/outline'
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
+// HeartSolidIcon import removed - not used
 import { coursesApi, progressApi } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'

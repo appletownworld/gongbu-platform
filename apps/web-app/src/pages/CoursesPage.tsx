@@ -8,11 +8,10 @@ import {
   StarIcon,
   ClockIcon,
   UsersIcon,
-  XMarkIcon
 } from '@heroicons/react/24/outline'
 import { coursesApi } from '@/services/api'
 import { Course, CourseCategory, CourseDifficulty } from '@/types/course'
-import { clsx } from 'clsx'
+// clsx import removed - not used
 
 const CoursesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()

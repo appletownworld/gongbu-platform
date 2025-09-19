@@ -12,7 +12,7 @@ import {
   MicrophoneIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline'
-import { coursesApi, progressApi } from '@/services/api'
+import { coursesApi } from '@/services/api'
 
 // Telegram WebApp types
 declare global {
@@ -62,7 +62,7 @@ const StudentApp: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0)
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set())
-  const [isLessonCompleted, setIsLessonCompleted] = useState(false)
+  // const [isLessonCompleted, setIsLessonCompleted] = useState(false) // Unused variable
 
   // Telegram WebApp initialization
   useEffect(() => {
@@ -102,13 +102,13 @@ const StudentApp: React.FC = () => {
 
   // Complete lesson mutation
   const completeLessonMutation = useMutation({
-    mutationFn: async (lessonId: string) => {
+    mutationFn: async (_lessonId: string) => {
       // Mock API call - in real implementation this would call progressApi
       return new Promise(resolve => setTimeout(resolve, 1000))
     },
     onSuccess: (_, lessonId) => {
       setCompletedLessons(prev => new Set(prev).add(lessonId))
-      setIsLessonCompleted(true)
+      // setIsLessonCompleted(true) // Unused function
     }
   })
 
@@ -147,7 +147,7 @@ const StudentApp: React.FC = () => {
         tg.MainButton.setText('Следующий урок →')
         const nextHandler = () => {
           setCurrentLessonIndex(prev => prev + 1)
-          setIsLessonCompleted(false)
+          // setIsLessonCompleted(false) // Unused function
         }
         tg.MainButton.onClick(nextHandler)
         tg.MainButton.show()
@@ -338,7 +338,7 @@ const StudentApp: React.FC = () => {
 
             {/* Text content */}
             <div className="prose prose-sm max-w-none text-secondary-900">
-              {currentLesson.content.split('\n').map((paragraph, index) => (
+              {currentLesson.content.split('\n').map((paragraph: string, index: number) => (
                 <p key={index} className="mb-3 leading-relaxed">
                   {paragraph}
                 </p>
@@ -384,7 +384,7 @@ const StudentApp: React.FC = () => {
                   <button
                     onClick={() => {
                       setCurrentLessonIndex(prev => prev + 1)
-                      setIsLessonCompleted(false)
+                      // setIsLessonCompleted(false) // Unused function
                     }}
                     className="flex items-center space-x-2 px-4 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700 transition-colors"
                   >

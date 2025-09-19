@@ -26,7 +26,7 @@ RUN npm install --omit=dev && npm cache clean --force
 FROM node:18-alpine AS production
 
 # Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init openssl-dev libssl1.1
 
 # Create app user
 RUN addgroup -g 1001 -S nodejs

@@ -6,7 +6,6 @@ import {
   ChartBarIcon,
   UsersIcon,
   StarIcon,
-  CheckIcon,
   ArrowRightIcon,
   PlayIcon
 } from '@heroicons/react/24/outline'

@@ -1,4 +1,4 @@
-import React from 'react'
+// React import removed - not needed in modern React
 import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 

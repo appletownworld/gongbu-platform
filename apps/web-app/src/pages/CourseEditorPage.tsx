@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import {
@@ -9,19 +9,16 @@ import {
   PlayIcon,
   DocumentTextIcon,
   MicrophoneIcon,
-  PhotoIcon,
   TrashIcon,
   EyeIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
   CheckCircleIcon,
   ClockIcon,
   GlobeAltIcon,
   PencilIcon
 } from '@heroicons/react/24/outline'
 import { coursesApi } from '@/services/api'
-import { Course, Lesson, LessonContentType } from '@/types/course'
-import { useAuth } from '@/contexts/AuthContext'
+import { Lesson, LessonContentType } from '@/types/course'
+// useAuth import removed - not used
 
 interface CreateLessonDto {
   title: string
@@ -38,9 +35,9 @@ interface CreateLessonDto {
 
 const CourseEditorPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
-  const navigate = useNavigate()
+  // const navigate = useNavigate() // Unused
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  // const { user } = useAuth() // Unused
   
   const [activeTab, setActiveTab] = useState<'info' | 'content' | 'settings'>('content')
   const [showLessonModal, setShowLessonModal] = useState(false)
@@ -50,7 +47,7 @@ const CourseEditorPage: React.FC = () => {
   const [lessonForm, setLessonForm] = useState({
     title: '',
     content: '',
-    contentType: 'TEXT' as LessonContentType,
+    contentType: LessonContentType.TEXT,
     videoUrl: '',
     audioUrl: '',
     duration: '',
@@ -111,7 +108,7 @@ const CourseEditorPage: React.FC = () => {
     setLessonForm({
       title: '',
       content: '',
-      contentType: 'TEXT',
+      contentType: LessonContentType.TEXT,
       videoUrl: '',
       audioUrl: '',
       duration: '',
@@ -148,12 +145,12 @@ const CourseEditorPage: React.FC = () => {
     setEditingLesson(lesson)
     setLessonForm({
       title: lesson.title,
-      content: lesson.content,
+      content: lesson.content || '',
       contentType: lesson.contentType,
       videoUrl: lesson.videoUrl || '',
       audioUrl: lesson.audioUrl || '',
       duration: lesson.duration?.toString() || '',
-      isPreview: lesson.isPreview
+      isPreview: false // lesson.isPreview not in interface - using default
     })
     setShowLessonModal(true)
   }
@@ -237,7 +234,7 @@ const CourseEditorPage: React.FC = () => {
               
               {course.isPublished && (
                 <a
-                  href={`https://t.me/${course.botUsername}`}
+                  href={`https://t.me/gongbu_platform_bot`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-secondary flex items-center space-x-2"
@@ -327,7 +324,7 @@ const CourseEditorPage: React.FC = () => {
                                       {lesson.duration} мин
                                     </span>
                                   )}
-                                  {lesson.isPreview && (
+                                  {lesson.isFree && (
                                     <span className="badge badge-secondary text-xs">Бесплатный</span>
                                   )}
                                 </div>

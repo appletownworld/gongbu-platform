@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('accessToken', response.accessToken)
       localStorage.setItem('refreshToken', response.refreshToken)
 
-      return response.accessToken
+      // Token refreshed successfully
     } catch (error) {
       console.error('Token refresh failed:', error)
       

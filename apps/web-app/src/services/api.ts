@@ -18,7 +18,7 @@ import {
 } from '@/types/course'
 
 // Base API configuration
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000'
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -216,11 +216,6 @@ export const coursesApi = {
 
   deleteLesson: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/lessons/${id}`)
-  },
-
-  getCourseBySlug: async (slug: string): Promise<Course> => {
-    const response = await apiClient.get<Course>(`/api/courses/slug/${slug}`)
-    return response.data
   },
 }
 

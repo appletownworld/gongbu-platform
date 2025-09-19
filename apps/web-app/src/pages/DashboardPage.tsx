@@ -7,13 +7,11 @@ import {
   TrophyIcon,
   ClockIcon,
   PlayIcon,
-  StarIcon,
   ArrowRightIcon,
   FireIcon,
-  CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 import { useAuth } from '@/contexts/AuthContext'
-import { progressApi, coursesApi } from '@/services/api'
+import { progressApi } from '@/services/api'
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth()
@@ -181,19 +179,19 @@ const DashboardPage: React.FC = () => {
                           <div className="mb-2">
                             <div className="flex items-center justify-between text-sm text-secondary-500 mb-1">
                               <span>Прогресс</span>
-                              <span>{course.progress?.progressPercentage || 0}%</span>
+                              <span>0%</span>
                             </div>
                             <div className="progress progress-primary">
                               <div 
                                 className="progress-bar" 
-                                style={{ width: `${course.progress?.progressPercentage || 0}%` }}
+                                style={{ width: `0%` }}
                               />
                             </div>
                           </div>
 
                           <div className="flex items-center justify-between">
                             <div className="text-sm text-secondary-500">
-                              {course.progress?.completedLessons || 0} из {course.lessonCount} уроков
+                              0 из {course.lessonCount} уроков
                             </div>
                             <Link
                               to={`/courses/${course.slug}`}
