@@ -189,6 +189,8 @@ temp/
 # .env.production (keep as template)
 
 # Server configuration files (contains sensitive infrastructure info)
+# Allow web-app local nginx.conf needed for image build
+!/apps/web-app/nginx.conf
 nginx.conf
 nginx-*.conf
 apache2.conf
