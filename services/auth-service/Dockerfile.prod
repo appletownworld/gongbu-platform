@@ -40,6 +40,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
 
+# Regenerate Prisma client for Debian
+RUN npx prisma generate
+
 # Switch to non-root user
 USER nextjs
 
