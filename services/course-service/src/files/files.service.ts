@@ -22,7 +22,8 @@ export class FilesService {
 
   constructor(
     private configService: ConfigService,
-    private validationService: FileValidationService
+    private validationService: FileValidationService,
+    private prisma: PrismaService
   ) {
     this.storageConfig = {
       provider: this.configService.get<'local' | 's3' | 'gcs'>('STORAGE_PROVIDER', 'local'),
@@ -290,7 +291,7 @@ export class FilesService {
         data: {
           id: fileInfo.id,
           filename: fileInfo.filename,
-          originalFilename: fileInfo.originalFilename,
+          originalFilename: fileInfo.originalName,
           mimeType: fileInfo.mimeType,
           size: fileInfo.size,
           path: fileInfo.path,
@@ -373,7 +374,7 @@ export class FilesService {
       // Delete physical file
       const fullPath = path.join(this.uploadPath, fileRecord.path);
       try {
-        await fs.unlink(fullPath);
+        await fs.promises.unlink(fullPath);
         this.logger.log(`✅ Physical file deleted: ${fullPath}`);
       } catch (error) {
         this.logger.warn(`⚠️ Could not delete physical file: ${error.message}`);

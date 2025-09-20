@@ -791,7 +791,7 @@ export class AssignmentController {
   async getAssignmentSubmissionTemplate(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log(`Получение шаблона сдачи для задания: ${id}`);
 
-    const assignment = await this.assignmentService.getAssignmentById(id);
+    const assignment = await this.assignmentService.getAssignment(id);
     if (!assignment) {
       throw new NotFoundException('Задание не найдено');
     }

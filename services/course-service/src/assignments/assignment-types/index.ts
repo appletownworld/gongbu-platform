@@ -6,6 +6,10 @@
 export { QuizAssignmentHandler, type QuizAssignmentContent, type QuizSubmissionContent, type QuizQuestion } from './quiz.assignment';
 export { CodeAssignmentHandler, type CodeAssignmentContent, type CodeSubmissionContent, type CodeTestCase } from './code.assignment';
 
+// Импортируем классы для использования в фабрике
+import { QuizAssignmentHandler } from './quiz.assignment';
+import { CodeAssignmentHandler } from './code.assignment';
+
 // Базовый интерфейс для всех типов заданий
 export interface BaseAssignmentHandler<TContent = any, TSubmission = any> {
   validateContent(content: any): { isValid: boolean; errors: string[] };
@@ -121,6 +125,45 @@ export class AssignmentUtils {
   }
 
   /**
+   * Генерирует шаблон для подачи задания
+   */
+  static generateSubmissionTemplate(assignment: any): any {
+    switch (assignment.type) {
+      case 'QUIZ':
+        return {
+          answers: assignment.content?.questions?.map(() => null) || []
+        };
+      case 'CODE':
+        return {
+          code: '',
+          language: assignment.content?.language || 'javascript'
+        };
+      case 'ESSAY':
+        return {
+          text: '',
+          wordCount: 0
+        };
+      case 'PROJECT':
+        return {
+          description: '',
+          files: []
+        };
+      case 'UPLOAD':
+        return {
+          files: []
+        };
+      case 'PEER_REVIEW':
+        return {
+          review: '',
+          rating: 0,
+          criteria: {}
+        };
+      default:
+        return {};
+    }
+  }
+
+  /**
    * Получает рекомендуемые настройки для типа задания
    */
   static getDefaultSettings(type: string): Record<string, any> {
@@ -167,6 +210,13 @@ export class AssignmentUtils {
     };
 
     return defaults[type.toUpperCase() as keyof typeof defaults] || {};
+  }
+
+  /**
+   * Получает поддерживаемые типы заданий
+   */
+  static getSupportedTypes(): string[] {
+    return ['QUIZ', 'CODE', 'ESSAY', 'PROJECT', 'UPLOAD', 'PEER_REVIEW'];
   }
 }
 
