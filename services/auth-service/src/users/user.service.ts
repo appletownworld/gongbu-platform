@@ -55,7 +55,7 @@ export class UserService {
         firstName: telegramData.firstName,
         lastName: telegramData.lastName,
         avatarUrl: telegramData.photoUrl,
-        lastLoginAt: telegramData.authDate,
+        lastLoginAt: new Date(telegramData.authDate * 1000),
       });
 
       // Update login info

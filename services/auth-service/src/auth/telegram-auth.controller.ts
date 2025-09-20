@@ -185,7 +185,6 @@ export class TelegramAuthController {
         firstName: loginDto.telegramUser.first_name,
         lastName: loginDto.telegramUser.last_name,
         username: loginDto.telegramUser.username,
-        languageCode: loginDto.telegramUser.language_code,
         photoUrl: loginDto.telegramUser.photo_url,
         authDate: loginDto.initData?.auth_date || Math.floor(Date.now() / 1000)
       });

@@ -189,7 +189,7 @@ export class TelegramOAuthService {
     firstName?: string;
     lastName?: string;
     photoUrl?: string;
-    authDate: Date;
+    authDate: number;
   } {
     if (!telegramData.user) {
       throw new UnauthorizedException('No user data in Telegram init data');
@@ -202,7 +202,7 @@ export class TelegramOAuthService {
       firstName: user.first_name,
       lastName: user.last_name,
       photoUrl: user.photo_url,
-      authDate: new Date(telegramData.auth_date * 1000),
+      authDate: telegramData.auth_date,
     };
   }
 }
