@@ -345,7 +345,7 @@ export class CourseCommandsService {
         {
           text: '🚀 Открыть',
           web_app: {
-            url: `${webAppUrl}/student/${course.slug}`
+            url: `${webAppUrl}/student/${course.slug || course.id}`
           }
         }
       ]);
@@ -361,7 +361,7 @@ export class CourseCommandsService {
         {
           text: '📖 Повторить',
           web_app: {
-            url: `${webAppUrl}/student/${course.slug}`
+            url: `${webAppUrl}/student/${course.slug || course.id}`
           }
         }
       ]);
@@ -377,7 +377,7 @@ export class CourseCommandsService {
         {
           text: '🎯 Начать',
           web_app: {
-            url: `${webAppUrl}/student/${course.slug}`
+            url: `${webAppUrl}/student/${course.slug || course.id}`
           }
         }
       ]);

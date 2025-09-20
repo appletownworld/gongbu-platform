@@ -446,7 +446,7 @@ export class BotBusinessLogic {
         [
           {
             text: '🌐 Открыть в WebApp',
-            web_app: { url: `http://localhost:3000/student/${course.slug}` },
+            web_app: { url: `http://localhost:3000/student/${course.slug || course.id}` },
           },
         ],
         [

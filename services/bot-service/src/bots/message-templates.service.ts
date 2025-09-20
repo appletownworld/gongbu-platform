@@ -192,7 +192,7 @@ ${completedLessons === totalLessons ? '🎉 Курс завершен!' : '⚡ �
         { text: '⚙️ Настройки', callback_data: 'settings' },
       ],
       [
-        { text: '🌐 Открыть в WebApp', web_app: { url: `http://localhost:3000/student/${course.slug}` } },
+        { text: '🌐 Открыть в WebApp', web_app: { url: `http://localhost:3000/student/${course.slug || course.id}` } },
       ],
     ];
 

@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 export interface Course {
   id: string;
   title: string;
+  slug: string; // Добавляем поле slug
   description: string;
   shortDescription?: string;
   imageUrl?: string;
@@ -302,6 +303,7 @@ export class CourseClientService {
       {
         id: 'course-1',
         title: '🐍 Python для начинающих',
+        slug: 'python-for-beginners',
         description: 'Полный курс по программированию на Python с нуля до продвинутого уровня',
         shortDescription: 'Изучите Python за 30 дней',
         imageUrl: 'https://via.placeholder.com/300x200?text=Python+Course',
@@ -328,6 +330,7 @@ export class CourseClientService {
       {
         id: 'course-2',
         title: '⚛️ React + TypeScript',
+        slug: 'react-typescript',
         description: 'Создание современных веб-приложений с React и TypeScript',
         shortDescription: 'Frontend разработка',
         imageUrl: 'https://via.placeholder.com/300x200?text=React+Course',
@@ -354,6 +357,7 @@ export class CourseClientService {
       {
         id: 'course-3',
         title: '🤖 Machine Learning',
+        slug: 'machine-learning',
         description: 'Машинное обучение на практике с Python и scikit-learn',
         shortDescription: 'ML с нуля',
         imageUrl: 'https://via.placeholder.com/300x200?text=ML+Course',
