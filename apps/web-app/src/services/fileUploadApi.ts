@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { UploadResult, FileUploadContext } from '../components/FileUpload';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_COURSE_SERVICE_URL || 'http://localhost:3002/api/v1';
+const API_BASE_URL = import.meta.env.VITE_COURSE_SERVICE_URL || 'http://localhost:3002/api/v1';
 
 interface FileUploadRequest {
   file: File;

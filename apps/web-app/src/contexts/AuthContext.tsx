@@ -49,12 +49,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(result.user)
         setAuthSource(result.source)
         
-        const sourceMessages = {
+        const sourceMessages: Record<string, string> = {
           'telegram': '✅ Автоматическая авторизация через Telegram WebApp',
-          'stored_tokens': '✅ Автоматическая авторизация через сохраненные токены'
+          'stored_tokens': '✅ Автоматическая авторизация через сохраненные токены',
+          'none': 'Нет авторизации'
         }
         
-        console.log(sourceMessages[result.source])
+        console.log(sourceMessages[result.source] || 'Неизвестный источник авторизации')
         
         // Показываем уведомление только для Telegram авторизации
         if (result.source === 'telegram') {

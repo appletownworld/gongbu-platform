@@ -15,49 +15,7 @@ import {
 import { coursesApi } from '@/services/api'
 import { autoAuthWithTelegram, getTelegramUser, isTelegramWebApp, setupTokenRefresh } from '@/services/telegramAuth'
 
-// Telegram WebApp types
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        ready(): void
-        expand(): void
-        close(): void
-        MainButton: {
-          setText(text: string): void
-          show(): void
-          hide(): void
-          onClick(callback: () => void): void
-          offClick(callback: () => void): void
-        }
-        BackButton: {
-          show(): void
-          hide(): void
-          onClick(callback: () => void): void
-          offClick(callback: () => void): void
-        }
-        initData: string
-        initDataUnsafe: {
-          user?: {
-            id: number
-            first_name: string
-            last_name?: string
-            username?: string
-            photo_url?: string
-          }
-        }
-        themeParams: {
-          bg_color?: string
-          text_color?: string
-          hint_color?: string
-          link_color?: string
-          button_color?: string
-          button_text_color?: string
-        }
-      }
-    }
-  }
-}
+// Типы Telegram определены в types/telegram.d.ts
 
 const StudentApp: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
@@ -105,8 +63,9 @@ const StudentApp: React.FC = () => {
       tg.expand()
       
       // Apply Telegram theme
-      if (tg.themeParams.bg_color) {
-        document.body.style.backgroundColor = tg.themeParams.bg_color
+      const themeParams = (tg as any).themeParams
+      if (themeParams?.bg_color) {
+        document.body.style.backgroundColor = themeParams.bg_color
       }
       
       return () => {

@@ -54,7 +54,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   className,
   children,
   disabled = false,
-  context,
+  context: _context, // Переименовываем чтобы избежать ошибки unused
   helperText
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);

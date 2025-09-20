@@ -36,7 +36,7 @@ const ProfilePage: React.FC = () => {
               <label className="block text-sm font-medium text-secondary-700 mb-1">
                 Подписка
               </label>
-              <span className="badge-primary">{user?.subscription}</span>
+              <span className="badge-primary">{user?.subscriptionPlan || 'Базовая'}</span>
             </div>
           </div>
         </div>

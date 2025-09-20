@@ -21,7 +21,7 @@ import ProfilePage from '@/pages/ProfilePage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 // Auth components
-import ProtectedRoute, { StudentRoute, CreatorRoute, AdminRoute } from '@/components/auth/ProtectedRoute'
+import ProtectedRoute, { StudentRoute, CreatorRoute } from '@/components/auth/ProtectedRoute'
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel'
 
 // Providers

@@ -3,7 +3,7 @@
  * Автоматически регистрирует/авторизует пользователей через Telegram данные
  */
 
-import { apiClient } from './api'
+import apiClient from './api'
 
 export interface TelegramUser {
   id: number
@@ -65,7 +65,7 @@ export function getTelegramInitData(): TelegramWebAppInitData | null {
   
   return {
     user: tg.initDataUnsafe?.user,
-    query_id: tg.initDataUnsafe?.query_id,
+    query_id: (tg.initDataUnsafe as any)?.query_id,
     auth_date: tg.initDataUnsafe?.auth_date,
     hash: tg.initDataUnsafe?.hash
   }
@@ -185,8 +185,8 @@ export function isAuthenticated(): boolean {
  */
 export function setupTokenRefresh(): void {
   apiClient.interceptors.response.use(
-    (response) => response,
-    async (error) => {
+    (response: any) => response,
+    async (error: any) => {
       if (error.response?.status === 401) {
         const refreshToken = localStorage.getItem('refreshToken')
         

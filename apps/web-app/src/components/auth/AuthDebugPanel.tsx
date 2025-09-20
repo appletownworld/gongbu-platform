@@ -4,12 +4,7 @@ import { autoAuthService } from '@/services/autoAuth'
 import { authApi } from '@/services/api'
 import { 
   UserIcon, 
-  KeyIcon, 
-  CogIcon, 
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ArrowPathIcon
+  CogIcon
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
@@ -25,7 +20,6 @@ const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({ className }) => {
     authSource, 
     login, 
     autoLogin, 
-    logout, 
     hasRole,
     isTelegramWebApp 
   } = useAuth()
@@ -95,9 +89,9 @@ const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({ className }) => {
     }
 
     const tests = [
-      { role: 'STUDENT', expected: hasRole('STUDENT') },
-      { role: 'CREATOR', expected: hasRole('CREATOR') },
-      { role: 'ADMIN', expected: hasRole('ADMIN') }
+      { role: 'STUDENT', expected: hasRole('STUDENT' as any) },
+      { role: 'CREATOR', expected: hasRole('CREATOR' as any) },
+      { role: 'ADMIN', expected: hasRole('ADMIN' as any) }
     ]
 
     const passed = tests.filter(test => test.expected).length > 0
