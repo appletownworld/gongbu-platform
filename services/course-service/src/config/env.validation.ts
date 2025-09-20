@@ -46,8 +46,7 @@ export const envValidationSchema = Joi.object({
   ENABLE_VIDEO_PROCESSING: Joi.boolean().default(false),
   FFMPEG_PATH: Joi.string().optional(),
   
-  // Inter-service Communication
-  AUTH_SERVICE_URL: Joi.string().uri().default('http://auth-service:3001'),
+  // Inter-service Communication (duplicate removed)
   
   // Search (Elasticsearch)
   ELASTICSEARCH_URL: Joi.string().uri().default('http://localhost:9200'),

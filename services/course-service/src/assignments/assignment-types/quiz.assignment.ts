@@ -1,356 +1,192 @@
-/**
- * Quiz Assignment Type Handler
- * Обрабатывает создание, валидацию и автоматическую проверку квизов
- */
+import { BaseAssignmentHandler } from './index';
 
 export interface QuizQuestion {
   id: string;
-  type: 'single_choice' | 'multiple_choice' | 'true_false' | 'text' | 'number';
   question: string;
-  options?: string[]; // Для вариантов ответа
-  correctAnswer: any;
+  type: 'multiple-choice' | 'single-choice' | 'true-false';
+  options: string[];
+  correctAnswer: number | boolean;
   explanation?: string;
   points: number;
-  timeLimit?: number; // в секундах
-  required: boolean;
 }
 
 export interface QuizAssignmentContent {
   questions: QuizQuestion[];
-  shuffleQuestions: boolean;
-  shuffleAnswers: boolean;
-  showCorrectAnswers: boolean;
-  allowRetries: boolean;
-  maxRetries?: number;
-  passingPercentage: number;
-  timeLimit?: number; // общий лимит времени на весь квиз
-  showProgressBar: boolean;
-  instructions?: string;
+  timeLimit?: number; // в секундах
+  shuffleQuestions?: boolean;
+  shuffleAnswers?: boolean;
+  showCorrectAnswers?: boolean;
+  passingScore?: number; // процент для прохождения
 }
 
 export interface QuizSubmissionContent {
-  answers: Record<string, any>; // questionId -> answer
-  startTime: Date;
-  endTime: Date;
-  timeSpent: number; // в секундах
-  questionOrder?: string[]; // порядок вопросов если был shuffle
+  answers: (number | boolean | string)[];
+  timeSpent?: number; // время в секундах
+  startedAt?: Date;
+  submittedAt?: Date;
 }
 
-export class QuizAssignmentHandler {
-  /**
-   * Валидирует контент квиза
-   */
-  static validateContent(content: any): { isValid: boolean; errors: string[] } {
+export class QuizAssignmentHandler implements BaseAssignmentHandler<QuizAssignmentContent, QuizSubmissionContent> {
+  validateContent(content: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
-    if (!content.questions || !Array.isArray(content.questions)) {
-      errors.push('Квиз должен содержать массив вопросов');
+
+    if (!content || typeof content !== 'object') {
+      errors.push('Контент должен быть объектом');
+      return { isValid: false, errors };
+    }
+
+    if (!Array.isArray(content.questions)) {
+      errors.push('Поле questions должно быть массивом');
       return { isValid: false, errors };
     }
 
     if (content.questions.length === 0) {
-      errors.push('Квиз должен содержать хотя бы один вопрос');
+      errors.push('Должен быть хотя бы один вопрос');
     }
 
-    // Валидируем каждый вопрос
+    // Валидация каждого вопроса
     content.questions.forEach((question: any, index: number) => {
       if (!question.id) {
         errors.push(`Вопрос ${index + 1}: отсутствует ID`);
       }
-
-      if (!question.question || question.question.trim() === '') {
+      if (!question.question || typeof question.question !== 'string') {
         errors.push(`Вопрос ${index + 1}: отсутствует текст вопроса`);
       }
-
-      if (!question.type) {
-        errors.push(`Вопрос ${index + 1}: не указан тип вопроса`);
+      if (!['multiple-choice', 'single-choice', 'true-false'].includes(question.type)) {
+        errors.push(`Вопрос ${index + 1}: неверный тип вопроса`);
       }
-
-      if (!['single_choice', 'multiple_choice', 'true_false', 'text', 'number'].includes(question.type)) {
-        errors.push(`Вопрос ${index + 1}: недопустимый тип вопроса`);
+      if (!Array.isArray(question.options) || question.options.length < 2) {
+        errors.push(`Вопрос ${index + 1}: должно быть минимум 2 варианта ответа`);
       }
-
-      // Валидируем варианты ответов для choice-вопросов
-      if (['single_choice', 'multiple_choice'].includes(question.type)) {
-        if (!question.options || !Array.isArray(question.options) || question.options.length < 2) {
-          errors.push(`Вопрос ${index + 1}: должен содержать минимум 2 варианта ответа`);
-        }
+      if (typeof question.correctAnswer === 'undefined') {
+        errors.push(`Вопрос ${index + 1}: отсутствует правильный ответ`);
       }
-
-      // Валидируем правильный ответ
-      if (question.correctAnswer === undefined || question.correctAnswer === null) {
-        errors.push(`Вопрос ${index + 1}: не указан правильный ответ`);
-      }
-
-      // Валидируем баллы
-      if (typeof question.points !== 'number' || question.points < 0) {
-        errors.push(`Вопрос ${index + 1}: некорректное количество баллов`);
+      if (typeof question.points !== 'number' || question.points <= 0) {
+        errors.push(`Вопрос ${index + 1}: неверное количество баллов`);
       }
     });
 
     return { isValid: errors.length === 0, errors };
   }
 
-  /**
-   * Создает шаблон квиза
-   */
-  static createTemplate(): QuizAssignmentContent {
+  createTemplate(): QuizAssignmentContent {
     return {
       questions: [
         {
-          id: 'q1',
-          type: 'single_choice',
-          question: 'Пример вопроса с одним правильным ответом',
-          options: ['Вариант А', 'Вариант Б', 'Вариант В', 'Вариант Г'],
-          correctAnswer: 0, // индекс правильного ответа
-          explanation: 'Объяснение правильного ответа',
-          points: 1,
-          required: true,
-        },
-        {
-          id: 'q2',
-          type: 'multiple_choice',
-          question: 'Пример вопроса с несколькими правильными ответами',
-          options: ['Вариант А', 'Вариант Б', 'Вариант В', 'Вариант Г'],
-          correctAnswer: [0, 2], // индексы правильных ответов
-          explanation: 'Варианты А и В правильные',
-          points: 2,
-          required: true,
-        },
-        {
-          id: 'q3',
-          type: 'true_false',
-          question: 'Это утверждение истинно?',
-          correctAnswer: true,
-          explanation: 'Объяснение ответа',
-          points: 1,
-          required: true,
-        },
-        {
-          id: 'q4',
-          type: 'text',
-          question: 'Дайте краткий ответ на вопрос',
-          correctAnswer: 'ожидаемый ответ',
-          points: 3,
-          required: false,
+          id: 'question-1',
+          question: 'Пример вопроса?',
+          type: 'single-choice',
+          options: ['Вариант 1', 'Вариант 2', 'Вариант 3', 'Вариант 4'],
+          correctAnswer: 0,
+          points: 10,
+          explanation: 'Объяснение правильного ответа'
         }
       ],
+      timeLimit: 1800, // 30 минут
       shuffleQuestions: false,
       shuffleAnswers: false,
       showCorrectAnswers: true,
-      allowRetries: false,
-      passingPercentage: 60,
-      showProgressBar: true,
-      instructions: 'Внимательно прочитайте вопросы и выберите правильные ответы.'
+      passingScore: 70
     };
   }
 
-  /**
-   * Подготавливает квиз для студента (убирает правильные ответы, перемешивает если нужно)
-   */
-  static prepareForStudent(content: QuizAssignmentContent): any {
-    const prepared = JSON.parse(JSON.stringify(content));
-    
-    // Убираем правильные ответы и объяснения
-    prepared.questions = prepared.questions.map((question: QuizQuestion) => {
-      const studentQuestion = { ...question };
-      delete studentQuestion.correctAnswer;
-      delete studentQuestion.explanation;
-      
-      // Перемешиваем варианты ответов если нужно
-      if (content.shuffleAnswers && studentQuestion.options) {
-        studentQuestion.options = this.shuffleArray([...studentQuestion.options]);
-      }
-      
-      return studentQuestion;
-    });
-    
-    // Перемешиваем вопросы если нужно
-    if (content.shuffleQuestions) {
-      prepared.questions = this.shuffleArray(prepared.questions);
-    }
-    
-    return prepared;
+  prepareForStudent(content: QuizAssignmentContent): any {
+    // Убираем правильные ответы для студента
+    return {
+      ...content,
+      questions: content.questions.map(q => ({
+        ...q,
+        correctAnswer: undefined, // Скрываем правильный ответ
+        explanation: undefined   // Скрываем объяснение
+      }))
+    };
   }
 
-  /**
-   * Проверяет ответы студента автоматически
-   */
-  static gradeSubmission(
-    assignmentContent: QuizAssignmentContent,
-    submissionContent: QuizSubmissionContent
-  ): {
-    score: number;
-    maxScore: number;
-    results: Array<{
-      questionId: string;
-      correct: boolean;
-      points: number;
-      studentAnswer: any;
-      correctAnswer: any;
-      explanation?: string;
-    }>;
-    feedback: string;
-  } {
-    const results: Array<{
-      questionId: string;
-      correct: boolean;
-      points: number;
-      studentAnswer: any;
-      correctAnswer: any;
-      explanation?: string;
-    }> = [];
+  gradeSubmission(assignmentContent: QuizAssignmentContent, submissionContent: QuizSubmissionContent): any {
+    const answers = submissionContent.answers || [];
+    const questions = assignmentContent.questions;
     
     let totalScore = 0;
     let maxScore = 0;
-    
-    assignmentContent.questions.forEach((question) => {
+    const results: any[] = [];
+
+    questions.forEach((question, index) => {
       maxScore += question.points;
+      const userAnswer = answers[index];
+      const isCorrect = this.isAnswerCorrect(question, userAnswer);
       
-      const studentAnswer = submissionContent.answers[question.id];
-      const isCorrect = this.isAnswerCorrect(question, studentAnswer);
-      const points = isCorrect ? question.points : 0;
-      
-      totalScore += points;
-      
+      if (isCorrect) {
+        totalScore += question.points;
+      }
+
       results.push({
         questionId: question.id,
-        correct: isCorrect,
-        points,
-        studentAnswer,
+        userAnswer,
         correctAnswer: question.correctAnswer,
-        explanation: question.explanation,
+        isCorrect,
+        points: isCorrect ? question.points : 0,
+        maxPoints: question.points
       });
     });
-    
-    const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-    const passed = percentage >= assignmentContent.passingPercentage;
-    
-    const feedback = this.generateFeedback(totalScore, maxScore, percentage, passed, results);
-    
+
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    const isPassing = percentage >= (assignmentContent.passingScore || 70);
+
     return {
       score: totalScore,
       maxScore,
+      percentage,
+      isPassing,
       results,
-      feedback,
+      timeSpent: submissionContent.timeSpent,
+      feedback: isPassing 
+        ? 'Поздравляем! Вы прошли тест.' 
+        : 'К сожалению, вы не прошли тест. Попробуйте еще раз.'
     };
   }
 
-  /**
-   * Проверяет правильность ответа на вопрос
-   */
-  private static isAnswerCorrect(question: QuizQuestion, studentAnswer: any): boolean {
-    if (studentAnswer === undefined || studentAnswer === null) {
-      return false;
-    }
-    
-    switch (question.type) {
-      case 'single_choice':
-        return studentAnswer === question.correctAnswer;
-        
-      case 'multiple_choice':
-        if (!Array.isArray(studentAnswer) || !Array.isArray(question.correctAnswer)) {
-          return false;
-        }
-        // Сравниваем отсортированные массивы
-        const sortedStudent = [...studentAnswer].sort();
-        const sortedCorrect = [...question.correctAnswer].sort();
-        return JSON.stringify(sortedStudent) === JSON.stringify(sortedCorrect);
-        
-      case 'true_false':
-        return studentAnswer === question.correctAnswer;
-        
-      case 'text':
-        // Для текстовых ответов делаем простое сравнение без учета регистра
-        const studentText = String(studentAnswer).toLowerCase().trim();
-        const correctText = String(question.correctAnswer).toLowerCase().trim();
-        return studentText === correctText;
-        
-      case 'number':
-        return Number(studentAnswer) === Number(question.correctAnswer);
-        
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Генерирует обратную связь по результатам квиза
-   */
-  private static generateFeedback(
-    score: number,
-    maxScore: number,
-    percentage: number,
-    passed: boolean,
-    results: any[]
-  ): string {
-    const correctCount = results.filter(r => r.correct).length;
-    const totalQuestions = results.length;
-    
-    let feedback = `Результат: ${score}/${maxScore} баллов (${Math.round(percentage)}%)\n`;
-    feedback += `Правильных ответов: ${correctCount} из ${totalQuestions}\n\n`;
-    
-    if (passed) {
-      feedback += '✅ Поздравляем! Вы успешно прошли квиз.\n\n';
-    } else {
-      feedback += '❌ Квиз не пройден. Необходимо набрать больше баллов.\n\n';
-    }
-    
-    // Детализация по вопросам
-    results.forEach((result, index) => {
-      const status = result.correct ? '✅' : '❌';
-      feedback += `${status} Вопрос ${index + 1}: ${result.points} из ${result.points} ${result.correct ? '' : '(0)'} баллов\n`;
-      
-      if (!result.correct && result.explanation) {
-        feedback += `   Объяснение: ${result.explanation}\n`;
-      }
-    });
-    
-    return feedback;
-  }
-
-  /**
-   * Перемешивает массив (алгоритм Фишера-Йетса)
-   */
-  private static shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }
-
-  /**
-   * Валидирует подачу квиза
-   */
-  static validateSubmission(
-    assignmentContent: QuizAssignmentContent,
-    submissionContent: any
-  ): { isValid: boolean; errors: string[] } {
+  validateSubmission(assignmentContent: QuizAssignmentContent, submissionContent: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
-    if (!submissionContent.answers || typeof submissionContent.answers !== 'object') {
-      errors.push('Подача должна содержать ответы на вопросы');
+
+    if (!submissionContent || typeof submissionContent !== 'object') {
+      errors.push('Содержимое подачи должно быть объектом');
       return { isValid: false, errors };
     }
-    
-    // Проверяем обязательные вопросы
-    const requiredQuestions = assignmentContent.questions.filter(q => q.required);
-    requiredQuestions.forEach((question) => {
-      const answer = submissionContent.answers[question.id];
-      if (answer === undefined || answer === null || answer === '') {
-        errors.push(`Вопрос "${question.question}" является обязательным`);
-      }
-    });
-    
-    // Проверяем временные ограничения
-    if (assignmentContent.timeLimit && submissionContent.timeSpent) {
-      if (submissionContent.timeSpent > assignmentContent.timeLimit + 60) { // +60 секунд допуск
-        errors.push('Превышен лимит времени на выполнение квиза');
-      }
+
+    if (!Array.isArray(submissionContent.answers)) {
+      errors.push('Поле answers должно быть массивом');
+      return { isValid: false, errors };
+    }
+
+    if (submissionContent.answers.length !== assignmentContent.questions.length) {
+      errors.push(`Количество ответов (${submissionContent.answers.length}) не соответствует количеству вопросов (${assignmentContent.questions.length})`);
+    }
+
+    return { isValid: errors.length === 0, errors };
+  }
+
+  private isAnswerCorrect(question: QuizQuestion, userAnswer: any): boolean {
+    if (question.type === 'true-false') {
+      return userAnswer === question.correctAnswer;
     }
     
-    return { isValid: errors.length === 0, errors };
+    if (question.type === 'single-choice') {
+      return userAnswer === question.correctAnswer;
+    }
+    
+    if (question.type === 'multiple-choice') {
+      if (!Array.isArray(userAnswer) || !Array.isArray(question.correctAnswer)) {
+        return false;
+      }
+      
+      // Сортируем массивы для сравнения
+      const sortedUser = [...userAnswer].sort();
+      const sortedCorrect = [...question.correctAnswer].sort();
+      
+      return sortedUser.length === sortedCorrect.length && 
+             sortedUser.every((val, index) => val === sortedCorrect[index]);
+    }
+
+    return false;
   }
 }
