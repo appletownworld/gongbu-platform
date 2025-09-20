@@ -8,7 +8,7 @@ export interface CreateUserFromTelegramData {
   firstName?: string;
   lastName?: string;
   photoUrl?: string;
-  authDate: Date;
+  authDate: number;
 }
 
 export interface UserProfile {

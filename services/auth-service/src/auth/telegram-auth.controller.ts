@@ -200,11 +200,10 @@ export class TelegramAuthController {
           lastName: result.user.lastName,
           username: result.user.username,
           role: result.user.role,
-          subscription: result.user.subscription,
-          isActive: result.user.isActive,
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken
-        }
+          subscriptionPlan: result.user.subscriptionPlan
+        },
+        accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken
       };
 
     } catch (error) {
