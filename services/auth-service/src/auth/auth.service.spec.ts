@@ -130,7 +130,7 @@ describe('AuthService', () => {
         lastName: 'User',
         username: 'testuser',
         photoUrl: 'https://example.com/photo.jpg',
-        authDate: new Date(),
+        authDate: 1640995200,
       };
       const sessionId = 'session_123';
 
@@ -188,7 +188,7 @@ describe('AuthService', () => {
       telegramOAuth.extractUserInfo.mockReturnValue({
         telegramId: 123456789,
         firstName: 'Test',
-        authDate: new Date(),
+        authDate: 1640995200,
       });
       userService.authenticateOrCreateUser.mockResolvedValue(bannedUser);
 
