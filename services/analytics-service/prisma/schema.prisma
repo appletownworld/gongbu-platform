@@ -1,0 +1,669 @@
+// Database schema for Analytics Service
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("ANALYTICS_SERVICE_DATABASE_URL")
+}
+
+model Event {
+  id                String            @id @default(cuid())
+  
+  // Event identification
+  eventName         String            @map("event_name") @db.VarChar(100)
+  category          EventCategory     // USER_ACTION, LEARNING, SYSTEM, etc.
+  action            String            @db.VarChar(100) // click, view, complete, etc.
+  label             String?           @db.VarChar(200) // Additional context
+  
+  // User and session tracking
+  userId            String?           @map("user_id") // Null for anonymous events
+  sessionId         String            @map("session_id")
+  deviceId          String?           @map("device_id") // Device fingerprint
+  
+  // Event context
+  properties        Json              @default("{}") // Custom event properties
+  metadata          Json              @default("{}") // Additional metadata
+  
+  // Page/content context
+  pageUrl           String?           @map("page_url") @db.Text
+  pagePath          String?           @map("page_path") @db.VarChar(500)
+  pageTitle         String?           @map("page_title") @db.VarChar(200)
+  referrer          String?           @db.Text
+  
+  // Course-specific context
+  courseId          String?           @map("course_id")
+  lessonId          String?           @map("lesson_id")
+  assignmentId      String?           @map("assignment_id")
+  progressValue     Float?            @map("progress_value") // 0.0 - 1.0
+  
+  // Technical details
+  userAgent         String?           @map("user_agent") @db.Text
+  ipAddress         String?           @map("ip_address") @db.VarChar(45)
+  country           String?           @db.VarChar(3) // ISO country code
+  city              String?           @db.VarChar(100)
+  timezone          String?           @db.VarChar(50)
+  language          String?           @db.VarChar(10)
+  
+  // Performance metrics
+  loadTime          Int?              @map("load_time") // Page load time in ms
+  duration          Int?              // Event duration in ms
+  
+  // A/B Testing
+  experimentId      String?           @map("experiment_id")
+  variant           String?           @db.VarChar(50)
+  
+  // Revenue tracking
+  revenue           Float?            // Revenue associated with event
+  currency          String?           @db.VarChar(3) // Currency code
+  
+  // Timestamps
+  timestamp         DateTime          @default(now())
+  createdAt         DateTime          @default(now()) @map("created_at")
+  
+  // Relations
+  session           SessionTracking?  @relation(fields: [sessionId], references: [id])
+  
+  // Indexes
+  @@index([eventName])
+  @@index([category])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([courseId])
+  @@index([lessonId])
+  @@index([userId, timestamp])
+  @@index([eventName, timestamp])
+  @@index([category, timestamp])
+  @@map("events")
+}
+
+model SessionTracking {
+  id                String            @id @default(cuid())
+  
+  // Session identification
+  sessionId         String            @unique @map("session_id")
+  userId            String?           @map("user_id") // Null for anonymous sessions
+  
+  // Session details
+  deviceId          String?           @map("device_id")
+  userAgent         String?           @map("user_agent") @db.Text
+  device            Json              @default("{}") // Parsed device info
+  
+  // Location
+  ipAddress         String?           @map("ip_address") @db.VarChar(45)
+  country           String?           @db.VarChar(3)
+  region            String?           @db.VarChar(100)
+  city              String?           @db.VarChar(100)
+  timezone          String?           @db.VarChar(50)
+  
+  // Session tracking
+  startTime         DateTime          @map("start_time")
+  endTime           DateTime?         @map("end_time")
+  duration          Int?              // Session duration in seconds
+  pageViews         Int               @default(0) @map("page_views")
+  events            Int               @default(0) // Total events in session
+  
+  // Entry and exit
+  entryPage         String?           @map("entry_page") @db.VarChar(500)
+  exitPage          String?           @map("exit_page") @db.VarChar(500)
+  referrer          String?           @db.Text
+  utmSource         String?           @map("utm_source") @db.VarChar(100)
+  utmMedium         String?           @map("utm_medium") @db.VarChar(100)
+  utmCampaign       String?           @map("utm_campaign") @db.VarChar(100)
+  utmContent        String?           @map("utm_content") @db.VarChar(100)
+  utmTerm           String?           @map("utm_term") @db.VarChar(100)
+  
+  // Session quality
+  bounceRate        Boolean           @default(false) @map("bounce_rate") // Single page session
+  engaged           Boolean           @default(false) // Meaningful engagement
+  converted         Boolean           @default(false) // Conversion achieved
+  
+  // Learning context
+  coursesViewed     String[]          @map("courses_viewed") // Course IDs viewed
+  lessonsCompleted  Int               @default(0) @map("lessons_completed")
+  timeOnLearning    Int               @default(0) @map("time_on_learning") // Seconds
+  
+  // Revenue
+  revenue           Float?            // Revenue generated in session
+  currency          String?           @db.VarChar(3)
+  
+  // Relations
+  events            Event[]
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@index([userId])
+  @@index([startTime])
+  @@index([deviceId])
+  @@index([country])
+  @@index([utmSource, utmMedium])
+  @@map("session_tracking")
+}
+
+model LearningAnalytics {
+  id                String            @id @default(cuid())
+  
+  // Student and course
+  userId            String            @map("user_id")
+  courseId          String            @map("course_id")
+  lessonId          String?           @map("lesson_id")
+  assignmentId      String?           @map("assignment_id")
+  
+  // Learning metrics
+  timeSpent         Int               @default(0) @map("time_spent") // Seconds
+  progress          Float             @default(0) // 0.0 - 1.0
+  completionRate    Float?            @map("completion_rate") // Lesson/assignment completion
+  score             Float?            // Assignment/quiz score
+  maxScore          Float?            @map("max_score") // Maximum possible score
+  
+  // Learning behavior
+  attemptsCount     Int               @default(1) @map("attempts_count")
+  hintsUsed         Int               @default(0) @map("hints_used")
+  pausesCount       Int               @default(0) @map("pauses_count")
+  rewindsCount      Int               @default(0) @map("rewinds_count")
+  speedAdjustments  Int               @default(0) @map("speed_adjustments")
+  
+  // Engagement quality
+  focusTime         Int               @default(0) @map("focus_time") // Active focus time
+  distractionEvents Int               @default(0) @map("distraction_events")
+  notesTaken        Int               @default(0) @map("notes_taken")
+  questionsAsked    Int               @default(0) @map("questions_asked")
+  
+  // Learning path
+  previousLessonId  String?           @map("previous_lesson_id")
+  nextLessonId      String?           @map("next_lesson_id")
+  pathDeviation     Boolean           @default(false) @map("path_deviation")
+  
+  // Performance indicators
+  strugglingIndicator Boolean         @default(false) @map("struggling_indicator")
+  masteryLevel      MasteryLevel      @default(BEGINNER) @map("mastery_level")
+  learningVelocity  Float?            @map("learning_velocity") // Lessons per day
+  
+  // Contextual data
+  deviceType        String?           @map("device_type") @db.VarChar(50)
+  learningSession   String?           @map("learning_session") // Session identifier
+  studyGroup        String?           @map("study_group") // Group/cohort identifier
+  
+  // Timestamps
+  startTime         DateTime?         @map("start_time")
+  endTime           DateTime?         @map("end_time")
+  lastInteraction   DateTime          @default(now()) @map("last_interaction")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@unique([userId, courseId, lessonId, createdAt])
+  @@index([userId])
+  @@index([courseId])
+  @@index([lessonId])
+  @@index([createdAt])
+  @@index([progress])
+  @@index([masteryLevel])
+  @@index([strugglingIndicator])
+  @@map("learning_analytics")
+}
+
+model UserBehavior {
+  id                String            @id @default(cuid())
+  
+  // User identification
+  userId            String            @map("user_id")
+  date              DateTime          @db.Date // Analytics date
+  
+  // Activity metrics
+  sessionsCount     Int               @default(0) @map("sessions_count")
+  totalTime         Int               @default(0) @map("total_time") // Total time in seconds
+  pageViews         Int               @default(0) @map("page_views")
+  uniquePages       Int               @default(0) @map("unique_pages")
+  
+  // Learning activity
+  coursesAccessed   Int               @default(0) @map("courses_accessed")
+  lessonsViewed     Int               @default(0) @map("lessons_viewed")
+  lessonsCompleted  Int               @default(0) @map("lessons_completed")
+  assignmentsSubmitted Int            @default(0) @map("assignments_submitted")
+  
+  // Engagement metrics
+  likes             Int               @default(0)
+  comments          Int               @default(0)
+  shares            Int               @default(0)
+  bookmarks         Int               @default(0)
+  
+  // Search and discovery
+  searchQueries     Int               @default(0) @map("search_queries")
+  filterUsage       Int               @default(0) @map("filter_usage")
+  categoryBrowsing  Int               @default(0) @map("category_browsing")
+  
+  // Social interactions
+  messagesSent      Int               @default(0) @map("messages_sent")
+  forumPosts        Int               @default(0) @map("forum_posts")
+  helpRequests      Int               @default(0) @map("help_requests")
+  
+  // Device usage
+  mobileTime        Int               @default(0) @map("mobile_time") // Time on mobile
+  desktopTime       Int               @default(0) @map("desktop_time") // Time on desktop
+  
+  // Feature usage
+  featuresUsed      Json              @default("[]") @map("features_used") // Array of features
+  experimentsExposed Json             @default("[]") @map("experiments_exposed") // A/B tests
+  
+  // Performance indicators
+  bounceRate        Float?            @map("bounce_rate")
+  avgSessionTime    Int?              @map("avg_session_time")
+  conversionEvents  Int               @default(0) @map("conversion_events")
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+  @@index([coursesAccessed])
+  @@index([lessonsCompleted])
+  @@map("user_behavior")
+}
+
+model Metric {
+  id                String            @id @default(cuid())
+  
+  // Metric identification
+  name              String            @db.VarChar(100)
+  category          MetricCategory    // LEARNING, BUSINESS, TECHNICAL, etc.
+  type              MetricType        // COUNTER, GAUGE, HISTOGRAM, etc.
+  
+  // Metric value
+  value             Float
+  previousValue     Float?            @map("previous_value")
+  change            Float?            // Percentage change
+  changeDirection   String?           @map("change_direction") @db.VarChar(10) // up, down, stable
+  
+  // Dimensions
+  dimensions        Json              @default("{}") // Metric dimensions/tags
+  
+  // Time context
+  period            String            @db.VarChar(20) // hour, day, week, month
+  date              DateTime          @db.Date
+  hour              Int?              // 0-23 for hourly metrics
+  
+  // Aggregation context
+  count             Int?              // Number of data points
+  sum               Float?            // Sum of values
+  average           Float?            // Average value
+  min               Float?            // Minimum value
+  max               Float?            // Maximum value
+  percentile95      Float?            @map("percentile_95") // 95th percentile
+  
+  // Metadata
+  metadata          Json              @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  
+  // Indexes
+  @@unique([name, date, hour, dimensions])
+  @@index([name])
+  @@index([category])
+  @@index([date])
+  @@index([name, date])
+  @@index([category, date])
+  @@map("metrics")
+}
+
+model Report {
+  id                String            @id @default(cuid())
+  
+  // Report identification
+  name              String            @db.VarChar(200)
+  slug              String            @unique @db.VarChar(100)
+  description       String?           @db.Text
+  category          ReportCategory    // LEARNING, BUSINESS, TECHNICAL, etc.
+  
+  // Report configuration
+  type              ReportType        // DASHBOARD, CHART, TABLE, PDF, etc.
+  config            Json              // Report configuration
+  queries           Json              // SQL/aggregation queries
+  
+  // Access control
+  createdBy         String            @map("created_by") // User ID who created
+  isPublic          Boolean           @default(false) @map("is_public")
+  allowedRoles      String[]          @map("allowed_roles")
+  allowedUsers      String[]          @map("allowed_users")
+  
+  // Report data
+  lastRunAt         DateTime?         @map("last_run_at")
+  lastData          Json?             @map("last_data") // Cached report data
+  dataSize          Int?              @map("data_size") // Size of data in bytes
+  
+  // Schedule
+  isScheduled       Boolean           @default(false) @map("is_scheduled")
+  scheduleExpression String?          @map("schedule_expression") // Cron expression
+  emailRecipients   String[]          @map("email_recipients") // Emails to send to
+  
+  // Status
+  status            ReportStatus      @default(ACTIVE)
+  errorMessage      String?           @map("error_message")
+  runCount          Int               @default(0) @map("run_count")
+  
+  // Metadata
+  metadata          Json              @default("{}")
+  tags              String[]          @default([])
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@index([category])
+  @@index([createdBy])
+  @@index([isPublic])
+  @@index([status])
+  @@index([isScheduled])
+  @@map("reports")
+}
+
+model Experiment {
+  id                String            @id @default(cuid())
+  
+  // Experiment identification
+  name              String            @db.VarChar(200)
+  slug              String            @unique @db.VarChar(100)
+  description       String?           @db.Text
+  hypothesis        String?           @db.Text
+  
+  // Experiment configuration
+  status            ExperimentStatus  @default(DRAFT)
+  type              ExperimentType    @default(AB_TEST) // AB_TEST, MULTIVARIATE, etc.
+  
+  // Traffic allocation
+  trafficPercentage Float             @default(100) @map("traffic_percentage") // % of users
+  variants          Json              // Variant configurations
+  
+  // Targeting
+  targetAudience    Json              @default("{}") @map("target_audience") // Targeting rules
+  excludeRules      Json              @default("{}") @map("exclude_rules") // Exclusion rules
+  
+  // Goals and metrics
+  primaryMetric     String            @map("primary_metric") @db.VarChar(100)
+  secondaryMetrics  String[]          @map("secondary_metrics")
+  successCriteria   Json              @map("success_criteria")
+  
+  // Timeline
+  startDate         DateTime?         @map("start_date")
+  endDate           DateTime?         @map("end_date")
+  plannedDuration   Int?              @map("planned_duration") // Days
+  
+  // Sample size
+  minimumSampleSize Int?              @map("minimum_sample_size")
+  currentSampleSize Int               @default(0) @map("current_sample_size")
+  confidenceLevel   Float             @default(95) @map("confidence_level")
+  
+  // Results
+  results           Json?             // Experiment results
+  winner            String?           @db.VarChar(50) // Winning variant
+  significance      Float?            // Statistical significance
+  pValue            Float?            @map("p_value")
+  
+  // Metadata
+  createdBy         String            @map("created_by")
+  metadata          Json              @default("{}")
+  tags              String[]          @default([])
+  
+  // Relations
+  assignments       ExperimentAssignment[]
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([createdBy])
+  @@index([slug])
+  @@map("experiments")
+}
+
+model ExperimentAssignment {
+  id                String            @id @default(cuid())
+  
+  // Assignment details
+  experimentId      String            @map("experiment_id")
+  experiment        Experiment        @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  
+  userId            String            @map("user_id")
+  variant           String            @db.VarChar(50) // Assigned variant
+  
+  // Assignment context
+  assignedAt        DateTime          @default(now()) @map("assigned_at")
+  firstExposure     DateTime?         @map("first_exposure")
+  exposureCount     Int               @default(0) @map("exposure_count")
+  
+  // Conversion tracking
+  converted         Boolean           @default(false)
+  convertedAt       DateTime?         @map("converted_at")
+  conversionValue   Float?            @map("conversion_value")
+  
+  // Metadata
+  metadata          Json              @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@unique([experimentId, userId])
+  @@index([experimentId])
+  @@index([userId])
+  @@index([variant])
+  @@index([converted])
+  @@map("experiment_assignments")
+}
+
+model Cohort {
+  id                String            @id @default(cuid())
+  
+  // Cohort identification
+  name              String            @db.VarChar(200)
+  description       String?           @db.Text
+  
+  // Cohort definition
+  type              CohortType        // ACQUISITION, BEHAVIOR, CUSTOM
+  definition        Json              // Cohort definition rules
+  
+  // Time-based cohorts
+  periodType        String?           @map("period_type") @db.VarChar(20) // daily, weekly, monthly
+  cohortDate        DateTime?         @map("cohort_date") // Cohort start date
+  
+  // Cohort size
+  totalUsers        Int               @default(0) @map("total_users")
+  activeUsers       Int               @default(0) @map("active_users")
+  
+  // Cohort metrics (calculated)
+  retentionRates    Json              @default("{}") @map("retention_rates") // Day/week/month retention
+  lifetimeValue    Float?            @map("lifetime_value") // Average LTV
+  conversionRate    Float?            @map("conversion_rate")
+  churnRate         Float?            @map("churn_rate")
+  
+  // Status
+  isActive          Boolean           @default(true) @map("is_active")
+  lastCalculated    DateTime?         @map("last_calculated")
+  
+  // Metadata
+  createdBy         String            @map("created_by")
+  metadata          Json              @default("{}")
+  tags              String[]          @default([])
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@index([type])
+  @@index([cohortDate])
+  @@index([createdBy])
+  @@index([isActive])
+  @@map("cohorts")
+}
+
+model Funnel {
+  id                String            @id @default(cuid())
+  
+  // Funnel identification
+  name              String            @db.VarChar(200)
+  description       String?           @db.Text
+  
+  // Funnel configuration
+  steps             Json              // Ordered funnel steps
+  conversionWindow  Int               @default(86400) @map("conversion_window") // Seconds
+  
+  // Funnel metrics (calculated)
+  totalEntered      Int               @default(0) @map("total_entered")
+  conversionRates   Json              @default("{}") @map("conversion_rates") // Step-by-step rates
+  dropoffRates      Json              @default("{}") @map("dropoff_rates")
+  averageTime       Json              @default("{}") @map("average_time") // Time between steps
+  
+  // Time period for analysis
+  dateFrom          DateTime          @map("date_from")
+  dateTo            DateTime          @map("date_to")
+  
+  // Status
+  isActive          Boolean           @default(true) @map("is_active")
+  lastCalculated    DateTime?         @map("last_calculated")
+  
+  // Metadata
+  createdBy         String            @map("created_by")
+  metadata          Json              @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@index([createdBy])
+  @@index([isActive])
+  @@index([dateFrom, dateTo])
+  @@map("funnels")
+}
+
+model Retention {
+  id                String            @id @default(cuid())
+  
+  // Retention cohort
+  cohortDate        DateTime          @map("cohort_date") @db.Date
+  cohortSize        Int               @map("cohort_size")
+  
+  // Retention period
+  periodType        RetentionPeriod   @map("period_type") // DAY, WEEK, MONTH
+  periodNumber      Int               @map("period_number") // 1, 2, 3, etc.
+  
+  // Retention metrics
+  returningUsers    Int               @map("returning_users")
+  retentionRate     Float             @map("retention_rate") // 0.0 - 1.0
+  
+  // Segmentation
+  segment           String?           @db.VarChar(100) // User segment
+  channel           String?           @db.VarChar(50) // Acquisition channel
+  
+  // Metadata
+  metadata          Json              @default("{}")
+  
+  // Timestamps
+  calculatedAt      DateTime          @default(now()) @map("calculated_at")
+  
+  // Indexes
+  @@unique([cohortDate, periodType, periodNumber, segment, channel])
+  @@index([cohortDate])
+  @@index([periodType])
+  @@index([segment])
+  @@index([channel])
+  @@map("retention")
+}
+
+// Enums
+enum EventCategory {
+  USER_ACTION      @map("user_action")
+  LEARNING        @map("learning")
+  SYSTEM          @map("system")
+  BUSINESS        @map("business")
+  ENGAGEMENT      @map("engagement")
+  ERROR           @map("error")
+  PERFORMANCE     @map("performance")
+}
+
+enum MasteryLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum MetricCategory {
+  LEARNING
+  BUSINESS
+  TECHNICAL
+  ENGAGEMENT
+  CONVERSION
+  RETENTION
+}
+
+enum MetricType {
+  COUNTER
+  GAUGE
+  HISTOGRAM
+  DISTRIBUTION
+}
+
+enum ReportCategory {
+  LEARNING
+  BUSINESS
+  TECHNICAL
+  CUSTOM
+}
+
+enum ReportType {
+  DASHBOARD
+  CHART
+  TABLE
+  PDF
+  CSV
+  EMAIL
+}
+
+enum ReportStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+  DRAFT
+}
+
+enum ExperimentStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ExperimentType {
+  AB_TEST         @map("ab_test")
+  MULTIVARIATE    @map("multivariate")
+  SPLIT_URL       @map("split_url")
+}
+
+enum CohortType {
+  ACQUISITION
+  BEHAVIOR
+  CUSTOM
+}
+
+enum RetentionPeriod {
+  DAY
+  WEEK
+  MONTH
+}

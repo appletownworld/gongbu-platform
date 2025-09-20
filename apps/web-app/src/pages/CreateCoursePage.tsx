@@ -14,6 +14,8 @@ import {
 import { coursesApi } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { CourseCategory, CourseDifficulty } from '@/types/course'
+import { ImageUpload, UploadResult } from '@/components/FileUpload'
+import { fileUploadService } from '@/services/fileUploadApi'
 
 const CreateCoursePage: React.FC = () => {
   const navigate = useNavigate()
@@ -36,6 +38,10 @@ const CreateCoursePage: React.FC = () => {
     metaTitle: '',
     metaDescription: ''
   })
+  
+  // Состояние для загруженных файлов
+  const [uploadedCover, setUploadedCover] = useState<UploadResult | null>(null)
+  const [uploadedThumbnail, setUploadedThumbnail] = useState<UploadResult | null>(null)
   
   const [tagInput, setTagInput] = useState('')
   const [currentStep, setCurrentStep] = useState(1)
@@ -88,6 +94,9 @@ const CreateCoursePage: React.FC = () => {
       creatorId: user.id,
       estimatedDuration: formData.estimatedDuration ? parseInt(formData.estimatedDuration) : undefined,
       price: formData.price ? parseFloat(formData.price) : undefined,
+      // Используем URL загруженных файлов или оставляем текущие URL из formData
+      coverImageUrl: uploadedCover?.url || formData.coverImageUrl,
+      thumbnailUrl: uploadedThumbnail?.url || formData.thumbnailUrl,
     }
 
     // Убираем пустые поля
@@ -98,6 +107,41 @@ const CreateCoursePage: React.FC = () => {
     })
 
     createCourseMutation.mutate(courseData)
+  }
+
+  // Обработчики загрузки файлов
+  const handleCoverUpload = async (files: File[]): Promise<UploadResult[]> => {
+    try {
+      const result = await fileUploadService.uploadFile({
+        file: files[0],
+        context: 'course-cover',
+        isPublic: true,
+      })
+      
+      setUploadedCover(result)
+      toast.success('Обложка курса загружена!')
+      return [result]
+    } catch (error) {
+      console.error('Cover upload failed:', error)
+      throw error
+    }
+  }
+
+  const handleThumbnailUpload = async (files: File[]): Promise<UploadResult[]> => {
+    try {
+      const result = await fileUploadService.uploadFile({
+        file: files[0],
+        context: 'course-thumbnail',
+        isPublic: true,
+      })
+      
+      setUploadedThumbnail(result)
+      toast.success('Миниатюра курса загружена!')
+      return [result]
+    } catch (error) {
+      console.error('Thumbnail upload failed:', error)
+      throw error
+    }
   }
 
   const categoryLabels: Record<CourseCategory, string> = {
@@ -409,31 +453,85 @@ const CreateCoursePage: React.FC = () => {
                 </div>
 
                 {/* Images */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-secondary-700 mb-2">
-                      Обложка курса (URL)
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.coverImageUrl}
-                      onChange={(e) => handleInputChange('coverImageUrl', e.target.value)}
-                      placeholder="https://example.com/course-cover.jpg"
-                      className="w-full p-3 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                  </div>
+                <div className="space-y-6">
+                  <h3 className="text-lg font-medium text-secondary-900">Изображения курса</h3>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Course Cover */}
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-secondary-700">
+                        Обложка курса
+                      </label>
+                      <ImageUpload
+                        context="course-cover"
+                        aspectRatio="video"
+                        onUpload={handleCoverUpload}
+                        maxSize={5 * 1024 * 1024} // 5MB
+                        className="w-full"
+                      />
+                      
+                      {/* Fallback URL input */}
+                      <details className="mt-3">
+                        <summary className="text-xs text-secondary-500 cursor-pointer hover:text-secondary-700">
+                          Или укажите URL изображения
+                        </summary>
+                        <div className="mt-2">
+                          <input
+                            type="url"
+                            value={formData.coverImageUrl}
+                            onChange={(e) => handleInputChange('coverImageUrl', e.target.value)}
+                            placeholder="https://example.com/course-cover.jpg"
+                            className="w-full p-2 text-sm border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          />
+                        </div>
+                      </details>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-secondary-700 mb-2">
-                      Миниатюра (URL)
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.thumbnailUrl}
-                      onChange={(e) => handleInputChange('thumbnailUrl', e.target.value)}
-                      placeholder="https://example.com/course-thumb.jpg"
-                      className="w-full p-3 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
+                    {/* Course Thumbnail */}
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-secondary-700">
+                        Миниатюра курса
+                      </label>
+                      <ImageUpload
+                        context="course-thumbnail"
+                        aspectRatio="video"
+                        previewSize="sm"
+                        onUpload={handleThumbnailUpload}
+                        maxSize={2 * 1024 * 1024} // 2MB
+                        className="w-full"
+                      />
+                      
+                      {/* Fallback URL input */}
+                      <details className="mt-3">
+                        <summary className="text-xs text-secondary-500 cursor-pointer hover:text-secondary-700">
+                          Или укажите URL изображения
+                        </summary>
+                        <div className="mt-2">
+                          <input
+                            type="url"
+                            value={formData.thumbnailUrl}
+                            onChange={(e) => handleInputChange('thumbnailUrl', e.target.value)}
+                            placeholder="https://example.com/course-thumb.jpg"
+                            className="w-full p-2 text-sm border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          />
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex">
+                      <PhotoIcon className="w-5 h-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium">Рекомендации по изображениям:</p>
+                        <ul className="mt-1 list-disc list-inside space-y-1 text-xs">
+                          <li><strong>Обложка:</strong> 1280x720px (16:9) для лучшего отображения</li>
+                          <li><strong>Миниатюра:</strong> 400x225px (16:9) для превью в списках</li>
+                          <li>Используйте яркие, контрастные изображения</li>
+                          <li>Избегайте слишком мелкого текста на изображениях</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

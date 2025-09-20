@@ -1,0 +1,726 @@
+// Database schema for Plugin Service
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PLUGIN_SERVICE_DATABASE_URL")
+}
+
+model Plugin {
+  id                String              @id @default(cuid())
+  
+  // Plugin identification
+  name              String              @db.VarChar(200)
+  slug              String              @unique @db.VarChar(100)
+  displayName       String              @map("display_name") @db.VarChar(200)
+  description       String              @db.Text
+  shortDescription  String?             @map("short_description") @db.VarChar(500)
+  
+  // Plugin metadata
+  type              PluginType          // FEATURE, THEME, INTEGRATION, etc.
+  category          PluginCategory      // LEARNING, UI, ANALYTICS, etc.
+  
+  // Author and publisher
+  authorId          String              @map("author_id")
+  authorName        String              @map("author_name") @db.VarChar(200)
+  authorEmail       String?             @map("author_email") @db.VarChar(255)
+  publisherId       String?             @map("publisher_id")
+  publisherName     String?             @map("publisher_name") @db.VarChar(200)
+  
+  // Repository and source
+  repositoryUrl     String?             @map("repository_url") @db.Text
+  homepageUrl       String?             @map("homepage_url") @db.Text
+  documentationUrl  String?             @map("documentation_url") @db.Text
+  issueTrackerUrl   String?             @map("issue_tracker_url") @db.Text
+  
+  // Current version info
+  currentVersion    String              @map("current_version") @db.VarChar(50)
+  latestVersion     String?             @map("latest_version") @db.VarChar(50)
+  
+  // Plugin status
+  status            PluginStatus        @default(DRAFT)
+  verified          Boolean             @default(false) // Verified by Gongbu team
+  featured          Boolean             @default(false) // Featured in marketplace
+  
+  // Marketplace info
+  price             Float?              // Price in USD (null = free)
+  currency          String              @default("USD") @db.VarChar(3)
+  licenseType       String              @map("license_type") @db.VarChar(100)
+  licenseUrl        String?             @map("license_url") @db.Text
+  
+  // Assets
+  iconUrl           String?             @map("icon_url") @db.Text
+  bannerUrl         String?             @map("banner_url") @db.Text
+  screenshots       String[]            // Array of screenshot URLs
+  videos            String[]            // Array of video URLs
+  
+  // Requirements and compatibility
+  minGongbuVersion  String?             @map("min_gongbu_version") @db.VarChar(50)
+  maxGongbuVersion  String?             @map("max_gongbu_version") @db.VarChar(50)
+  nodeVersion       String?             @map("node_version") @db.VarChar(50)
+  dependencies      Json                @default("{}") // Plugin dependencies
+  
+  // Permissions and security
+  permissions       Json                @default("[]") // Required permissions
+  sandboxed         Boolean             @default(true) // Run in sandbox
+  trustedPublisher  Boolean             @default(false) @map("trusted_publisher")
+  
+  // Metrics
+  downloadCount     Int                 @default(0) @map("download_count")
+  installCount      Int                 @default(0) @map("install_count")
+  activeInstalls    Int                 @default(0) @map("active_installs")
+  rating            Float               @default(0) // Average rating (0-5)
+  ratingCount       Int                 @default(0) @map("rating_count")
+  
+  // Configuration
+  configSchema      Json?               @map("config_schema") // JSON Schema for configuration
+  defaultConfig     Json                @default("{}") @map("default_config")
+  
+  // Content and SEO
+  tags              String[]            @default([])
+  keywords          String[]            @default([])
+  readme            String?             @db.Text // Markdown content
+  changelog         String?             @db.Text // Markdown content
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  publishedAt       DateTime?           @map("published_at")
+  
+  // Relations
+  versions          PluginVersion[]
+  installations     PluginInstallation[]
+  marketplace       PluginMarketplace?
+  configurations    PluginConfiguration[]
+  reviews           PluginReview[]
+  analytics         PluginAnalytics[]
+  
+  // Indexes
+  @@index([type])
+  @@index([category])
+  @@index([status])
+  @@index([verified])
+  @@index([featured])
+  @@index([authorId])
+  @@index([publisherId])
+  @@index([downloadCount])
+  @@index([rating])
+  @@index([createdAt])
+  @@index([publishedAt])
+  @@map("plugins")
+}
+
+model PluginVersion {
+  id                String              @id @default(cuid())
+  
+  // Version identification
+  pluginId          String              @map("plugin_id")
+  plugin            Plugin              @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  
+  version           String              @db.VarChar(50)
+  isPrerelease      Boolean             @default(false) @map("is_prerelease")
+  isCurrent         Boolean             @default(false) @map("is_current")
+  
+  // Version metadata
+  title             String?             @db.VarChar(200)
+  description       String?             @db.Text
+  releaseNotes      String?             @map("release_notes") @db.Text
+  
+  // Package info
+  packageUrl        String              @map("package_url") @db.Text // Download URL
+  packageSize       Int                 @map("package_size") // Size in bytes
+  packageHash       String              @map("package_hash") @db.VarChar(128) // SHA256 hash
+  
+  // Compatibility
+  minGongbuVersion  String?             @map("min_gongbu_version") @db.VarChar(50)
+  maxGongbuVersion  String?             @map("max_gongbu_version") @db.VarChar(50)
+  nodeVersion       String?             @map("node_version") @db.VarChar(50)
+  
+  // Dependencies
+  dependencies      Json                @default("{}")
+  peerDependencies  Json                @default("{}") @map("peer_dependencies")
+  
+  // Status
+  status            VersionStatus       @default(DRAFT)
+  downloadCount     Int                 @default(0) @map("download_count")
+  
+  // Security
+  securityScan      Json?               @map("security_scan") // Security scan results
+  vulnerabilities   Int                 @default(0) // Number of vulnerabilities
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  publishedAt       DateTime?           @map("published_at")
+  deprecatedAt      DateTime?           @map("deprecated_at")
+  
+  // Relations
+  installations     PluginInstallation[]
+  
+  // Indexes
+  @@unique([pluginId, version])
+  @@index([pluginId])
+  @@index([version])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([downloadCount])
+  @@map("plugin_versions")
+}
+
+model PluginInstallation {
+  id                String              @id @default(cuid())
+  
+  // Installation target
+  userId            String?             @map("user_id") // Individual user installation
+  organizationId    String?             @map("organization_id") // Organization-wide installation
+  
+  // Plugin and version
+  pluginId          String              @map("plugin_id")
+  plugin            Plugin              @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  
+  versionId         String              @map("version_id")
+  version           PluginVersion       @relation(fields: [versionId], references: [id])
+  
+  // Installation status
+  status            InstallationStatus  @default(PENDING)
+  enabled           Boolean             @default(true)
+  autoUpdate        Boolean             @default(false) @map("auto_update")
+  
+  // Installation metadata
+  installationType  String              @default("manual") @map("installation_type") @db.VarChar(50)
+  installPath       String?             @map("install_path") @db.Text // Installation directory
+  
+  // Configuration
+  configuration     Json                @default("{}") // User/org specific config
+  
+  // Usage tracking
+  firstUsed         DateTime?           @map("first_used")
+  lastUsed          DateTime?           @map("last_used")
+  usageCount        Int                 @default(0) @map("usage_count")
+  
+  // Error tracking
+  lastError         String?             @map("last_error") @db.Text
+  errorCount        Int                 @default(0) @map("error_count")
+  
+  // Timestamps
+  installedAt       DateTime            @default(now()) @map("installed_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  uninstalledAt     DateTime?           @map("uninstalled_at")
+  
+  // Relations
+  configurations    PluginConfiguration[]
+  
+  // Indexes
+  @@unique([userId, pluginId]) // One installation per user per plugin
+  @@unique([organizationId, pluginId]) // One installation per org per plugin
+  @@index([pluginId])
+  @@index([versionId])
+  @@index([status])
+  @@index([enabled])
+  @@index([installedAt])
+  @@map("plugin_installations")
+}
+
+model PluginMarketplace {
+  id                String              @id @default(cuid())
+  
+  // Related plugin
+  pluginId          String              @unique @map("plugin_id")
+  plugin            Plugin              @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  
+  // Marketplace status
+  status            MarketplaceStatus   @default(PENDING_REVIEW)
+  reviewStatus      String?             @map("review_status") @db.VarChar(100)
+  reviewNotes       String?             @map("review_notes") @db.Text
+  reviewedBy        String?             @map("reviewed_by")
+  
+  // Listing details
+  featured          Boolean             @default(false)
+  priority          Int                 @default(0) // Higher = more prominent
+  category          String              @db.VarChar(100)
+  subcategory       String?             @db.VarChar(100)
+  
+  // Pricing and monetization
+  pricingModel      PricingModel        @default(FREE) @map("pricing_model")
+  price             Float?              // One-time price
+  subscriptionPrice Float?              @map("subscription_price") // Monthly price
+  currency          String              @default("USD") @db.VarChar(3)
+  
+  // Revenue sharing
+  revenueShare      Float               @default(0.7) @map("revenue_share") // Publisher's share (0-1)
+  
+  // Marketing
+  promoted          Boolean             @default(false) // Paid promotion
+  promotionStart    DateTime?           @map("promotion_start")
+  promotionEnd      DateTime?           @map("promotion_end")
+  
+  // Analytics
+  views             Int                 @default(0)
+  clicks            Int                 @default(0)
+  conversions       Int                 @default(0) // Views to installs
+  
+  // SEO
+  seoTitle          String?             @map("seo_title") @db.VarChar(200)
+  seoDescription    String?             @map("seo_description") @db.VarChar(500)
+  seoKeywords       String[]            @map("seo_keywords") @default([])
+  
+  // Timestamps
+  submittedAt       DateTime            @default(now()) @map("submitted_at")
+  approvedAt        DateTime?           @map("approved_at")
+  rejectedAt        DateTime?           @map("rejected_at")
+  listedAt          DateTime?           @map("listed_at")
+  
+  // Indexes
+  @@index([status])
+  @@index([featured])
+  @@index([priority])
+  @@index([category])
+  @@index([pricingModel])
+  @@index([promoted])
+  @@index([listedAt])
+  @@map("plugin_marketplace")
+}
+
+model Theme {
+  id                String              @id @default(cuid())
+  
+  // Theme identification
+  name              String              @db.VarChar(200)
+  slug              String              @unique @db.VarChar(100)
+  displayName       String              @map("display_name") @db.VarChar(200)
+  description       String?             @db.Text
+  
+  // Theme metadata
+  version           String              @db.VarChar(50)
+  authorId          String              @map("author_id")
+  authorName        String              @map("author_name") @db.VarChar(200)
+  
+  // Theme assets
+  previewUrl        String?             @map("preview_url") @db.Text
+  thumbnailUrl      String?             @map("thumbnail_url") @db.Text
+  screenshots       String[]            @default([])
+  
+  // Theme configuration
+  colorScheme       Json                @default("{}") @map("color_scheme") // Color palette
+  typography        Json                @default("{}") // Typography settings  
+  layout            Json                @default("{}") // Layout configuration
+  components        Json                @default("{}") // Component styles
+  
+  // CSS and assets
+  cssUrl            String?             @map("css_url") @db.Text // Main CSS file
+  assetsUrl         String?             @map("assets_url") @db.Text // Assets bundle
+  customCss         String?             @map("custom_css") @db.Text // Custom CSS
+  
+  // Theme status
+  status            ThemeStatus         @default(DRAFT)
+  isDefault         Boolean             @default(false) @map("is_default")
+  isSystemTheme     Boolean             @default(false) @map("is_system_theme")
+  
+  // Compatibility
+  supportsDarkMode  Boolean             @default(false) @map("supports_dark_mode")
+  supportsRTL       Boolean             @default(false) @map("supports_rtl")
+  responsive        Boolean             @default(true)
+  
+  // Usage tracking
+  installCount      Int                 @default(0) @map("install_count")
+  activeInstalls    Int                 @default(0) @map("active_installs")
+  
+  // Relations
+  installations     ThemeInstallation[]
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  publishedAt       DateTime?           @map("published_at")
+  
+  // Indexes
+  @@index([status])
+  @@index([authorId])
+  @@index([installCount])
+  @@index([isDefault])
+  @@map("themes")
+}
+
+model ThemeInstallation {
+  id                String              @id @default(cuid())
+  
+  // Installation target
+  userId            String?             @map("user_id")
+  organizationId    String?             @map("organization_id")
+  
+  // Theme
+  themeId           String              @map("theme_id")
+  theme             Theme               @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  
+  // Installation status
+  isActive          Boolean             @default(false) @map("is_active")
+  customizations    Json                @default("{}") // User customizations
+  
+  // Timestamps
+  installedAt       DateTime            @default(now()) @map("installed_at")
+  activatedAt       DateTime?           @map("activated_at")
+  
+  // Indexes
+  @@unique([userId, themeId])
+  @@unique([organizationId, themeId])
+  @@index([themeId])
+  @@index([isActive])
+  @@map("theme_installations")
+}
+
+model Hook {
+  id                String              @id @default(cuid())
+  
+  // Hook identification
+  name              String              @db.VarChar(200)
+  slug              String              @unique @db.VarChar(100)
+  description       String?             @db.Text
+  
+  // Hook details
+  type              HookType            // FILTER, ACTION, EVENT
+  context           String              @db.VarChar(100) // user.created, course.completed, etc.
+  priority          Int                 @default(10) // Execution priority
+  
+  // Hook signature
+  parameters        Json                @default("{}") // Expected parameters
+  returnType        String?             @map("return_type") @db.VarChar(100)
+  
+  // Status
+  isActive          Boolean             @default(true) @map("is_active")
+  isSystemHook      Boolean             @default(false) @map("is_system_hook")
+  
+  // Usage tracking
+  callCount         Int                 @default(0) @map("call_count")
+  errorCount        Int                 @default(0) @map("error_count")
+  
+  // Relations
+  handlers          HookHandler[]
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@index([type])
+  @@index([context])
+  @@index([isActive])
+  @@index([priority])
+  @@map("hooks")
+}
+
+model HookHandler {
+  id                String              @id @default(cuid())
+  
+  // Hook reference
+  hookId            String              @map("hook_id")
+  hook              Hook                @relation(fields: [hookId], references: [id], onDelete: Cascade)
+  
+  // Handler details
+  pluginId          String              @map("plugin_id")
+  handlerFunction   String              @map("handler_function") @db.VarChar(200)
+  priority          Int                 @default(10)
+  
+  // Status
+  isActive          Boolean             @default(true) @map("is_active")
+  
+  // Performance tracking
+  avgExecutionTime  Float?              @map("avg_execution_time") // in milliseconds
+  callCount         Int                 @default(0) @map("call_count")
+  errorCount        Int                 @default(0) @map("error_count")
+  lastError         String?             @map("last_error") @db.Text
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  lastCalled        DateTime?           @map("last_called")
+  
+  // Indexes
+  @@unique([hookId, pluginId, handlerFunction])
+  @@index([hookId])
+  @@index([pluginId])
+  @@index([isActive])
+  @@index([priority])
+  @@map("hook_handlers")
+}
+
+model PluginConfiguration {
+  id                String              @id @default(cuid())
+  
+  // Configuration target
+  pluginId          String              @map("plugin_id")
+  plugin            Plugin              @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  
+  installationId    String?             @map("installation_id")
+  installation      PluginInstallation? @relation(fields: [installationId], references: [id])
+  
+  // Configuration scope
+  scope             ConfigScope         // GLOBAL, USER, ORGANIZATION
+  userId            String?             @map("user_id")
+  organizationId    String?             @map("organization_id")
+  
+  // Configuration data
+  configuration     Json                @default("{}")
+  schema            Json?               // JSON Schema for validation
+  
+  // Status
+  isActive          Boolean             @default(true) @map("is_active")
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@unique([pluginId, scope, userId, organizationId])
+  @@index([pluginId])
+  @@index([installationId])
+  @@index([scope])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("plugin_configurations")
+}
+
+model PluginReview {
+  id                String              @id @default(cuid())
+  
+  // Review target
+  pluginId          String              @map("plugin_id")
+  plugin            Plugin              @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  
+  // Reviewer
+  userId            String              @map("user_id")
+  userName          String?             @map("user_name") @db.VarChar(200)
+  
+  // Review content
+  rating            Int                 // 1-5 stars
+  title             String?             @db.VarChar(200)
+  content           String?             @db.Text
+  
+  // Review context
+  version           String?             @db.VarChar(50) // Version reviewed
+  verifiedPurchase  Boolean             @default(false) @map("verified_purchase")
+  
+  // Status
+  status            ReviewStatus        @default(PUBLISHED)
+  moderatedBy       String?             @map("moderated_by")
+  moderationNotes   String?             @map("moderation_notes") @db.Text
+  
+  // Helpfulness
+  helpfulCount      Int                 @default(0) @map("helpful_count")
+  reportCount       Int                 @default(0) @map("report_count")
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  moderatedAt       DateTime?           @map("moderated_at")
+  
+  // Indexes
+  @@unique([pluginId, userId]) // One review per user per plugin
+  @@index([pluginId])
+  @@index([userId])
+  @@index([rating])
+  @@index([status])
+  @@index([createdAt])
+  @@map("plugin_reviews")
+}
+
+model PluginAnalytics {
+  id                String              @id @default(cuid())
+  
+  // Analytics target
+  pluginId          String              @map("plugin_id")
+  plugin            Plugin              @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  
+  // Time period
+  date              DateTime            @db.Date
+  hour              Int?                // 0-23 for hourly analytics
+  
+  // Usage metrics
+  activeInstalls    Int                 @default(0) @map("active_installs")
+  newInstalls       Int                 @default(0) @map("new_installs")
+  uninstalls        Int                 @default(0)
+  downloads         Int                 @default(0)
+  
+  // Engagement metrics
+  activeUsers       Int                 @default(0) @map("active_users")
+  sessionsCount     Int                 @default(0) @map("sessions_count")
+  avgSessionTime    Float?              @map("avg_session_time")
+  
+  // Performance metrics
+  errorCount        Int                 @default(0) @map("error_count")
+  crashCount        Int                 @default(0) @map("crash_count")
+  avgLoadTime       Float?              @map("avg_load_time")
+  
+  // Revenue metrics
+  revenue           Float?              // Revenue generated
+  transactions      Int                 @default(0) // Number of transactions
+  
+  // Segmentation
+  platform          String?             @db.VarChar(50) // web, mobile, desktop
+  country           String?             @db.VarChar(3)
+  userType          String?             @map("user_type") @db.VarChar(50) // student, teacher, admin
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  
+  // Indexes
+  @@unique([pluginId, date, hour, platform, country, userType])
+  @@index([pluginId])
+  @@index([date])
+  @@index([activeInstalls])
+  @@index([revenue])
+  @@map("plugin_analytics")
+}
+
+model PluginSecurity {
+  id                String              @id @default(cuid())
+  
+  // Plugin reference
+  pluginId          String              @map("plugin_id")
+  versionId         String?             @map("version_id")
+  
+  // Security scan results
+  scanType          String              @map("scan_type") @db.VarChar(100) // static, dynamic, dependency
+  scanStatus        SecurityScanStatus  @map("scan_status") @default(PENDING)
+  
+  // Vulnerabilities
+  vulnerabilities   Json                @default("[]") // Array of vulnerability objects
+  riskLevel         RiskLevel           @map("risk_level") @default(LOW)
+  score             Float?              // Security score (0-100)
+  
+  // Scan metadata
+  scannedBy         String?             @map("scanned_by")
+  scanEngine        String?             @map("scan_engine") @db.VarChar(100)
+  scanVersion       String?             @map("scan_version") @db.VarChar(50)
+  
+  // Resolution
+  resolved          Boolean             @default(false)
+  resolution        String?             @db.Text
+  resolvedBy        String?             @map("resolved_by")
+  resolvedAt        DateTime?           @map("resolved_at")
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  // Indexes
+  @@index([pluginId])
+  @@index([versionId])
+  @@index([scanStatus])
+  @@index([riskLevel])
+  @@index([resolved])
+  @@map("plugin_security")
+}
+
+// Enums
+enum PluginType {
+  FEATURE          @map("feature")
+  THEME            @map("theme")
+  INTEGRATION      @map("integration")
+  WIDGET           @map("widget")
+  ANALYTICS        @map("analytics")
+  PAYMENT          @map("payment")
+  COMMUNICATION    @map("communication")
+  CONTENT          @map("content")
+  UTILITY          @map("utility")
+  DEVELOPER_TOOL   @map("developer_tool")
+}
+
+enum PluginCategory {
+  LEARNING         @map("learning")
+  UI               @map("ui")
+  ANALYTICS        @map("analytics")
+  COMMUNICATION    @map("communication")
+  CONTENT          @map("content")
+  PRODUCTIVITY     @map("productivity")
+  SOCIAL           @map("social")
+  ECOMMERCE        @map("ecommerce")
+  INTEGRATION      @map("integration")
+  DEVELOPER        @map("developer")
+  OTHER            @map("other")
+}
+
+enum PluginStatus {
+  DRAFT
+  PENDING_REVIEW   @map("pending_review")
+  APPROVED
+  REJECTED
+  PUBLISHED
+  DEPRECATED
+  SUSPENDED
+}
+
+enum VersionStatus {
+  DRAFT
+  BETA
+  RELEASE_CANDIDATE @map("release_candidate")
+  PUBLISHED
+  DEPRECATED
+}
+
+enum InstallationStatus {
+  PENDING
+  INSTALLING
+  INSTALLED
+  FAILED
+  UPDATING
+  UNINSTALLING
+  UNINSTALLED
+}
+
+enum MarketplaceStatus {
+  PENDING_REVIEW   @map("pending_review")
+  IN_REVIEW        @map("in_review")
+  APPROVED
+  REJECTED
+  PUBLISHED
+  SUSPENDED
+  DELISTED
+}
+
+enum PricingModel {
+  FREE
+  ONE_TIME         @map("one_time")
+  SUBSCRIPTION     @map("subscription")
+  FREEMIUM         @map("freemium")
+  USAGE_BASED      @map("usage_based")
+}
+
+enum ThemeStatus {
+  DRAFT
+  PUBLISHED
+  DEPRECATED
+}
+
+enum HookType {
+  FILTER           // Modify data
+  ACTION           // Trigger actions
+  EVENT            // Listen to events
+}
+
+enum ConfigScope {
+  GLOBAL
+  USER
+  ORGANIZATION
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  HIDDEN
+  FLAGGED
+}
+
+enum SecurityScanStatus {
+  PENDING
+  SCANNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum RiskLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}

@@ -13,8 +13,12 @@ import { HealthModule } from './health/health.module';
 // Feature modules
 import { CoursesModule } from './courses/courses.module';
 import { LessonsModule } from './lessons/lessons.module';
-import { AssignmentsModule } from './assignments/assignments.module';
+import { AssignmentModule } from './assignments/assignment.module';
 import { ProgressModule } from './progress/progress.module';
+import { EnrollmentModule } from './enrollment/enrollment.module';
+import { CertificateModule } from './certificates/certificate.module';
+import { FilesModule } from './files/files.module';
+import { AuthModule } from './auth/auth.module';
 
 // Configuration
 import { validateEnv } from './config/env.validation';
@@ -76,8 +80,12 @@ import { validateEnv } from './config/env.validation';
     // Feature modules
     CoursesModule,
     LessonsModule,
-    AssignmentsModule,
+    AssignmentModule,
     ProgressModule,
+    EnrollmentModule,
+    CertificateModule,
+    FilesModule,
+    AuthModule,
 
     // Health checks
     HealthModule,

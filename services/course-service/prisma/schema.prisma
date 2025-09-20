@@ -49,10 +49,14 @@ model Course {
   reviews           CourseReview[]
   certificates      CourseCertificate[]
   
+  // File attachments
+  files             File[]
+  
   // Analytics
   viewCount         Int               @default(0)
   enrollmentCount   Int               @default(0)
   completionCount   Int               @default(0)
+  certificateCount  Int               @default(0)
   averageRating     Decimal?          @db.Decimal(3, 2)
   
   // Course settings
@@ -115,6 +119,9 @@ model Lesson {
   progress         LessonProgress[]
   assignments      Assignment[]
   
+  // File attachments
+  files            File[]
+  
   // Settings
   isPreview        Boolean           @default(false)
   isPublished      Boolean           @default(false)
@@ -161,6 +168,9 @@ model Assignment {
   
   // Student submissions
   submissions    AssignmentSubmission[]
+  
+  // File attachments
+  files          File[]
   
   // Order and settings
   order          Int
@@ -439,4 +449,71 @@ enum SubmissionStatus {
   GRADED
   NEEDS_REVISION
   APPROVED
+}
+
+model File {
+  id                 String            @id @default(cuid())
+  filename           String            // Sanitized filename used for storage  
+  originalFilename   String            @map("original_filename") // Original filename from upload
+  mimeType           String            @map("mime_type") // MIME type of the file
+  size               Int               // File size in bytes
+  path               String            // Relative path to file on disk/cloud
+  url                String            // Public URL for accessing the file
+  context            FileUploadContext // Upload context: course-cover, lesson-video, etc.
+  isPublic           Boolean           @default(false) @map("is_public") // Whether file is publicly accessible
+  userId             String            @map("user_id") // ID of user who uploaded the file
+  
+  // Associated entities (nullable)
+  courseId           String?           @map("course_id")
+  lessonId           String?           @map("lesson_id")
+  assignmentId       String?           @map("assignment_id")
+  
+  // File processing status
+  status             FileStatus        @default(UPLOADED)
+  processedUrl       String?           @map("processed_url") // URL to processed version (e.g., compressed video)
+  thumbnailUrl       String?           @map("thumbnail_url") // URL to thumbnail/preview image
+  metadata           Json              @default("{}") // Additional file metadata (dimensions, duration, etc.)
+  
+  // Timestamps
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  deletedAt          DateTime?         @map("deleted_at")
+  
+  // Relations (optional - when we have user management)
+  course             Course?           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson             Lesson?           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  assignment         Assignment?       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([userId])
+  @@index([context])
+  @@index([courseId])
+  @@index([lessonId])
+  @@index([assignmentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([isPublic])
+  @@index([userId, context])
+  @@index([courseId, context])
+  
+  @@map("files")
+}
+
+enum FileUploadContext {
+  COURSE_COVER      @map("course-cover")
+  COURSE_THUMBNAIL  @map("course-thumbnail")
+  LESSON_VIDEO      @map("lesson-video")
+  LESSON_AUDIO      @map("lesson-audio")
+  LESSON_ATTACHMENT @map("lesson-attachment")
+  ASSIGNMENT_SUBMISSION @map("assignment-submission")
+  USER_AVATAR       @map("user-avatar")
+  TEMP              @map("temp")
+}
+
+enum FileStatus {
+  UPLOADED    // File uploaded successfully
+  PROCESSING  // File is being processed (e.g., video compression)
+  READY       // File processed and ready for use
+  FAILED      // Processing failed
+  DELETED     // File marked for deletion
 }

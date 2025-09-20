@@ -1,6 +1,7 @@
 import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { User, UserSession } from '@prisma/client';
 import { TelegramOAuthService, TelegramWebAppInitData } from './telegram-oauth.service';
+import { TelegramHmacValidatorService } from './telegram-hmac-validator.service';
 import { JwtTokenService, TokenPair } from './jwt-token.service';
 import { UserService, CreateUserFromTelegramData } from '../users/user.service';
 import { UserRepository, CreateSessionData } from '../users/user.repository';
@@ -29,6 +30,7 @@ export class AuthService {
 
   constructor(
     private readonly telegramOAuth: TelegramOAuthService,
+    private readonly telegramHmacValidator: TelegramHmacValidatorService,
     private readonly jwtTokenService: JwtTokenService,
     private readonly userService: UserService,
     private readonly userRepository: UserRepository,
@@ -294,6 +296,145 @@ export class AuthService {
    */
   async validateServiceToken(token: string) {
     return this.jwtTokenService.validateServiceToken(token);
+  }
+
+  /**
+   * Authenticates or creates user with Telegram WebApp initData (with HMAC validation)
+   */
+  async authenticateOrCreateTelegramUser(
+    initData: string,
+    deviceInfo?: any,
+    ipAddress?: string
+  ): Promise<LoginResult> {
+    this.logger.debug('Authenticating user with Telegram WebApp initData');
+
+    try {
+      // Step 1: Validate Telegram WebApp initData with HMAC
+      const validatedData = this.telegramHmacValidator.validateInitDataSafe(initData);
+      
+      if (!validatedData || !validatedData.user) {
+        throw new UnauthorizedException('Invalid Telegram WebApp data or HMAC validation failed');
+      }
+
+      // Step 2: Extract user info from validated data
+      const telegramUser = validatedData.user;
+      const userData: CreateUserFromTelegramData = {
+        telegramId: telegramUser.id,
+        username: telegramUser.username,
+        firstName: telegramUser.first_name,
+        lastName: telegramUser.last_name,
+        photoUrl: telegramUser.photo_url,
+        authDate: validatedData.auth_date,
+      };
+
+      // Step 3: Create or update user
+      const user = await this.userService.authenticateOrCreateUser(userData);
+
+      // Step 4: Check if user is active
+      if (user.status === 'BANNED') {
+        throw new UnauthorizedException('User account is banned');
+      }
+
+      if (user.status === 'INACTIVE') {
+        throw new UnauthorizedException('User account is inactive');
+      }
+
+      // Step 5: Generate session and tokens
+      const sessionId = this.jwtTokenService.generateSessionId();
+      const permissions = this.userService.getUserPermissions(user);
+      const tokens = await this.jwtTokenService.generateTokenPair(user, sessionId, permissions);
+
+      // Step 6: Create session record
+      const sessionData: CreateSessionData = {
+        userId: user.id,
+        refreshToken: tokens.refreshToken,
+        deviceInfo: deviceInfo || {},
+        ipAddress,
+        userAgent: deviceInfo?.userAgent,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      };
+
+      await this.userRepository.createSession(sessionData);
+
+      // Step 7: Prepare response
+      const result: LoginResult = {
+        user: {
+          id: user.id,
+          telegramId: user.telegramId.toString(),
+          username: user.username || undefined,
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          email: user.email || undefined,
+          role: user.role,
+          subscriptionPlan: user.subscriptionPlan,
+        },
+        tokens,
+      };
+
+      this.logger.debug(`Successfully authenticated Telegram user: ${user.id}`);
+      return result;
+    } catch (error) {
+      this.logger.error('Telegram WebApp authentication failed', error);
+      
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      
+      throw new BadRequestException('Telegram WebApp authentication failed');
+    }
+  }
+
+  /**
+   * Legacy method for backward compatibility (without HMAC validation)
+   */
+  async authenticateOrCreateTelegramUserLegacy(userData: CreateUserFromTelegramData): Promise<LoginResult> {
+    this.logger.debug('Legacy Telegram authentication (without HMAC validation)');
+
+    try {
+      const user = await this.userService.authenticateOrCreateUser(userData);
+
+      if (user.status === 'BANNED') {
+        throw new UnauthorizedException('User account is banned');
+      }
+
+      if (user.status === 'INACTIVE') {
+        throw new UnauthorizedException('User account is inactive');
+      }
+
+      const sessionId = this.jwtTokenService.generateSessionId();
+      const permissions = this.userService.getUserPermissions(user);
+      const tokens = await this.jwtTokenService.generateTokenPair(user, sessionId, permissions);
+
+      const sessionData: CreateSessionData = {
+        userId: user.id,
+        refreshToken: tokens.refreshToken,
+        deviceInfo: {},
+        ipAddress: undefined,
+        userAgent: undefined,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      };
+
+      await this.userRepository.createSession(sessionData);
+
+      const result: LoginResult = {
+        user: {
+          id: user.id,
+          telegramId: user.telegramId.toString(),
+          username: user.username || undefined,
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          email: user.email || undefined,
+          role: user.role,
+          subscriptionPlan: user.subscriptionPlan,
+        },
+        tokens,
+      };
+
+      return result;
+    } catch (error) {
+      this.logger.error('Legacy Telegram authentication failed', error);
+      throw new BadRequestException('Authentication failed');
+    }
   }
 
   /**

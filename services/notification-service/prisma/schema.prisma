@@ -1,0 +1,551 @@
+// Database schema for Notification Service
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NOTIFICATION_SERVICE_DATABASE_URL")
+}
+
+model Notification {
+  id                String                   @id @default(cuid())
+  
+  // Recipient information
+  userId            String                   @map("user_id")
+  recipientEmail    String?                  @map("recipient_email")
+  recipientPhone    String?                  @map("recipient_phone")
+  telegramChatId    String?                  @map("telegram_chat_id")
+  
+  // Notification content
+  templateId        String?                  @map("template_id")
+  template          NotificationTemplate?    @relation(fields: [templateId], references: [id])
+  
+  title             String                   // Notification title
+  content           String                   // Main content (can be HTML)
+  contentPlain      String?                  @map("content_plain") // Plain text version
+  
+  // Notification type and channel
+  type              NotificationType         // WELCOME, COURSE_PURCHASED, etc.
+  channel           NotificationChannel      // EMAIL, PUSH, TELEGRAM, SMS
+  priority          NotificationPriority     @default(NORMAL)
+  
+  // Status and delivery
+  status            NotificationStatus       @default(PENDING)
+  scheduledFor      DateTime?                @map("scheduled_for") // When to send
+  sentAt            DateTime?                @map("sent_at")
+  deliveredAt       DateTime?                @map("delivered_at")
+  readAt            DateTime?                @map("read_at")
+  
+  // Retry logic
+  attempts          Int                      @default(0)
+  maxAttempts       Int                      @default(3) @map("max_attempts")
+  nextRetryAt       DateTime?                @map("next_retry_at")
+  lastError         String?                  @map("last_error")
+  
+  // Context and metadata
+  context           Json                     @default("{}") // Related entities (courseId, paymentId, etc.)
+  metadata          Json                     @default("{}") // Additional data for templates
+  personalizations Json                     @default("{}") // User-specific personalizations
+  
+  // Tracking
+  trackingId        String?                  @unique @map("tracking_id") // For external tracking
+  externalId        String?                  @map("external_id") // ID from external service (SendGrid, etc.)
+  
+  // Relations
+  deliveries        NotificationDelivery[]
+  interactions      NotificationInteraction[]
+  
+  // Timestamps
+  createdAt         DateTime                 @default(now()) @map("created_at")
+  updatedAt         DateTime                 @updatedAt @map("updated_at")
+  expiresAt         DateTime?                @map("expires_at") // When notification expires
+  
+  @@index([userId])
+  @@index([type])
+  @@index([channel])
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([createdAt])
+  @@index([templateId])
+  @@index([priority, scheduledFor])
+  @@map("notifications")
+}
+
+model NotificationTemplate {
+  id                String               @id @default(cuid())
+  
+  // Template identification
+  name              String               // Human-readable name
+  slug              String               @unique // URL-friendly identifier
+  description       String?              // Template description
+  
+  // Template content
+  subject           String               // Email subject / Push title
+  htmlContent       String               @map("html_content") // HTML version
+  textContent       String               @map("text_content") // Plain text version
+  
+  // Template settings
+  type              NotificationType     // WELCOME, COURSE_PURCHASED, etc.
+  channel           NotificationChannel  // EMAIL, PUSH, TELEGRAM, SMS
+  language          String               @default("ru") @db.VarChar(5) // Language code
+  
+  // Template variables
+  variables         Json                 @default("[]") // Available template variables
+  requiredVars      Json                 @default("[]") @map("required_vars") // Required variables
+  
+  // Design and layout
+  layout            String?              // Layout template to use
+  styles            Json                 @default("{}") // Custom styles
+  
+  // Template status
+  isActive          Boolean              @default(true) @map("is_active")
+  isDefault         Boolean              @default(false) @map("is_default") // Default template for this type
+  
+  // Version control
+  version           Int                  @default(1)
+  parentId          String?              @map("parent_id") // For template versioning
+  parent            NotificationTemplate? @relation("TemplateVersions", fields: [parentId], references: [id])
+  versions          NotificationTemplate[] @relation("TemplateVersions")
+  
+  // Usage tracking
+  usageCount        Int                  @default(0) @map("usage_count")
+  lastUsedAt        DateTime?            @map("last_used_at")
+  
+  // Relations
+  notifications     Notification[]
+  
+  // Metadata
+  metadata          Json                 @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  
+  @@index([type, channel])
+  @@index([isActive, isDefault])
+  @@index([language])
+  @@index([slug])
+  @@map("notification_templates")
+}
+
+model NotificationPreference {
+  id                String               @id @default(cuid())
+  
+  // User identification
+  userId            String               @unique @map("user_id")
+  
+  // Email preferences
+  emailEnabled      Boolean              @default(true) @map("email_enabled")
+  emailMarketing    Boolean              @default(true) @map("email_marketing")
+  emailTransactional Boolean             @default(true) @map("email_transactional")
+  emailReminders    Boolean              @default(true) @map("email_reminders")
+  
+  // Push preferences  
+  pushEnabled       Boolean              @default(true) @map("push_enabled")
+  pushMarketing     Boolean              @default(false) @map("push_marketing")
+  pushReminders     Boolean              @default(true) @map("push_reminders")
+  pushProgress      Boolean              @default(true) @map("push_progress")
+  
+  // Telegram preferences
+  telegramEnabled   Boolean              @default(true) @map("telegram_enabled")
+  telegramMarketing Boolean              @default(false) @map("telegram_marketing")
+  telegramReminders Boolean              @default(true) @map("telegram_reminders")
+  telegramProgress  Boolean              @default(true) @map("telegram_progress")
+  
+  // SMS preferences
+  smsEnabled        Boolean              @default(false) @map("sms_enabled")
+  smsTransactional  Boolean              @default(false) @map("sms_transactional")
+  
+  // Frequency settings
+  digestFrequency   DigestFrequency      @default(WEEKLY) @map("digest_frequency")
+  quietHoursStart   String?              @map("quiet_hours_start") // "22:00"
+  quietHoursEnd     String?              @map("quiet_hours_end") // "08:00"
+  timezone          String               @default("Europe/Moscow") @db.VarChar(50)
+  
+  // Notification types preferences
+  typePreferences   Json                 @default("{}") @map("type_preferences") // Per-type settings
+  
+  // Metadata
+  metadata          Json                 @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  
+  @@index([userId])
+  @@index([emailEnabled])
+  @@index([pushEnabled])
+  @@index([telegramEnabled])
+  @@map("notification_preferences")
+}
+
+model NotificationDelivery {
+  id                String               @id @default(cuid())
+  
+  // Related notification
+  notificationId    String               @map("notification_id")
+  notification      Notification         @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  // Delivery details
+  channel           NotificationChannel  // Actual delivery channel used
+  provider          String?              // Service provider (SendGrid, Firebase, etc.)
+  externalId        String?              @map("external_id") // Provider's message ID
+  
+  // Status tracking
+  status            DeliveryStatus       @default(PENDING)
+  attempts          Int                  @default(1)
+  
+  // Delivery results
+  sentAt            DateTime?            @map("sent_at")
+  deliveredAt       DateTime?            @map("delivered_at")
+  bouncedAt         DateTime?            @map("bounced_at")
+  openedAt          DateTime?            @map("opened_at")
+  clickedAt         DateTime?            @map("clicked_at")
+  
+  // Error tracking
+  errorMessage      String?              @map("error_message")
+  errorCode         String?              @map("error_code")
+  
+  // Provider response
+  providerResponse  Json?                @map("provider_response") // Full response from provider
+  
+  // Metrics
+  responseTime      Int?                 @map("response_time") // Response time in ms
+  
+  // Metadata
+  metadata          Json                 @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  
+  @@index([notificationId])
+  @@index([channel])
+  @@index([status])
+  @@index([provider])
+  @@index([externalId, provider])
+  @@map("notification_deliveries")
+}
+
+model NotificationQueue {
+  id                String               @id @default(cuid())
+  
+  // Queue information
+  queueName         String               @map("queue_name") // email, push, telegram, etc.
+  jobId             String?              @unique @map("job_id") // Bull queue job ID
+  
+  // Related notification
+  notificationId    String               @map("notification_id")
+  
+  // Processing details
+  priority          Int                  @default(0) // Higher number = higher priority
+  attempts          Int                  @default(0)
+  maxAttempts       Int                  @default(3) @map("max_attempts")
+  
+  // Timing
+  processAt         DateTime             @map("process_at") // When to process
+  processedAt       DateTime?            @map("processed_at")
+  completedAt       DateTime?            @map("completed_at")
+  failedAt          DateTime?            @map("failed_at")
+  
+  // Status
+  status            QueueStatus          @default(WAITING)
+  
+  // Error handling
+  lastError         String?              @map("last_error")
+  errorStack        String?              @map("error_stack")
+  
+  // Job data
+  jobData           Json                 @default("{}") @map("job_data")
+  
+  // Metadata
+  metadata          Json                 @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  
+  @@index([queueName])
+  @@index([status])
+  @@index([processAt])
+  @@index([priority, processAt])
+  @@index([notificationId])
+  @@map("notification_queue")
+}
+
+model NotificationInteraction {
+  id                String               @id @default(cuid())
+  
+  // Related notification
+  notificationId    String               @map("notification_id")
+  notification      Notification         @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  // User information
+  userId            String               @map("user_id")
+  
+  // Interaction details
+  type              InteractionType      // OPENED, CLICKED, DISMISSED, etc.
+  channel           NotificationChannel  // Where interaction happened
+  
+  // Context
+  linkUrl           String?              @map("link_url") // URL that was clicked
+  deviceType        String?              @map("device_type") // mobile, desktop, etc.
+  userAgent         String?              @map("user_agent")
+  ipAddress         String?              @map("ip_address")
+  
+  // Location data
+  country           String?
+  city              String?
+  
+  // Metadata
+  metadata          Json                 @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime             @default(now()) @map("created_at")
+  
+  @@index([notificationId])
+  @@index([userId])
+  @@index([type])
+  @@index([channel])
+  @@index([createdAt])
+  @@map("notification_interactions")
+}
+
+model NotificationSchedule {
+  id                String               @id @default(cuid())
+  
+  // Schedule identification
+  name              String               // Human-readable name
+  description       String?              // Schedule description
+  
+  // Target audience
+  userId            String?              @map("user_id") // For individual user
+  userSegment       String?              @map("user_segment") // For user segments
+  userQuery         Json?                @map("user_query") // Dynamic user query
+  
+  // Notification details
+  templateId        String               @map("template_id")
+  type              NotificationType
+  channel           NotificationChannel
+  priority          NotificationPriority @default(NORMAL)
+  
+  // Scheduling
+  scheduledAt       DateTime?            @map("scheduled_at") // One-time schedule
+  cronExpression    String?              @map("cron_expression") // Recurring schedule
+  timezone          String               @default("Europe/Moscow") @db.VarChar(50)
+  
+  // Schedule status
+  isActive          Boolean              @default(true) @map("is_active")
+  lastRunAt         DateTime?            @map("last_run_at")
+  nextRunAt         DateTime?            @map("next_run_at")
+  
+  // Execution limits
+  maxExecutions     Int?                 @map("max_executions") // Max times to run
+  executionCount    Int                  @default(0) @map("execution_count")
+  
+  // Context data
+  contextData       Json                 @default("{}") @map("context_data") // Data for template
+  
+  // Metadata
+  metadata          Json                 @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  
+  @@index([isActive, nextRunAt])
+  @@index([userId])
+  @@index([type])
+  @@index([channel])
+  @@map("notification_schedules")
+}
+
+model NotificationAnalytics {
+  id                String               @id @default(cuid())
+  
+  // Time period
+  date              DateTime             @db.Date // Analytics date
+  hour              Int?                 // Hour (0-23) for hourly analytics
+  
+  // Notification details
+  type              NotificationType?
+  channel           NotificationChannel?
+  templateId        String?              @map("template_id")
+  
+  // Metrics
+  sent              Int                  @default(0) // Total sent
+  delivered         Int                  @default(0) // Successfully delivered
+  opened            Int                  @default(0) // Opened/read
+  clicked           Int                  @default(0) // Clicked links
+  bounced           Int                  @default(0) // Bounced
+  failed            Int                  @default(0) // Failed to send
+  unsubscribed      Int                  @default(0) // Unsubscribed
+  
+  // Calculated rates (stored for performance)
+  deliveryRate      Float?               @map("delivery_rate") // delivered/sent
+  openRate          Float?               @map("open_rate") // opened/delivered
+  clickRate         Float?               @map("click_rate") // clicked/opened
+  bounceRate        Float?               @map("bounce_rate") // bounced/sent
+  
+  // Performance metrics
+  avgResponseTime   Int?                 @map("avg_response_time") // Average response time in ms
+  
+  // Metadata
+  metadata          Json                 @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  
+  @@unique([date, hour, type, channel, templateId])
+  @@index([date])
+  @@index([type, channel])
+  @@index([templateId])
+  @@map("notification_analytics")
+}
+
+model NotificationWebhook {
+  id                String               @id @default(cuid())
+  
+  // Webhook identification
+  provider          String               // sendgrid, mailgun, firebase, etc.
+  eventType         String               @map("event_type") // delivered, opened, clicked, etc.
+  externalId        String?              @map("external_id") // Provider's event ID
+  
+  // Related notification
+  notificationId    String?              @map("notification_id")
+  trackingId        String?              @map("tracking_id") // Alternative lookup
+  
+  // Event data
+  eventData         Json                 @map("event_data") // Full webhook payload
+  headers           Json                 @default("{}") // HTTP headers
+  
+  // Processing status
+  processed         Boolean              @default(false)
+  processedAt       DateTime?            @map("processed_at")
+  processingError   String?              @map("processing_error")
+  
+  // Metadata
+  metadata          Json                 @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime             @default(now()) @map("created_at")
+  
+  @@index([provider])
+  @@index([eventType])
+  @@index([notificationId])
+  @@index([trackingId])
+  @@index([processed])
+  @@index([externalId, provider])
+  @@map("notification_webhooks")
+}
+
+// Enums
+enum NotificationType {
+  // User lifecycle
+  WELCOME
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  ACCOUNT_DEACTIVATED
+  
+  // Course related
+  COURSE_PURCHASED
+  COURSE_ENROLLMENT
+  LESSON_COMPLETED
+  COURSE_COMPLETED
+  CERTIFICATE_ISSUED
+  
+  // Learning progress
+  LEARNING_REMINDER
+  STREAK_MILESTONE
+  ACHIEVEMENT_UNLOCKED
+  PROGRESS_SUMMARY
+  
+  // Payment related
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  SUBSCRIPTION_RENEWED
+  SUBSCRIPTION_EXPIRED
+  SUBSCRIPTION_CANCELLED
+  REFUND_PROCESSED
+  
+  // Marketing
+  NEW_COURSE_AVAILABLE
+  DISCOUNT_OFFER
+  NEWSLETTER
+  PRODUCT_UPDATE
+  
+  // System
+  MAINTENANCE_NOTICE
+  SECURITY_ALERT
+  SYSTEM_UPDATE
+  
+  // Custom
+  CUSTOM
+}
+
+enum NotificationChannel {
+  EMAIL
+  PUSH
+  TELEGRAM
+  SMS
+  IN_APP
+  WEBHOOK
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL  
+  HIGH
+  URGENT
+}
+
+enum NotificationStatus {
+  PENDING
+  QUEUED
+  PROCESSING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED
+  BOUNCED
+  OPENED
+  CLICKED
+  FAILED
+}
+
+enum QueueStatus {
+  WAITING
+  ACTIVE
+  COMPLETED
+  FAILED
+  DELAYED
+  PAUSED
+}
+
+enum InteractionType {
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  DISMISSED
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+}
+
+enum DigestFrequency {
+  DISABLED
+  DAILY
+  WEEKLY  
+  MONTHLY
+}

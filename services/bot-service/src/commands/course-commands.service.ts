@@ -333,29 +333,54 @@ export class CourseCommandsService {
     inProgress: Course[];
   }): InlineKeyboardButton[][] {
     const keyboard: InlineKeyboardButton[][] = [];
+    const webAppUrl = process.env.APP_URL || 'https://gongbu.appletownworld.com';
 
     // Курсы в процессе изучения
     userCourses.inProgress.forEach((course, index) => {
-      keyboard.push([{
-        text: `🔥 ${course.title}`,
-        callback_data: `my_course_${course.id}`,
-      }]);
+      keyboard.push([
+        {
+          text: `🔥 ${course.title}`,
+          callback_data: `my_course_${course.id}`,
+        },
+        {
+          text: '🚀 Открыть',
+          web_app: {
+            url: `${webAppUrl}/student/${course.slug}`
+          }
+        }
+      ]);
     });
 
     // Завершенные курсы
     userCourses.completed.forEach((course, index) => {
-      keyboard.push([{
-        text: `✅ ${course.title}`,
-        callback_data: `completed_course_${course.id}`,
-      }]);
+      keyboard.push([
+        {
+          text: `✅ ${course.title}`,
+          callback_data: `completed_course_${course.id}`,
+        },
+        {
+          text: '📖 Повторить',
+          web_app: {
+            url: `${webAppUrl}/student/${course.slug}`
+          }
+        }
+      ]);
     });
 
     // Записанные курсы
     userCourses.enrolled.forEach((course, index) => {
-      keyboard.push([{
-        text: `📚 ${course.title}`,
-        callback_data: `enrolled_course_${course.id}`,
-      }]);
+      keyboard.push([
+        {
+          text: `📚 ${course.title}`,
+          callback_data: `enrolled_course_${course.id}`,
+        },
+        {
+          text: '🎯 Начать',
+          web_app: {
+            url: `${webAppUrl}/student/${course.slug}`
+          }
+        }
+      ]);
     });
 
     keyboard.push([
@@ -392,6 +417,15 @@ export class CourseCommandsService {
    */
   private createCourseDetailsKeyboard(course: Course): InlineKeyboardButton[][] {
     const keyboard: InlineKeyboardButton[][] = [];
+
+    // 🎯 ОСНОВНАЯ КНОПКА - ЗАПУСК МИНИ-ПРИЛОЖЕНИЯ
+    const webAppUrl = process.env.APP_URL || 'https://gongbu.appletownworld.com';
+    keyboard.push([{
+      text: '🚀 Начать изучение',
+      web_app: {
+        url: `${webAppUrl}/student/${course.slug}`
+      }
+    }]);
 
     // Основные действия
     if (course.price > 0) {

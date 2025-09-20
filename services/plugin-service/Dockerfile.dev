@@ -1,0 +1,48 @@
+# Development Dockerfile for Gongbu Plugin Service
+FROM node:20-alpine
+
+# Install curl for health checks and build dependencies
+RUN apk add --no-cache curl python3 make g++ git zip unzip tar gzip jq bash
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install all dependencies (including dev dependencies)
+RUN npm install
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy source code
+COPY . .
+
+# Create directories for development
+RUN mkdir -p \
+    /app/plugins/installed \
+    /app/plugins/marketplace \
+    /app/plugins/themes \
+    /app/plugins/packages \
+    /app/plugins/cache \
+    /app/tmp/plugins \
+    /app/data/security \
+    /app/data/analytics \
+    /app/data/backups \
+    /app/logs \
+    /app/sandbox/js \
+    /app/sandbox/wasm \
+    /app/sandbox/docker \
+    /app/sandbox/temp
+
+# Expose port
+EXPOSE 3008
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3008/health/live || exit 1
+
+# Start the application in development mode with hot reload
+CMD ["npm", "run", "start:dev"]

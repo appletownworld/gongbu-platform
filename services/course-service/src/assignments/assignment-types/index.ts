@@ -1,0 +1,183 @@
+/**
+ * Assignment Types Index
+ * Экспортирует все типы заданий и их обработчики
+ */
+
+export { QuizAssignmentHandler, type QuizAssignmentContent, type QuizSubmissionContent, type QuizQuestion } from './quiz.assignment';
+export { CodeAssignmentHandler, type CodeAssignmentContent, type CodeSubmissionContent, type CodeTestCase } from './code.assignment';
+
+// Базовый интерфейс для всех типов заданий
+export interface BaseAssignmentHandler<TContent = any, TSubmission = any> {
+  validateContent(content: any): { isValid: boolean; errors: string[] };
+  createTemplate(): TContent;
+  prepareForStudent(content: TContent): any;
+  gradeSubmission(assignmentContent: TContent, submissionContent: TSubmission): Promise<any> | any;
+  validateSubmission(assignmentContent: TContent, submissionContent: any): { isValid: boolean; errors: string[] };
+}
+
+// Фабрика для получения обработчика типа задания
+export class AssignmentTypeFactory {
+  private static handlers = new Map([
+    ['QUIZ', QuizAssignmentHandler],
+    ['CODE', CodeAssignmentHandler],
+  ]);
+
+  static getHandler(type: string): BaseAssignmentHandler | null {
+    return this.handlers.get(type.toUpperCase()) || null;
+  }
+
+  static getSupportedTypes(): string[] {
+    return Array.from(this.handlers.keys());
+  }
+
+  static registerHandler(type: string, handler: BaseAssignmentHandler): void {
+    this.handlers.set(type.toUpperCase(), handler);
+  }
+}
+
+// Утилиты для работы с заданиями
+export class AssignmentUtils {
+  /**
+   * Валидирует контент задания в зависимости от типа
+   */
+  static validateAssignmentContent(type: string, content: any): { isValid: boolean; errors: string[] } {
+    const handler = AssignmentTypeFactory.getHandler(type);
+    if (!handler) {
+      return { isValid: false, errors: [`Неподдерживаемый тип задания: ${type}`] };
+    }
+
+    return handler.validateContent(content);
+  }
+
+  /**
+   * Создает шаблон задания
+   */
+  static createAssignmentTemplate(type: string): any {
+    const handler = AssignmentTypeFactory.getHandler(type);
+    if (!handler) {
+      throw new Error(`Неподдерживаемый тип задания: ${type}`);
+    }
+
+    return handler.createTemplate();
+  }
+
+  /**
+   * Подготавливает задание для студента
+   */
+  static prepareAssignmentForStudent(type: string, content: any): any {
+    const handler = AssignmentTypeFactory.getHandler(type);
+    if (!handler) {
+      return content; // Возвращаем как есть для неизвестных типов
+    }
+
+    return handler.prepareForStudent(content);
+  }
+
+  /**
+   * Автоматически проверяет подачу задания
+   */
+  static async gradeAssignmentSubmission(
+    type: string, 
+    assignmentContent: any, 
+    submissionContent: any
+  ): Promise<any> {
+    const handler = AssignmentTypeFactory.getHandler(type);
+    if (!handler) {
+      throw new Error(`Автоматическая проверка не поддерживается для типа: ${type}`);
+    }
+
+    const result = handler.gradeSubmission(assignmentContent, submissionContent);
+    
+    // Если результат - промис, дожидаемся его выполнения
+    if (result instanceof Promise) {
+      return await result;
+    }
+    
+    return result;
+  }
+
+  /**
+   * Валидирует подачу задания
+   */
+  static validateAssignmentSubmission(
+    type: string, 
+    assignmentContent: any, 
+    submissionContent: any
+  ): { isValid: boolean; errors: string[] } {
+    const handler = AssignmentTypeFactory.getHandler(type);
+    if (!handler) {
+      return { isValid: true, errors: [] }; // Пропускаем валидацию для неизвестных типов
+    }
+
+    return handler.validateSubmission(assignmentContent, submissionContent);
+  }
+
+  /**
+   * Проверяет, поддерживает ли тип автоматическую проверку
+   */
+  static supportsAutoGrading(type: string): boolean {
+    const autoGradableTypes = ['QUIZ', 'CODE'];
+    return autoGradableTypes.includes(type.toUpperCase());
+  }
+
+  /**
+   * Получает рекомендуемые настройки для типа задания
+   */
+  static getDefaultSettings(type: string): Record<string, any> {
+    const defaults = {
+      QUIZ: {
+        allowRetries: false,
+        showCorrectAnswers: true,
+        timeLimit: 1800, // 30 минут
+        shuffleQuestions: false,
+        shuffleAnswers: false,
+      },
+      CODE: {
+        allowRetries: true,
+        maxRetries: 10,
+        showTestResults: true,
+        timeLimit: 3600, // 1 час
+        enableSyntaxHighlighting: true,
+        enableAutoCompletion: true,
+      },
+      ESSAY: {
+        allowRetries: false,
+        wordLimit: 1000,
+        enableSpellCheck: true,
+        allowFileAttachments: true,
+      },
+      PROJECT: {
+        allowRetries: true,
+        allowFileAttachments: true,
+        maxFileSize: 100 * 1024 * 1024, // 100MB
+        allowedFileTypes: ['.zip', '.tar.gz', '.pdf', '.docx'],
+      },
+      UPLOAD: {
+        allowRetries: true,
+        maxFileSize: 50 * 1024 * 1024, // 50MB
+        allowedFileTypes: ['.pdf', '.docx', '.txt', '.jpg', '.png'],
+        requireDescription: false,
+      },
+      PEER_REVIEW: {
+        reviewersPerSubmission: 3,
+        reviewCriteria: ['quality', 'originality', 'clarity'],
+        allowSelfReview: false,
+        anonymousReview: true,
+      }
+    };
+
+    return defaults[type.toUpperCase() as keyof typeof defaults] || {};
+  }
+}
+
+// Константы типов заданий
+export const ASSIGNMENT_TYPES = {
+  QUIZ: 'QUIZ',
+  ESSAY: 'ESSAY', 
+  CODE: 'CODE',
+  PROJECT: 'PROJECT',
+  UPLOAD: 'UPLOAD',
+  PEER_REVIEW: 'PEER_REVIEW',
+} as const;
+
+export type AssignmentType = typeof ASSIGNMENT_TYPES[keyof typeof ASSIGNMENT_TYPES];

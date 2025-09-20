@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { TelegramOAuthService } from './telegram-oauth.service';
+import { TelegramHmacValidatorService } from './telegram-hmac-validator.service';
 import { JwtTokenService } from './jwt-token.service';
 import { UserService } from '../users/user.service';
 import { UserRepository } from '../users/user.repository';
@@ -31,6 +32,7 @@ import { PrismaModule } from '../config/prisma.module';
     // Core services
     AuthService,
     TelegramOAuthService,
+    TelegramHmacValidatorService,
     JwtTokenService,
     UserService,
     UserRepository,

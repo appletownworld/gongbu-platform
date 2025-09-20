@@ -15,9 +15,14 @@ import MyCoursesPage from '@/pages/MyCoursesPage'
 import CourseEditorPage from '@/pages/CourseEditorPage'
 import StudentApp from '@/pages/StudentApp'
 import LoginPage from '@/pages/auth/LoginPage'
+import AccessDeniedPage from '@/pages/auth/AccessDeniedPage'
 import DashboardPage from '@/pages/DashboardPage'
 import ProfilePage from '@/pages/ProfilePage'
 import NotFoundPage from '@/pages/NotFoundPage'
+
+// Auth components
+import ProtectedRoute, { StudentRoute, CreatorRoute, AdminRoute } from '@/components/auth/ProtectedRoute'
+import AuthDebugPanel from '@/components/auth/AuthDebugPanel'
 
 // Providers
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -34,17 +39,65 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:slug" element={<CourseDetailPage />} />
-            <Route path="/login" element={<LoginPage />} />
             
-            {/* Protected routes */}
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/create-course" element={<CreateCoursePage />} />
-            <Route path="/my-courses" element={<MyCoursesPage />} />
-            <Route path="/courses/:slug/edit" element={<CourseEditorPage />} />
+            {/* Auth routes */}
+            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/login" element={<LoginPage />} /> {/* Backwards compatibility */}
+            <Route path="/access-denied" element={<AccessDeniedPage />} />
             
-            {/* Student Telegram WebApp */}
-            <Route path="/student/:slug" element={<StudentApp />} />
+            {/* Protected routes for all authenticated users */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Creator/Admin routes */}
+            <Route 
+              path="/create-course" 
+              element={
+                <CreatorRoute>
+                  <CreateCoursePage />
+                </CreatorRoute>
+              } 
+            />
+            <Route 
+              path="/my-courses" 
+              element={
+                <CreatorRoute>
+                  <MyCoursesPage />
+                </CreatorRoute>
+              } 
+            />
+            <Route 
+              path="/courses/:slug/edit" 
+              element={
+                <CreatorRoute>
+                  <CourseEditorPage />
+                </CreatorRoute>
+              } 
+            />
+            
+            {/* Student routes (включая Telegram WebApp) */}
+            <Route 
+              path="/student/:slug" 
+              element={
+                <StudentRoute>
+                  <StudentApp />
+                </StudentRoute>
+              } 
+            />
             
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
@@ -61,6 +114,9 @@ function App() {
             className: 'bg-white shadow-lg border border-secondary-200',
           }}
         />
+
+        {/* Auth Debug Panel (development only) */}
+        <AuthDebugPanel />
       </div>
     </AuthProvider>
   )

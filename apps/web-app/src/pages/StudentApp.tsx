@@ -13,6 +13,7 @@ import {
   DocumentTextIcon
 } from '@heroicons/react/24/outline'
 import { coursesApi } from '@/services/api'
+import { autoAuthWithTelegram, getTelegramUser, isTelegramWebApp, setupTokenRefresh } from '@/services/telegramAuth'
 
 // Telegram WebApp types
 declare global {
@@ -62,7 +63,39 @@ const StudentApp: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0)
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set())
-  // const [isLessonCompleted, setIsLessonCompleted] = useState(false) // Unused variable
+  const [authUser, setAuthUser] = useState<any>(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  // Автоматическая авторизация при загрузке
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        console.log('🚀 Инициализация StudentApp...')
+        
+        // Настройка автоматического обновления токенов
+        setupTokenRefresh()
+        
+        // Автоматическая авторизация через Telegram
+        const user = await autoAuthWithTelegram()
+        
+        if (user) {
+          setAuthUser(user)
+          console.log('✅ Пользователь автоматически авторизован:', user.firstName)
+        } else if (isTelegramWebApp()) {
+          console.log('⚠️ Не удалось авторизоваться, но работаем в Telegram')
+        } else {
+          console.log('ℹ️ Гостевой режим (не Telegram WebApp)')
+        }
+        
+      } catch (error) {
+        console.error('❌ Ошибка инициализации авторизации:', error)
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    initializeAuth()
+  }, [])
 
   // Telegram WebApp initialization
   useEffect(() => {
@@ -83,8 +116,8 @@ const StudentApp: React.FC = () => {
     }
   }, [])
 
-  // Get Telegram user data
-  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+  // Get Telegram user data (для отображения)
+  const telegramUser = getTelegramUser()
 
   // Fetch course data
   const { data: course, isLoading: courseLoading } = useQuery({
@@ -188,12 +221,19 @@ const StudentApp: React.FC = () => {
     }
   }
 
-  if (courseLoading || lessonsLoading) {
+  if (authLoading || courseLoading || lessonsLoading) {
     return (
       <div className="min-h-screen bg-secondary-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-secondary-600">Загрузка курса...</p>
+          <p className="text-secondary-600">
+            {authLoading ? 'Авторизация...' : 'Загрузка курса...'}
+          </p>
+          {isTelegramWebApp() && authLoading && (
+            <p className="text-xs text-secondary-400 mt-2">
+              Получаем данные из Telegram...
+            </p>
+          )}
         </div>
       </div>
     )
@@ -223,6 +263,7 @@ const StudentApp: React.FC = () => {
             {course.title}
           </h1>
           <div className="flex items-center space-x-2">
+            {/* Показываем пользователя из авторизации или Telegram */}
             {telegramUser?.photo_url ? (
               <img 
                 src={telegramUser.photo_url} 
@@ -232,6 +273,12 @@ const StudentApp: React.FC = () => {
             ) : (
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <UserIcon className="w-5 h-5" />
+              </div>
+            )}
+            {/* Индикатор авторизации */}
+            {authUser && (
+              <div className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                ✓
               </div>
             )}
           </div>

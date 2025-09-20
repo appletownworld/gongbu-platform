@@ -21,7 +21,18 @@
   },
   "homepage": "https://github.com/appletownworld/gongbu-platform#readme",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.1",
+    "@modelcontextprotocol/server-filesystem": "^2025.8.21",
+    "@modelcontextprotocol/server-sequential-thinking": "^2025.7.1",
+    "@monsoft/mcp-postgres": "^0.6.0",
+    "@thgamble/containerization-assist-mcp": "^1.4.2",
     "express": "^5.1.0",
+    "mcp-docker": "^1.0.0",
+    "mcp-server-kubernetes": "^2.9.5",
+    "mcp-telegram-bot-server": "^1.0.11",
     "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "puppeteer-mcp-server": "^0.7.2"
   }
 }

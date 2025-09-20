@@ -1,0 +1,462 @@
+// Database schema for Payment Service
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PAYMENT_SERVICE_DATABASE_URL")
+}
+
+model Payment {
+  id                String            @id @default(cuid())
+  
+  // Payment identification
+  externalId        String?           // ID from payment provider (Stripe, YooKassa)
+  orderNumber       String            @unique @map("order_number") // Human-readable order number
+  
+  // User and course information
+  userId            String            @map("user_id")
+  courseId          String?           @map("course_id") // For single course purchase
+  subscriptionId    String?           @map("subscription_id") // For subscription
+  
+  // Payment details
+  amount            Decimal           @db.Decimal(10, 2) // Payment amount
+  currency          String            @default("RUB") @db.VarChar(3) // ISO currency code
+  description       String            // Payment description
+  
+  // Payment method and provider
+  paymentMethod     PaymentMethod     @map("payment_method")
+  provider          PaymentProvider   // Stripe, YooKassa, etc.
+  providerData      Json              @default("{}") @map("provider_data") // Provider-specific data
+  
+  // Status tracking
+  status            PaymentStatus     @default(PENDING)
+  statusHistory     Json              @default("[]") @map("status_history") // Status change history
+  
+  // URLs and redirects
+  confirmationUrl   String?           @map("confirmation_url") // URL for user to complete payment
+  returnUrl         String?           @map("return_url") // URL to redirect after payment
+  
+  // Receipt and invoice
+  receiptData       Json?             @map("receipt_data") // Receipt details for tax authorities
+  invoiceId         String?           @map("invoice_id") // Reference to invoice
+  
+  // Metadata
+  metadata          Json              @default("{}") // Additional metadata
+  
+  // Relations
+  subscription      Subscription?     @relation(fields: [subscriptionId], references: [id])
+  transactions      Transaction[]
+  refunds           Refund[]
+  invoice           Invoice?          @relation(fields: [invoiceId], references: [id])
+  
+  // Timestamps
+  paidAt            DateTime?         @map("paid_at")
+  expiresAt         DateTime?         @map("expires_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  @@index([userId])
+  @@index([courseId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([provider])
+  @@index([createdAt])
+  @@index([externalId, provider])
+  @@map("payments")
+}
+
+model Subscription {
+  id                String                @id @default(cuid())
+  
+  // User information
+  userId            String                @map("user_id")
+  
+  // Subscription details
+  planId            String                @map("plan_id")
+  plan              SubscriptionPlan      @relation(fields: [planId], references: [id])
+  
+  // External provider data
+  externalId        String?               // ID from payment provider
+  provider          PaymentProvider
+  providerData      Json                  @default("{}") @map("provider_data")
+  
+  // Subscription status
+  status            SubscriptionStatus    @default(ACTIVE)
+  
+  // Dates
+  currentPeriodStart DateTime             @map("current_period_start")
+  currentPeriodEnd   DateTime             @map("current_period_end")
+  trialStart         DateTime?            @map("trial_start")
+  trialEnd           DateTime?            @map("trial_end")
+  canceledAt         DateTime?            @map("canceled_at")
+  cancelAtPeriodEnd  Boolean              @default(false) @map("cancel_at_period_end")
+  
+  // Billing
+  nextBillingDate   DateTime?             @map("next_billing_date")
+  lastBillingDate   DateTime?             @map("last_billing_date")
+  
+  // Relations
+  payments          Payment[]
+  invoices          Invoice[]
+  
+  // Metadata
+  metadata          Json                  @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
+  
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+  @@index([provider])
+  @@index([nextBillingDate])
+  @@index([externalId, provider])
+  @@map("subscriptions")
+}
+
+model SubscriptionPlan {
+  id                String            @id @default(cuid())
+  
+  // Plan identification
+  name              String            // Plan name (e.g., "Premium Monthly")
+  slug              String            @unique // URL-friendly identifier
+  description       String?           // Plan description
+  
+  // Pricing
+  price             Decimal           @db.Decimal(10, 2)
+  currency          String            @default("RUB") @db.VarChar(3)
+  
+  // Billing
+  interval          BillingInterval   // MONTHLY, YEARLY, etc.
+  intervalCount     Int               @default(1) @map("interval_count") // Every N intervals
+  
+  // Trial
+  trialDays         Int               @default(0) @map("trial_days")
+  
+  // Features
+  features          Json              @default("[]") // Array of features included
+  courseAccess      Json              @default("[]") // Course IDs that this plan provides access to
+  
+  // Plan settings
+  isActive          Boolean           @default(true) @map("is_active")
+  isPublic          Boolean           @default(true) @map("is_public") // Visible to users
+  
+  // Limits
+  maxCourses        Int?              @map("max_courses") // Maximum courses user can enroll
+  maxStorage        BigInt?           @map("max_storage") // Storage limit in bytes
+  
+  // Relations
+  subscriptions     Subscription[]
+  
+  // Metadata
+  metadata          Json              @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  @@index([isActive, isPublic])
+  @@index([interval])
+  @@map("subscription_plans")
+}
+
+model Transaction {
+  id                String              @id @default(cuid())
+  
+  // Transaction identification
+  externalId        String?             // ID from payment provider
+  paymentId         String              @map("payment_id")
+  payment           Payment             @relation(fields: [paymentId], references: [id])
+  
+  // Transaction details
+  type              TransactionType     // CHARGE, REFUND, PARTIAL_REFUND, etc.
+  amount            Decimal             @db.Decimal(10, 2)
+  currency          String              @db.VarChar(3)
+  
+  // Status
+  status            TransactionStatus   @default(PENDING)
+  
+  // Provider details
+  provider          PaymentProvider
+  providerData      Json                @default("{}") @map("provider_data")
+  
+  // Fee information
+  fee               Decimal?            @db.Decimal(10, 2) // Provider fee
+  netAmount         Decimal?            @db.Decimal(10, 2) @map("net_amount") // Amount after fees
+  
+  // Metadata
+  description       String?
+  metadata          Json                @default("{}")
+  
+  // Timestamps
+  processedAt       DateTime?           @map("processed_at")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  @@index([paymentId])
+  @@index([type])
+  @@index([status])
+  @@index([provider])
+  @@index([externalId, provider])
+  @@map("transactions")
+}
+
+model Refund {
+  id                String            @id @default(cuid())
+  
+  // Refund identification
+  externalId        String?           // ID from payment provider
+  paymentId         String            @map("payment_id")
+  payment           Payment           @relation(fields: [paymentId], references: [id])
+  
+  // Refund details
+  amount            Decimal           @db.Decimal(10, 2)
+  currency          String            @db.VarChar(3)
+  reason            RefundReason
+  description       String?
+  
+  // Status
+  status            RefundStatus      @default(PENDING)
+  
+  // Provider details
+  provider          PaymentProvider
+  providerData      Json              @default("{}") @map("provider_data")
+  
+  // Admin information
+  initiatedBy       String?           @map("initiated_by") // User ID who initiated refund
+  
+  // Metadata
+  metadata          Json              @default("{}")
+  
+  // Timestamps
+  processedAt       DateTime?         @map("processed_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  @@index([paymentId])
+  @@index([status])
+  @@index([reason])
+  @@index([externalId, provider])
+  @@map("refunds")
+}
+
+model Invoice {
+  id                String              @id @default(cuid())
+  
+  // Invoice identification
+  number            String              @unique // Human-readable invoice number
+  
+  // Customer information
+  userId            String              @map("user_id")
+  subscriptionId    String?             @map("subscription_id")
+  subscription      Subscription?       @relation(fields: [subscriptionId], references: [id])
+  
+  // Invoice details
+  description       String
+  amount            Decimal             @db.Decimal(10, 2)
+  currency          String              @db.VarChar(3)
+  taxAmount         Decimal             @default(0) @db.Decimal(10, 2) @map("tax_amount")
+  totalAmount       Decimal             @db.Decimal(10, 2) @map("total_amount")
+  
+  // Status
+  status            InvoiceStatus       @default(DRAFT)
+  
+  // Dates
+  issueDate         DateTime            @map("issue_date")
+  dueDate           DateTime            @map("due_date")
+  paidDate          DateTime?           @map("paid_date")
+  
+  // PDF and files
+  pdfUrl            String?             @map("pdf_url")
+  
+  // Relations
+  payments          Payment[]
+  
+  // Metadata
+  metadata          Json                @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+model WebhookEvent {
+  id                String              @id @default(cuid())
+  
+  // Event identification
+  externalId        String?             // Event ID from provider
+  provider          PaymentProvider
+  eventType         String              @map("event_type") // Type of webhook event
+  
+  // Event data
+  data              Json                // Full webhook payload
+  headers           Json                @default("{}") // HTTP headers from webhook
+  
+  // Processing status
+  processed         Boolean             @default(false)
+  processedAt       DateTime?           @map("processed_at")
+  processingError   String?             @map("processing_error")
+  retryCount        Int                 @default(0) @map("retry_count")
+  
+  // Related entities
+  paymentId         String?             @map("payment_id")
+  subscriptionId    String?             @map("subscription_id")
+  
+  // Metadata
+  metadata          Json                @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  @@index([provider])
+  @@index([eventType])
+  @@index([processed])
+  @@index([externalId, provider])
+  @@index([paymentId])
+  @@index([subscriptionId])
+  @@map("webhook_events")
+}
+
+model PayoutInfo {
+  id                String              @id @default(cuid())
+  
+  // Recipient information
+  recipientId       String              @map("recipient_id") // Creator/instructor user ID
+  
+  // Payout details
+  amount            Decimal             @db.Decimal(10, 2)
+  currency          String              @db.VarChar(3)
+  period            String              // "2023-10" for monthly payouts
+  
+  // Status
+  status            PayoutStatus        @default(PENDING)
+  
+  // Provider details
+  provider          PaymentProvider?
+  externalId        String?             // Payout ID from provider
+  
+  // Calculation details
+  totalEarnings     Decimal             @db.Decimal(10, 2) @map("total_earnings")
+  platformFee       Decimal             @db.Decimal(10, 2) @map("platform_fee")
+  taxes             Decimal             @db.Decimal(10, 2) @default(0)
+  
+  // Metadata
+  metadata          Json                @default("{}")
+  breakdown         Json                @default("[]") // Detailed earnings breakdown
+  
+  // Timestamps
+  scheduledDate     DateTime            @map("scheduled_date")
+  processedAt       DateTime?           @map("processed_at")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  @@index([recipientId])
+  @@index([status])
+  @@index([period])
+  @@index([scheduledDate])
+  @@unique([recipientId, period])
+  @@map("payout_info")
+}
+
+// Enums
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  WALLET
+  CRYPTOCURRENCY
+  APPLE_PAY
+  GOOGLE_PAY
+  PAYPAL
+}
+
+enum PaymentProvider {
+  STRIPE
+  YOOKASSA
+  PAYPAL
+  MANUAL
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  UNPAID
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+}
+
+enum BillingInterval {
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum TransactionType {
+  CHARGE
+  REFUND
+  PARTIAL_REFUND
+  ADJUSTMENT
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+enum RefundReason {
+  DUPLICATE
+  FRAUDULENT
+  REQUESTED_BY_CUSTOMER
+  FAILED_CHARGE
+  EXPIRED_UNCAPTURED_CHARGE
+  OTHER
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}
+
+enum PayoutStatus {
+  PENDING
+  IN_TRANSIT
+  PAID
+  FAILED
+  CANCELLED
+}

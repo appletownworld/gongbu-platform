@@ -1,0 +1,55 @@
+{
+  "mcpServers": {
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "YOUR_GITHUB_TOKEN_HERE"
+      }
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "Accept": "application/json, text/event-stream",
+        "Content-Type": "application/json"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["@monsoft/mcp-postgres", "--connection-string", "postgresql://postgres:postgres@localhost:5433/gongbu_dev"],
+      "cwd": "/home/zebracoder/projects/gongbu_app"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "/home/zebracoder/projects/gongbu_app"],
+      "cwd": "/home/zebracoder/projects/gongbu_app"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-sequential-thinking"],
+      "cwd": "/home/zebracoder/projects/gongbu_app"
+    },
+    "kubernetes": {
+      "command": "npx",
+      "args": ["mcp-server-kubernetes"],
+      "cwd": "/home/zebracoder/projects/gongbu_app"
+    },
+    "telegram": {
+      "command": "npx",
+      "args": ["mcp-telegram-bot-server"],
+      "env": {
+        "TELEGRAM_BOT_TOKEN": "8464711606:AAG3oqGrg3P1_qvqfGFzGSmxlVDjuc9_a9w"
+      },
+      "cwd": "/home/zebracoder/projects/gongbu_app"
+    },
+    "terminal": {
+      "command": "node",
+      "args": ["simple-terminal-mcp.js"],
+      "cwd": "/home/zebracoder/projects/gongbu_app"
+    },
+    "browser": {
+      "command": "npx",
+      "args": ["puppeteer-mcp-server"],
+      "cwd": "/home/zebracoder/projects/gongbu_app"
+    }
+  }
+}

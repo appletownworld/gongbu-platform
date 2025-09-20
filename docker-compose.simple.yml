@@ -6,15 +6,15 @@ services:
     image: postgres:15-alpine
     container_name: gongbu_postgres
     environment:
-      POSTGRES_DB: gongbu_platform
-      POSTGRES_USER: ${DB_USER:-gongbu_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-gongbu_platform}
+      POSTGRES_USER: ${POSTGRES_USER:-gongbu_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-gongbu_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gongbu_user}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -112,9 +112,9 @@ services:
     container_name: gongbu_web_app
     environment:
       - NODE_ENV=production
-      - REACT_APP_API_BASE_URL=${API_BASE_URL}
-      - REACT_APP_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
-      - REACT_APP_WEBAPP_URL=${WEBAPP_URL}
+      - VITE_API_BASE_URL=${API_BASE_URL}
+      - VITE_TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
+      - VITE_WEBAPP_URL=${WEBAPP_URL}
     ports:
       - "3000:3000"
     depends_on:

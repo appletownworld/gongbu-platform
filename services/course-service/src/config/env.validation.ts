@@ -26,6 +26,8 @@ export const envValidationSchema = Joi.object({
   // File Storage
   STORAGE_PROVIDER: Joi.string().valid('local', 's3', 'gcs').default('local'),
   UPLOAD_MAX_SIZE: Joi.number().default(100 * 1024 * 1024), // 100MB
+  FILE_STORAGE_PATH: Joi.string().default('/app/uploads'),
+  BASE_URL: Joi.string().uri().default('http://localhost:3002'),
   
   // AWS S3 (if using S3 storage)
   AWS_ACCESS_KEY_ID: Joi.string().when('STORAGE_PROVIDER', { is: 's3', then: Joi.required() }),
@@ -43,6 +45,9 @@ export const envValidationSchema = Joi.object({
   // Video Processing
   ENABLE_VIDEO_PROCESSING: Joi.boolean().default(false),
   FFMPEG_PATH: Joi.string().optional(),
+  
+  // Inter-service Communication
+  AUTH_SERVICE_URL: Joi.string().uri().default('http://auth-service:3001'),
   
   // Search (Elasticsearch)
   ELASTICSEARCH_URL: Joi.string().uri().default('http://localhost:9200'),
