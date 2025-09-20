@@ -223,7 +223,6 @@ export class EnrollmentController {
       discountCode: enrollment.discountCode,
       paidAmount: enrollment.paidAmount ? Number(enrollment.paidAmount) : undefined,
       settings: enrollment.settings,
-      course: enrollment.course,
       createdAt: enrollment.createdAt,
       updatedAt: enrollment.updatedAt,
     };
@@ -280,7 +279,6 @@ export class EnrollmentController {
       courseId: enrollment.courseId,
       status: enrollment.status,
       enrolledAt: enrollment.enrolledAt,
-      course: enrollment.course,
     };
   }
 
@@ -436,8 +434,7 @@ export class EnrollmentController {
         discountCode: enrollment.discountCode,
         paidAmount: enrollment.paidAmount ? Number(enrollment.paidAmount) : undefined,
         settings: enrollment.settings,
-        course: enrollment.course,
-        progress: enrollment.progress?.[0] || null,
+        // progress: enrollment.progress?.[0] || null, // Field doesn't exist
         createdAt: enrollment.createdAt,
         updatedAt: enrollment.updatedAt,
       })),
@@ -492,8 +489,7 @@ export class EnrollmentController {
       status: enrollment.status,
       enrolledAt: enrollment.enrolledAt,
       completedAt: enrollment.completedAt,
-      course: enrollment.course,
-      progress: enrollment.progress?.[0] || null,
+      // progress: enrollment.progress?.[0] || null, // Field doesn't exist
     }));
   }
 
@@ -549,7 +545,7 @@ export class EnrollmentController {
       discountCode: enrollment.discountCode,
       paidAmount: enrollment.paidAmount ? Number(enrollment.paidAmount) : undefined,
       settings: enrollment.settings,
-      progress: enrollment.progress?.[0] || null,
+      // progress: enrollment.progress?.[0] || null, // Field doesn't exist
       createdAt: enrollment.createdAt,
       updatedAt: enrollment.updatedAt,
     }));
@@ -583,9 +579,9 @@ export class EnrollmentController {
   @ApiResponse({ status: 404, description: 'Запись не найдена' })
   async getEnrollment(
     @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: UserContext,
     @Query('includeProgress') includeProgress?: boolean,
-    @Query('includePayment') includePayment?: boolean,
-    @GetUser() user: UserContext
+    @Query('includePayment') includePayment?: boolean
   ) {
     this.logger.debug(`Получение записи: ${id}`, { requesterId: user.userId });
 
@@ -609,8 +605,7 @@ export class EnrollmentController {
       discountCode: enrollment.discountCode,
       paidAmount: enrollment.paidAmount ? Number(enrollment.paidAmount) : undefined,
       settings: enrollment.settings,
-      course: enrollment.course,
-      progress: enrollment.progress?.[0] || null,
+      // progress: enrollment.progress?.[0] || null, // Field doesn't exist
       createdAt: enrollment.createdAt,
       updatedAt: enrollment.updatedAt,
     };
@@ -771,8 +766,8 @@ export class EnrollmentController {
         id: enrollment.id,
         status: enrollment.status,
         enrolledAt: enrollment.enrolledAt,
-        course: enrollment.course,
-        progress: enrollment.progress?.[0] || null,
+        courseId: enrollment.courseId,
+        // progress: enrollment.progress?.[0] || null, // Field doesn't exist
       } : null,
     };
   }

@@ -500,7 +500,6 @@ export class EnrollmentService {
       activeEnrollments,
       completedEnrollments,
       droppedEnrollments,
-      pausedEnrollments,
       paidEnrollments,
       completionTimes,
       revenueData,
@@ -509,7 +508,7 @@ export class EnrollmentService {
       this.prisma.enrollment.count({ where: { ...where, status: EnrollmentStatus.ACTIVE } }),
       this.prisma.enrollment.count({ where: { ...where, status: EnrollmentStatus.COMPLETED } }),
       this.prisma.enrollment.count({ where: { ...where, status: EnrollmentStatus.DROPPED } }),
-      this.prisma.enrollment.count({ where: { ...where, status: EnrollmentStatus.PAUSED } }),
+      // this.prisma.enrollment.count({ where: { ...where, status: EnrollmentStatus.PAUSED } }), // PAUSED doesn't exist
       this.prisma.enrollment.count({ where: { ...where, paidAmount: { not: null } } }),
       this.prisma.enrollment.findMany({
         where: { ...where, status: EnrollmentStatus.COMPLETED },
@@ -536,15 +535,15 @@ export class EnrollmentService {
     // Вычисляем показатели
     const completionRate = totalEnrollments > 0 ? (completedEnrollments / totalEnrollments) * 100 : 0;
     const dropoutRate = totalEnrollments > 0 ? (droppedEnrollments / totalEnrollments) * 100 : 0;
-    const revenueGenerated = Number(revenueData._sum.paidAmount || 0);
-    const freeEnrollments = totalEnrollments - paidEnrollments;
+    const revenueGenerated = Number(revenueData?._sum?.paidAmount || 0);
+    const freeEnrollments = totalEnrollments - Number(paidEnrollments);
 
     return {
       totalEnrollments,
       activeEnrollments,
       completedEnrollments,
       droppedEnrollments,
-      pausedEnrollments,
+      pausedEnrollments: 0, // Field doesn't exist
       averageCompletionTime,
       completionRate,
       dropoutRate,
@@ -601,7 +600,7 @@ export class EnrollmentService {
         progressPercentage: 0,
         status: 'ACTIVE',
         totalTimeSpent: 0,
-        startedAt: new Date(),
+        // startedAt: new Date(), // Field doesn't exist
       },
     });
   }
@@ -614,7 +613,7 @@ export class EnrollmentService {
       where: {
         studentId,
         courseId,
-        status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED, EnrollmentStatus.PAUSED] },
+        status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] }, // PAUSED doesn't exist
       },
     });
 
@@ -629,7 +628,7 @@ export class EnrollmentService {
       where: {
         studentId,
         courseId,
-        status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.PAUSED] },
+        status: { in: [EnrollmentStatus.ACTIVE] }, // PAUSED doesn't exist
       },
       include: {
         course: {

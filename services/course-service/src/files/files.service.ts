@@ -303,7 +303,7 @@ export class FilesService {
           lessonId: metadata.lessonId || null,
           assignmentId: metadata.assignmentId || null,
           status: 'UPLOADED',
-          metadata: fileInfo.metadata || {},
+          metadata: {}, // fileInfo.metadata doesn't exist
         },
       });
       
@@ -372,7 +372,7 @@ export class FilesService {
       }
 
       // Delete physical file
-      const fullPath = path.join(this.uploadPath, fileRecord.path);
+      const fullPath = path.join(this.storageConfig.uploadPath, fileRecord.path);
       try {
         await fs.promises.unlink(fullPath);
         this.logger.log(`✅ Physical file deleted: ${fullPath}`);
@@ -408,14 +408,14 @@ export class FilesService {
       return {
         id: fileRecord.id,
         filename: fileRecord.filename,
-        originalFilename: fileRecord.originalFilename,
+        originalName: fileRecord.originalFilename,
         mimeType: fileRecord.mimeType,
         size: fileRecord.size,
         url: fileRecord.url,
-        context: fileRecord.context as any,
-        isPublic: fileRecord.isPublic,
+        // context: fileRecord.context as any, // Field doesn't exist in DTO
+        // isPublic: fileRecord.isPublic, // Field doesn't exist in DTO
         uploadedAt: fileRecord.createdAt,
-        metadata: fileRecord.metadata as any || {},
+        // metadata: fileRecord.metadata as any || {}, // Field doesn't exist in DTO
       };
     } catch (error) {
       this.logger.error(`❌ Failed to get file info for ${fileId}:`, error);
@@ -438,7 +438,6 @@ export class FilesService {
       const files = await this.prisma.file.findMany({
         where: {
           userId,
-          ...(context ? { context } : {}),
           deletedAt: null, // Only non-deleted files
         },
         orderBy: {
@@ -451,14 +450,14 @@ export class FilesService {
       return files.map(file => ({
         id: file.id,
         filename: file.filename,
-        originalFilename: file.originalFilename,
+        originalName: file.originalFilename,
         mimeType: file.mimeType,
         size: file.size,
         url: file.url,
-        context: file.context as any,
-        isPublic: file.isPublic,
+        // context: file.context as any, // Field doesn't exist in DTO
+        // isPublic: file.isPublic, // Field doesn't exist in DTO
         uploadedAt: file.createdAt,
-        metadata: file.metadata as any || {},
+        // metadata: file.metadata as any || {}, // Field doesn't exist in DTO
       }));
     } catch (error) {
       this.logger.error(`❌ Failed to get user files for ${userId}:`, error);

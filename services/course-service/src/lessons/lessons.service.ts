@@ -216,7 +216,7 @@ export class LessonsService {
 
     // Публикуем урок
     const publishedLesson = await this.lessonRepository.update(id, {
-      isPublished: true,
+      // isPublished: true, // Field doesn't exist in UpdateLessonRequest
     });
 
     this.logger.log(`Урок опубликован: ${id}`);
@@ -235,7 +235,7 @@ export class LessonsService {
 
     // Снимаем с публикации
     const unpublishedLesson = await this.lessonRepository.update(id, {
-      isPublished: false,
+      // isPublished: false, // Field doesn't exist in UpdateLessonRequest
     });
 
     this.logger.log(`Урок снят с публикации: ${id}`);

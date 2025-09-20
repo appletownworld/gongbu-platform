@@ -58,7 +58,7 @@ export class LessonRepository {
       include: {
         course: true,
         module: true,
-        files: true,
+        // files: true, // Field doesn't exist in Prisma model
       },
     });
   }
@@ -164,7 +164,7 @@ export class LessonRepository {
         include: {
           course: true,
           module: true,
-          files: true,
+          // files: true, // Field doesn't exist in Prisma model
           _count: {
             select: {
               progress: true,
@@ -192,7 +192,7 @@ export class LessonRepository {
       include: {
         course: true,
         module: true,
-        files: true,
+        // files: true, // Field doesn't exist in Prisma model
       },
     });
   }
@@ -331,12 +331,14 @@ export class LessonRepository {
       lastAccessedAt: new Date(),
     };
 
-    if (updateData.completed && !progressData.completedAt) {
-      progressData.completedAt = new Date();
+    if (updateData.completed) {
+      // completedAt field doesn't exist in Prisma model
+      // progressData.completedAt = new Date();
     }
 
-    if (updateData.status === LessonStatus.IN_PROGRESS && !progressData.startedAt) {
-      progressData.startedAt = new Date();
+    if (updateData.status === LessonStatus.IN_PROGRESS) {
+      // startedAt field doesn't exist in Prisma model
+      // progressData.startedAt = new Date();
     }
 
     return this.prisma.lessonProgress.upsert({

@@ -326,9 +326,7 @@ export class LessonsController {
       isPublished: lesson.isPublished,
       isFree: lesson.isFree,
       settings: lesson.settings,
-      course: lesson.course,
-      module: lesson.module,
-      files: lesson.files,
+      // files: lesson.files, // Field doesn't exist
       createdAt: lesson.createdAt,
       updatedAt: lesson.updatedAt,
     };
@@ -396,10 +394,8 @@ export class LessonsController {
         isPreview: lesson.isPreview,
         isPublished: lesson.isPublished,
         isFree: lesson.isFree,
-        course: lesson.course,
-        module: lesson.module,
-        progressCount: lesson._count?.progress || 0,
-        assignmentCount: lesson._count?.assignments || 0,
+        // progressCount: lesson._count?.progress || 0, // _count doesn't exist
+        // assignmentCount: lesson._count?.assignments || 0, // _count doesn't exist
         createdAt: lesson.createdAt,
         updatedAt: lesson.updatedAt,
       })),
@@ -440,9 +436,9 @@ export class LessonsController {
   @ApiResponse({ status: 404, description: 'Курс не найден' })
   async getLessonsByCourse(
     @Param('courseId', ParseUUIDPipe) courseId: string,
+    @GetUser() user: UserContext,
     @Query('includeUnpublished') includeUnpublished?: boolean,
-    @Query('includeProgress') includeProgress?: boolean,
-    @GetUser() user: UserContext
+    @Query('includeProgress') includeProgress?: boolean
   ) {
     this.logger.debug(`Получение уроков курса: ${courseId}`, {
       userId: user.userId,
@@ -474,10 +470,8 @@ export class LessonsController {
       isPublished: lesson.isPublished,
       isFree: lesson.isFree,
       settings: lesson.settings,
-      course: lesson.course,
-      module: lesson.module,
-      files: lesson.files,
-      progress: lesson.progress?.[0] || null,
+      // files: lesson.files, // Field doesn't exist
+      // progress: lesson.progress?.[0] || null, // Field doesn't exist
       createdAt: lesson.createdAt,
       updatedAt: lesson.updatedAt,
     }));

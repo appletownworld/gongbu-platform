@@ -79,13 +79,14 @@ async function bootstrap() {
   });
 
   // Health check endpoint
-  app.getHttpAdapter().get('/health', (req, res) => {
-    res.json({
+  app.getHttpAdapter().get('/health', (req: any, res: any) => {
+    const response = {
       service: 'course-service',
       status: 'healthy',
       timestamp: new Date().toISOString(),
       version: '1.0.0',
-    });
+    };
+    res.json(response);
   });
 
   const port = process.env.PORT || 3002;

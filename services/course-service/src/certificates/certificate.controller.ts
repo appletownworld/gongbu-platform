@@ -535,9 +535,9 @@ export class CertificateController {
   @ApiResponse({ status: 404, description: 'Сертификат не найден' })
   async getCertificate(
     @Param('certificateId') certificateId: string,
+    @GetUser() user: UserContext,
     @Query('includeTemplate') includeTemplate?: boolean,
-    @Query('includeMetadata') includeMetadata?: boolean,
-    @GetUser() user: UserContext
+    @Query('includeMetadata') includeMetadata?: boolean
   ) {
     this.logger.debug(`Получение сертификата: ${certificateId}`, { requesterId: user.userId });
 
@@ -561,10 +561,10 @@ export class CertificateController {
       status: certificate.status,
       // fingerprint: certificate.fingerprint, // Поле не существует в Prisma модели
       // templateId: certificate.templateId, // Поле не существует в Prisma модели
-      templateData: includeMetadata ? certificate.templateData : undefined,
-      metadata: includeMetadata ? certificate.metadata : undefined,
+      // templateData: includeMetadata ? certificate.templateData : undefined, // Поле не существует в Prisma модели
+      // metadata: includeMetadata ? certificate.metadata : undefined, // Поле не существует в Prisma модели
       enrollmentId: certificate.enrollmentId, // enrollment не существует, используем enrollmentId
-      issuerInfo: certificate.issuerInfo,
+      // issuerInfo: certificate.issuerInfo, // Поле не существует в Prisma модели
       // revokedAt: certificate.revokedAt, // Поле не существует в Prisma модели
       // revokedBy: certificate.revokedBy, // Поле не существует в Prisma модели
       // revocationReason: certificate.revocationReason, // Поле не существует в Prisma модели

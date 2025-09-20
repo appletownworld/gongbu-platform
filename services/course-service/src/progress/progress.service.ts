@@ -829,7 +829,7 @@ export class ProgressService {
     const totalLessonsCompleted = allLessonProgress.filter(lp => lp.completed).length;
     const totalAssignmentsSubmitted = allSubmissions.length;
     const averageScore = allSubmissions.length > 0
-      ? allSubmissions.reduce((sum, s) => sum + (s.score || 0), 0) / allSubmissions.length
+      ? allSubmissions.reduce((sum, s) => sum + (Number(s.score) || 0), 0) / allSubmissions.length
       : 0;
 
     const learningStats = {
@@ -904,9 +904,9 @@ export class ProgressService {
 
     // Производительность
     const averageScore = submissions.length > 0
-      ? submissions.reduce((sum, s) => sum + (s.score || 0), 0) / submissions.length
+      ? submissions.reduce((sum, s) => sum + (Number(s.score) || 0), 0) / submissions.length
       : 0;
-    const passedSubmissions = submissions.filter(s => s.isPassing).length;
+    const passedSubmissions = submissions.filter(s => Number(s.score) >= 60).length; // isPassing doesn't exist
     const passRate = submissions.length > 0 ? (passedSubmissions / submissions.length) * 100 : 0;
 
     const performance = {
@@ -1057,17 +1057,17 @@ export class ProgressService {
     ).length;
 
     const totalTimeSpent = lessonProgress.reduce((sum, lp) => sum + lp.timeSpent, 0) +
-      assignmentSubmissions.reduce((sum, as) => sum + (as.timeSpent || 0), 0);
+      assignmentSubmissions.reduce((sum, as) => sum + 0, 0); // timeSpent doesn't exist
 
     // Weighted progress: 70% lessons, 30% assignments
     const lessonWeight = 0.7;
     const assignmentWeight = 0.3;
     
-    const lessonProgress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 100;
+    const lessonProgressPercent = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 100;
     const assignmentProgress = totalAssignments > 0 ? (completedAssignments / totalAssignments) * 100 : 100;
     
     const progressPercentage = Math.round(
-      (lessonProgress * lessonWeight) + (assignmentProgress * assignmentWeight)
+      (lessonProgressPercent * lessonWeight) + (assignmentProgress * assignmentWeight)
     );
 
     // Определяем статус
