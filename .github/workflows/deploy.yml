@@ -43,13 +43,15 @@ jobs:
           PORT=3000
           
           # Database
-          DATABASE_URL=postgresql://gongbu_user:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/gongbu_platform
+          DATABASE_URL=postgresql://gongbu_user:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/gongbu_platform
           DB_USER=gongbu_user
           DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_USER=gongbu_user
+          POSTGRES_DB=gongbu_platform
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           
           # Redis
-          REDIS_URL=redis://localhost:6379
+          REDIS_URL=redis://redis:6379
           REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
           
           # JWT
@@ -196,16 +198,60 @@ jobs:
           echo "JWT_SECRET установлен: $([ -n "$JWT_SECRET" ] && echo "✅ Да" || echo "❌ Нет")"  
           echo "TELEGRAM_BOT_TOKEN установлен: $([ -n "$TELEGRAM_BOT_TOKEN" ] && echo "✅ Да" || echo "❌ Нет")"
           
-          # Запуск упрощенной системы (только существующие сервисы)
-          echo "🚀 Запуск Docker Compose..."
-          docker-compose -f docker-compose.simple.yml up -d --build 2>&1 | head -100
+          # Диагностика перед запуском 
+          echo "🔍 ДИАГНОСТИКА ПЕРЕД ЗАПУСКОМ:"
+          echo "✅ Docker version: $(docker --version)"
+          echo "✅ Docker Compose version: $(docker-compose --version)"
+          echo "📋 Environment variables check:"
+          echo "  - POSTGRES_USER: ${POSTGRES_USER:-not_set}"
+          echo "  - POSTGRES_DB: ${POSTGRES_DB:-not_set}" 
+          echo "  - DATABASE_URL check: $(echo $DATABASE_URL | sed 's/:[^@]*@/:***@/g')"
           
-          # Небольшая пауза для инициализации контейнеров
-          sleep 10
+          # Очистка предыдущих контейнеров (решение из devlog 19.09)
+          echo "🧹 Очистка предыдущих контейнеров..."
+          docker-compose -f docker-compose.simple.yml down --remove-orphans 2>/dev/null || true
+          docker system prune -f || true
+          
+          # Запуск упрощенной системы (только существующие сервисы)
+          echo "🚀 Запуск Docker Compose с детальным логированием..."
+          docker-compose -f docker-compose.simple.yml up -d --build --force-recreate 2>&1 | tee build.log
+          
+          # Проверяем статус сборки
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "❌ ОШИБКА СБОРКИ! Показываем последние 50 строк:"
+            tail -50 build.log
+            exit 1
+          fi
+          
+          # Увеличиваем время ожидания для медленных VPS
+          echo "⏳ Ожидание инициализации контейнеров (30 сек)..."
+          sleep 30
           
           # Проверка что контейнеры хотя бы пытались запуститься
           echo "🔍 ПРОВЕРКА СТАТУСА КОНТЕЙНЕРОВ:"
           docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "Не удалось получить статус контейнеров"
+          
+          # Если контейнеры не запустились - показываем детальные логи
+          RUNNING_CONTAINERS=$(docker ps --format "{{.Names}}" | wc -l)
+          echo "📊 Количество запущенных контейнеров: $RUNNING_CONTAINERS"
+          
+          if [ "$RUNNING_CONTAINERS" -lt 2 ]; then
+            echo "⚠️ МАЛО КОНТЕЙНЕРОВ ЗАПУЩЕНО! Показываем детальные логи сборки:"
+            echo "📋 Последние 100 строк build.log:"
+            tail -100 build.log || echo "build.log не найден"
+            
+            echo ""
+            echo "📋 Docker Compose логи для всех сервисов:"
+            docker-compose -f docker-compose.simple.yml logs --tail=50 || echo "Не удалось получить compose логи"
+            
+            echo ""
+            echo "📋 Логи отдельных контейнеров:"
+            for container in $(docker ps -a --format "{{.Names}}"); do
+              echo "--- Логи $container ---"
+              docker logs --tail=20 "$container" 2>&1 || echo "Не удалось получить логи $container"
+              echo ""
+            done
+          fi
           
           echo ""
           echo "🔍 DOCKER COMPOSE статус:"
