@@ -138,8 +138,8 @@ services:
       # - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro            # Вариант 2: nginx.conf в папке nginx/ (раскомментируйте при необходимости)
       - ./nginx/html:/usr/share/nginx/html                       # For ACME challenge (Let's Encrypt)
       # SSL certificates (выберите подходящий вариант)
-      - ./letsencrypt:/etc/letsencrypt:ro                        # Вариант 1: SSL в проекте  
-      # - /etc/letsencrypt:/etc/letsencrypt:ro                   # Вариант 2: Системные SSL (раскомментируйте при необходимости)
+      # - ./letsencrypt:/etc/letsencrypt:ro                      # Вариант 1: SSL в проекте (если скопированы из системы)
+      - /etc/letsencrypt:/etc/letsencrypt:ro                     # Вариант 2: Системные SSL (рекомендуется для production)
     depends_on:
       - web-app
       - bot-service

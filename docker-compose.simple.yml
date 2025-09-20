@@ -141,7 +141,9 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/html:/usr/share/nginx/html        # For ACME challenge (Let's Encrypt)
-      - /etc/letsencrypt:/etc/letsencrypt:ro      # For SSL certificates (fixed path)
+      - /etc/letsencrypt:/etc/letsencrypt:ro      # For SSL certificates (system path)
+      # Alternative: use local project certificates if copied from system
+      # - ./letsencrypt:/etc/letsencrypt:ro       # For SSL certificates (project path)
     depends_on:
       - web-app
       - auth-service
