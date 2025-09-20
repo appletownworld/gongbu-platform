@@ -179,17 +179,16 @@ export class CertificateController {
       id: certificate.id,
       certificateId: certificate.certificateId,
       certificateNumber: certificate.certificateNumber,
-      studentId: certificate.studentId,
+      userId: certificate.userId, // studentId не существует, используем userId
       courseId: certificate.courseId,
-      issuedAt: certificate.issuedAt,
-      expiresAt: certificate.expiresAt,
+      issuedAt: certificate.issueDate, // issuedAt не существует, используем issueDate
+      expiresAt: certificate.expiryDate, // expiresAt не существует, используем expiryDate
       status: certificate.status,
-      fingerprint: certificate.fingerprint,
-      templateId: certificate.templateId,
-      templateData: certificate.templateData,
-      metadata: certificate.metadata,
-      course: certificate.course,
-      enrollment: certificate.enrollment,
+      // fingerprint: certificate.fingerprint, // Поле не существует в Prisma модели
+      // templateId: certificate.templateId, // Поле не существует в Prisma модели
+      // templateData: certificate.templateData, // Поле не существует в Prisma модели
+      // metadata: certificate.metadata, // Поле не существует в Prisma модели
+      enrollmentId: certificate.enrollmentId, // enrollment не существует, используем enrollmentId
       createdAt: certificate.createdAt,
       updatedAt: certificate.updatedAt,
     };
@@ -244,10 +243,9 @@ export class CertificateController {
       certificateId: certificate.certificateId,
       certificateNumber: certificate.certificateNumber,
       courseId: certificate.courseId,
-      issuedAt: certificate.issuedAt,
-      expiresAt: certificate.expiresAt,
+      issuedAt: certificate.issueDate, // issuedAt не существует, используем issueDate
+      expiresAt: certificate.expiryDate, // expiresAt не существует, используем expiryDate
       status: certificate.status,
-      course: certificate.course,
     };
   }
 
@@ -326,20 +324,19 @@ export class CertificateController {
         id: certificate.id,
         certificateId: certificate.certificateId,
         certificateNumber: certificate.certificateNumber,
-        studentId: certificate.studentId,
+        userId: certificate.userId, // studentId не существует, используем userId
         courseId: certificate.courseId,
-        issuedAt: certificate.issuedAt,
-        expiresAt: certificate.expiresAt,
+        issuedAt: certificate.issueDate, // issuedAt не существует, используем issueDate
+        expiresAt: certificate.expiryDate, // expiresAt не существует, используем expiryDate
         status: certificate.status,
-        fingerprint: certificate.fingerprint,
-        templateId: certificate.templateId,
+        // fingerprint: certificate.fingerprint, // Поле не существует в Prisma модели
+        // templateId: certificate.templateId, // Поле не существует в Prisma модели
         templateData: query.includeMetadata ? certificate.templateData : undefined,
         metadata: query.includeMetadata ? certificate.metadata : undefined,
-        course: certificate.course,
-        enrollment: certificate.enrollment,
-        revokedAt: certificate.revokedAt,
-        revokedBy: certificate.revokedBy,
-        revocationReason: certificate.revocationReason,
+        enrollmentId: certificate.enrollmentId, // enrollment не существует, используем enrollmentId
+        // revokedAt: certificate.revokedAt, // Поле не существует в Prisma модели
+        // revokedBy: certificate.revokedBy, // Поле не существует в Prisma модели
+        // revocationReason: certificate.revocationReason, // Поле не существует в Prisma модели
         createdAt: certificate.createdAt,
         updatedAt: certificate.updatedAt,
       })),
@@ -393,11 +390,10 @@ export class CertificateController {
       certificateId: certificate.certificateId,
       certificateNumber: certificate.certificateNumber,
       courseId: certificate.courseId,
-      issuedAt: certificate.issuedAt,
-      expiresAt: certificate.expiresAt,
+      issuedAt: certificate.issueDate, // issuedAt не существует, используем issueDate
+      expiresAt: certificate.expiryDate, // expiresAt не существует, используем expiryDate
       status: certificate.status,
-      course: certificate.course,
-      enrollment: certificate.enrollment,
+      enrollmentId: certificate.enrollmentId, // enrollment не существует, используем enrollmentId
     }));
   }
 
@@ -448,17 +444,17 @@ export class CertificateController {
       id: certificate.id,
       certificateId: certificate.certificateId,
       certificateNumber: certificate.certificateNumber,
-      studentId: certificate.studentId,
-      issuedAt: certificate.issuedAt,
-      expiresAt: certificate.expiresAt,
+      userId: certificate.userId, // studentId не существует, используем userId
+      issuedAt: certificate.issueDate, // issuedAt не существует, используем issueDate
+      expiresAt: certificate.expiryDate, // expiresAt не существует, используем expiryDate
       status: certificate.status,
-      fingerprint: certificate.fingerprint,
-      templateData: certificate.templateData,
-      metadata: certificate.metadata,
-      enrollment: certificate.enrollment,
-      revokedAt: certificate.revokedAt,
-      revokedBy: certificate.revokedBy,
-      revocationReason: certificate.revocationReason,
+      // fingerprint: certificate.fingerprint, // Поле не существует в Prisma модели
+      // templateData: certificate.templateData, // Поле не существует в Prisma модели
+      // metadata: certificate.metadata, // Поле не существует в Prisma модели
+      enrollmentId: certificate.enrollmentId, // enrollment не существует, используем enrollmentId
+      // revokedAt: certificate.revokedAt, // Поле не существует в Prisma модели
+      // revokedBy: certificate.revokedBy, // Поле не существует в Prisma модели
+      // revocationReason: certificate.revocationReason, // Поле не существует в Prisma модели
       createdAt: certificate.createdAt,
       updatedAt: certificate.updatedAt,
     }));
@@ -494,14 +490,13 @@ export class CertificateController {
       certificate: validation.certificate ? {
         certificateId: validation.certificate.certificateId,
         certificateNumber: validation.certificate.certificateNumber,
-        studentId: validation.certificate.studentId,
+        userId: validation.certificate.userId, // studentId не существует, используем userId
         courseId: validation.certificate.courseId,
-        issuedAt: validation.certificate.issuedAt,
-        expiresAt: validation.certificate.expiresAt,
+        issuedAt: validation.certificate.issueDate, // issuedAt не существует, используем issueDate
+        expiresAt: validation.certificate.expiryDate, // expiresAt не существует, используем expiryDate
         status: validation.certificate.status,
-        course: validation.certificate.course,
-        templateData: validation.certificate.templateData,
-        metadata: validation.certificate.metadata,
+        // templateData: validation.certificate.templateData, // Поле не существует в Prisma модели
+        // metadata: validation.certificate.metadata, // Поле не существует в Prisma модели
       } : undefined,
       errors: validation.errors,
       validatedAt: validation.validatedAt,
@@ -559,21 +554,20 @@ export class CertificateController {
       id: certificate.id,
       certificateId: certificate.certificateId,
       certificateNumber: certificate.certificateNumber,
-      studentId: certificate.studentId,
+      userId: certificate.userId, // studentId не существует, используем userId
       courseId: certificate.courseId,
-      issuedAt: certificate.issuedAt,
-      expiresAt: certificate.expiresAt,
+      issuedAt: certificate.issueDate, // issuedAt не существует, используем issueDate
+      expiresAt: certificate.expiryDate, // expiresAt не существует, используем expiryDate
       status: certificate.status,
-      fingerprint: certificate.fingerprint,
-      templateId: certificate.templateId,
+      // fingerprint: certificate.fingerprint, // Поле не существует в Prisma модели
+      // templateId: certificate.templateId, // Поле не существует в Prisma модели
       templateData: includeMetadata ? certificate.templateData : undefined,
       metadata: includeMetadata ? certificate.metadata : undefined,
-      course: certificate.course,
-      enrollment: certificate.enrollment,
+      enrollmentId: certificate.enrollmentId, // enrollment не существует, используем enrollmentId
       issuerInfo: certificate.issuerInfo,
-      revokedAt: certificate.revokedAt,
-      revokedBy: certificate.revokedBy,
-      revocationReason: certificate.revocationReason,
+      // revokedAt: certificate.revokedAt, // Поле не существует в Prisma модели
+      // revokedBy: certificate.revokedBy, // Поле не существует в Prisma модели
+      // revocationReason: certificate.revocationReason, // Поле не существует в Prisma модели
       createdAt: certificate.createdAt,
       updatedAt: certificate.updatedAt,
     };
@@ -629,9 +623,9 @@ export class CertificateController {
       certificateId: certificate.certificateId,
       certificateNumber: certificate.certificateNumber,
       status: certificate.status,
-      revokedAt: certificate.revokedAt,
-      revokedBy: certificate.revokedBy,
-      revocationReason: certificate.revocationReason,
+      // revokedAt: certificate.revokedAt, // Поле не существует в Prisma модели
+      // revokedBy: certificate.revokedBy, // Поле не существует в Prisma модели
+      // revocationReason: certificate.revocationReason, // Поле не существует в Prisma модели
       updatedAt: certificate.updatedAt,
     };
   }
@@ -676,9 +670,9 @@ export class CertificateController {
       certificateId: certificate.certificateId,
       certificateNumber: certificate.certificateNumber,
       status: certificate.status,
-      revokedAt: certificate.revokedAt,
-      revokedBy: certificate.revokedBy,
-      revocationReason: certificate.revocationReason,
+      // revokedAt: certificate.revokedAt, // Поле не существует в Prisma модели
+      // revokedBy: certificate.revokedBy, // Поле не существует в Prisma модели
+      // revocationReason: certificate.revocationReason, // Поле не существует в Prisma модели
       updatedAt: certificate.updatedAt,
     };
   }

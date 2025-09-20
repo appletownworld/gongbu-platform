@@ -46,6 +46,9 @@ class CreateSubmissionDto implements CreateSubmissionRequest {
   assignmentId: string;
 
   @IsString()
+  enrollmentId: string; // Добавляем обязательное поле
+
+  @IsString()
   studentId: string;
 
   @IsObject()
@@ -358,7 +361,6 @@ export class SubmissionController {
       // timeSpent: submission.timeSpent, // Поле не существует в Prisma модели
       attachments: submission.attachments,
       // metadata: submission.metadata, // Поле не существует в Prisma модели
-      assignment: submission.assignment,
       createdAt: submission.createdAt,
       updatedAt: submission.updatedAt,
     };
