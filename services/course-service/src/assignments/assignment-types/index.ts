@@ -21,21 +21,22 @@ export interface BaseAssignmentHandler<TContent = any, TSubmission = any> {
 
 // Фабрика для получения обработчика типа задания
 export class AssignmentTypeFactory {
-  private static handlers = new Map([
+  private static handlers = new Map<string, any>([
     ['QUIZ', QuizAssignmentHandler],
     ['CODE', CodeAssignmentHandler],
   ]);
 
   static getHandler(type: string): BaseAssignmentHandler | null {
-    return this.handlers.get(type.toUpperCase()) || null;
+    const HandlerClass = this.handlers.get(type.toUpperCase());
+    return HandlerClass ? new HandlerClass() : null;
   }
 
   static getSupportedTypes(): string[] {
     return Array.from(this.handlers.keys());
   }
 
-  static registerHandler(type: string, handler: BaseAssignmentHandler): void {
-    this.handlers.set(type.toUpperCase(), handler);
+  static registerHandler(type: string, HandlerClass: any): void {
+    this.handlers.set(type.toUpperCase(), HandlerClass);
   }
 }
 

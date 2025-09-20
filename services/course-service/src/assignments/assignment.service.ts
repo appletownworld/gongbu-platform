@@ -6,10 +6,9 @@ import {
   Assignment,
   AssignmentSubmission,
   AssignmentType,
-  SubmissionStatus,
-  File
+  SubmissionStatus
 } from '@prisma/client';
-import { EnvironmentVariables } from '../config/env.validation';
+// import { EnvironmentVariables } from '../config/env.validation'; // Не используется
 import { AssignmentUtils } from './assignment-types';
 
 export interface CreateAssignmentRequest {
@@ -99,7 +98,7 @@ export class AssignmentService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly configService: ConfigService<EnvironmentVariables>,
+    private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -182,7 +181,7 @@ export class AssignmentService {
         lesson: {
           select: { id: true, title: true, order: true }
         },
-        files: true,
+        // files: true, // Модель File не существует в Prisma
         submissions: includeSubmissions ? {
           include: {
             enrollment: {
@@ -369,7 +368,7 @@ export class AssignmentService {
           lesson: {
             select: { id: true, title: true, order: true }
           },
-          files: true,
+          // files: true, // Модель File не существует в Prisma
           _count: {
             select: {
               submissions: true,

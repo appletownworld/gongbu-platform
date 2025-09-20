@@ -223,8 +223,8 @@ export class SubmissionController {
       score: submission.score,
       maxScore: submission.maxScore,
       feedback: submission.feedback,
-      isPassing: submission.isPassing,
-      timeSpent: submission.timeSpent,
+      // isPassing: submission.isPassing, // Поле не существует в Prisma модели
+      // timeSpent: submission.timeSpent, // Поле не существует в Prisma модели
       attachments: submission.attachments,
       createdAt: submission.createdAt,
       updatedAt: submission.updatedAt,
@@ -290,13 +290,12 @@ export class SubmissionController {
         score: submission.score,
         maxScore: submission.maxScore,
         feedback: submission.feedback,
-        isPassing: submission.isPassing,
+        // isPassing: submission.isPassing, // Поле не существует в Prisma модели
         submittedAt: submission.submittedAt,
         gradedAt: submission.gradedAt,
         gradedBy: submission.gradedBy,
-        timeSpent: submission.timeSpent,
+        // timeSpent: submission.timeSpent, // Поле не существует в Prisma модели
         attachments: submission.attachments,
-        assignment: submission.assignment,
         createdAt: submission.createdAt,
         updatedAt: submission.updatedAt,
       })),
@@ -351,14 +350,14 @@ export class SubmissionController {
       score: submission.score,
       maxScore: submission.maxScore,
       feedback: submission.feedback,
-      rubricScores: submission.rubricScores,
-      isPassing: submission.isPassing,
+      // rubricScores: submission.rubricScores, // Поле не существует в Prisma модели
+      // isPassing: submission.isPassing, // Поле не существует в Prisma модели
       submittedAt: submission.submittedAt,
       gradedAt: submission.gradedAt,
       gradedBy: submission.gradedBy,
-      timeSpent: submission.timeSpent,
+      // timeSpent: submission.timeSpent, // Поле не существует в Prisma модели
       attachments: submission.attachments,
-      metadata: submission.metadata,
+      // metadata: submission.metadata, // Поле не существует в Prisma модели
       assignment: submission.assignment,
       createdAt: submission.createdAt,
       updatedAt: submission.updatedAt,
@@ -454,8 +453,8 @@ export class SubmissionController {
       score: submission.score,
       maxScore: submission.maxScore,
       feedback: submission.feedback,
-      rubricScores: submission.rubricScores,
-      isPassing: submission.isPassing,
+      // rubricScores: submission.rubricScores, // Поле не существует в Prisma модели
+      // isPassing: submission.isPassing, // Поле не существует в Prisma модели
       status: submission.status,
       gradedBy: submission.gradedBy,
       gradedAt: submission.gradedAt,
@@ -496,7 +495,7 @@ export class SubmissionController {
       score: submission.score,
       maxScore: submission.maxScore,
       feedback: submission.feedback,
-      isPassing: submission.isPassing,
+      // isPassing: submission.isPassing, // Поле не существует в Prisma модели
       status: submission.status,
       gradedBy: submission.gradedBy,
       gradedAt: submission.gradedAt,
