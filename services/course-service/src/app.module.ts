@@ -16,7 +16,7 @@ import { LessonsModule } from './lessons/lessons.module';
 import { AssignmentModule } from './assignments/assignment.module';
 import { ProgressModule } from './progress/progress.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
-import { CertificateModule } from './certificates/certificate.module';
+// import { CertificateModule } from './certificates/certificate.module';
 import { FilesModule } from './files/files.module';
 import { AuthModule } from './auth/auth.module';
 
@@ -83,7 +83,7 @@ import { validateEnv } from './config/env.validation';
     AssignmentModule,
     ProgressModule,
     EnrollmentModule,
-    CertificateModule,
+    // CertificateModule, // Временно отключен из-за HttpService dependency issue
     FilesModule,
     AuthModule,
 

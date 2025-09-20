@@ -43,8 +43,16 @@ export class TelegramHmacValidatorService {
 
   constructor(private readonly configService: ConfigService) {
     this.botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
+    const nodeEnv = this.configService.get<string>('NODE_ENV');
+    
+    // В development режиме разрешаем dummy токен
     if (!this.botToken) {
-      throw new Error('TELEGRAM_BOT_TOKEN is required for HMAC validation');
+      if (nodeEnv === 'development') {
+        this.logger.warn('⚠️ TELEGRAM_BOT_TOKEN отсутствует, использую dummy токен для разработки');
+        this.botToken = 'dummy_development_token_for_local_testing_only';
+      } else {
+        throw new Error('TELEGRAM_BOT_TOKEN is required for HMAC validation');
+      }
     }
     
     // Create secret key from bot token
