@@ -1,0 +1,444 @@
+{
+  "timestamp": "2025-09-21T02:59:18.414Z",
+  "baseUrl": "http://localhost:3000",
+  "summary": {
+    "total": 50,
+    "success": 48,
+    "failed": 2,
+    "successRate": 96
+  },
+  "categories": {
+    "footer": {
+      "total": 16,
+      "success": 16
+    },
+    "appRoutes": {
+      "total": 29,
+      "success": 29
+    },
+    "api": {
+      "total": 5,
+      "success": 3
+    }
+  },
+  "results": [
+    {
+      "name": "О платформе",
+      "href": "/about",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Как это работает",
+      "href": "/how-it-works",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Цены",
+      "href": "/pricing",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "FAQ",
+      "href": "/faq",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Все курсы",
+      "href": "/courses",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Категории",
+      "href": "/categories",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Преподаватели",
+      "href": "/instructors",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Сертификаты",
+      "href": "/certificates",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Центр помощи",
+      "href": "/help",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Контакты",
+      "href": "/contact",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Сообщить о проблеме",
+      "href": "/report",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Статус системы",
+      "href": "/status",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Политика конфиденциальности",
+      "href": "/privacy",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Условия использования",
+      "href": "/terms",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Пользовательское соглашение",
+      "href": "/agreement",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Cookies",
+      "href": "/cookies",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Главная",
+      "href": "/",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "О платформе",
+      "href": "/about",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Контакты",
+      "href": "/contact",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Курсы",
+      "href": "/courses",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Детали курса",
+      "href": "/courses/test-course",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Как это работает",
+      "href": "/how-it-works",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Цены",
+      "href": "/pricing",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "FAQ",
+      "href": "/faq",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Категории",
+      "href": "/categories",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Преподаватели",
+      "href": "/instructors",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Сертификаты",
+      "href": "/certificates",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Помощь",
+      "href": "/help",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Сообщить о проблеме",
+      "href": "/report",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Статус системы",
+      "href": "/status",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Политика конфиденциальности",
+      "href": "/privacy",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Условия использования",
+      "href": "/terms",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Cookies",
+      "href": "/cookies",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Вход",
+      "href": "/auth/login",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Вход (старая)",
+      "href": "/login",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Регистрация",
+      "href": "/auth/register",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Регистрация (старая)",
+      "href": "/register",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Доступ запрещен",
+      "href": "/access-denied",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Панель управления",
+      "href": "/dashboard",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Профиль",
+      "href": "/profile",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Создать курс",
+      "href": "/create-course",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Мои курсы",
+      "href": "/my-courses",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Редактор курса",
+      "href": "/courses/test-course/edit",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Студенческое приложение",
+      "href": "/student/test-course",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Несуществующая страница",
+      "href": "/nonexistent-page",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": false
+    },
+    {
+      "name": "Auth Health",
+      "href": "/api/v1/health",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": true
+    },
+    {
+      "name": "Course Health",
+      "href": "/api/v1/health",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": true
+    },
+    {
+      "name": "Courses List",
+      "href": "/api/v1/courses",
+      "status": 200,
+      "success": true,
+      "time": "N/A",
+      "isApi": true
+    },
+    {
+      "name": "Auth Me",
+      "href": "/api/v1/auth/me",
+      "status": 401,
+      "success": false,
+      "time": "N/A",
+      "isApi": true
+    },
+    {
+      "name": "Non-existent Course",
+      "href": "/api/v1/courses/nonexistent",
+      "status": 404,
+      "success": false,
+      "time": "N/A",
+      "isApi": true
+    }
+  ],
+  "brokenLinks": [
+    {
+      "name": "Auth Me",
+      "href": "/api/v1/auth/me",
+      "status": 401,
+      "success": false,
+      "time": "N/A",
+      "isApi": true
+    },
+    {
+      "name": "Non-existent Course",
+      "href": "/api/v1/courses/nonexistent",
+      "status": 404,
+      "success": false,
+      "time": "N/A",
+      "isApi": true
+    }
+  ]
+}
