@@ -1,0 +1,304 @@
+{
+  "zone_settings": {
+    "zone_name": "gongbu-platform.com",
+    "settings": {
+      "ssl": {
+        "type": "full",
+        "certificate_authority": "lets_encrypt"
+      },
+      "security_level": "high",
+      "cache_level": "aggressive",
+      "browser_cache_ttl": 31536000,
+      "edge_cache_ttl": 86400,
+      "always_online": true,
+      "development_mode": false,
+      "minify": {
+        "css": true,
+        "html": true,
+        "js": true
+      },
+      "brotli": true,
+      "http2": true,
+      "http3": true,
+      "0rtt": true,
+      "ipv6": true,
+      "websockets": true,
+      "pseudo_ipv4": "off",
+      "ip_geolocation": true,
+      "true_client_ip_header": "CF-Connecting-IP",
+      "origin_max_http_version": "2",
+      "tls_1_3": true,
+      "automatic_https_rewrites": true,
+      "opportunistic_encryption": true,
+      "tls_client_auth": false,
+      "min_tls_version": "1.2",
+      "cipher": "auto",
+      "early_hints": true,
+      "h2_prioritization": true,
+      "origin_error_page_pass_thru": false,
+      "sort_query_string_for_cache": true,
+      "respect_strong_etag": true,
+      "cache_deception_armor": true,
+      "waf": {
+        "enabled": true,
+        "sensitivity": "high"
+      },
+      "rate_limiting": {
+        "enabled": true,
+        "rules": [
+          {
+            "match": {
+              "request": {
+                "url": "gongbu-platform.com/api/auth/*"
+              }
+            },
+            "rate_limit": {
+              "threshold": 5,
+              "period": 60,
+              "action": {
+                "mode": "challenge"
+              }
+            }
+          },
+          {
+            "match": {
+              "request": {
+                "url": "gongbu-platform.com/api/*"
+              }
+            },
+            "rate_limit": {
+              "threshold": 100,
+              "period": 60,
+              "action": {
+                "mode": "challenge"
+              }
+            }
+          }
+        ]
+      },
+      "page_rules": [
+        {
+          "targets": [
+            {
+              "target": "url",
+              "constraint": {
+                "operator": "matches",
+                "value": "gongbu-platform.com/static/*"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "cache_level",
+              "value": "cache_everything"
+            },
+            {
+              "id": "edge_cache_ttl",
+              "value": 31536000
+            },
+            {
+              "id": "browser_cache_ttl",
+              "value": 31536000
+            }
+          ],
+          "priority": 1,
+          "status": "active"
+        },
+        {
+          "targets": [
+            {
+              "target": "url",
+              "constraint": {
+                "operator": "matches",
+                "value": "gongbu-platform.com/api/*"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "cache_level",
+              "value": "bypass"
+            },
+            {
+              "id": "security_level",
+              "value": "high"
+            }
+          ],
+          "priority": 2,
+          "status": "active"
+        },
+        {
+          "targets": [
+            {
+              "target": "url",
+              "constraint": {
+                "operator": "matches",
+                "value": "gongbu-platform.com/*.js"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "cache_level",
+              "value": "cache_everything"
+            },
+            {
+              "id": "edge_cache_ttl",
+              "value": 86400
+            },
+            {
+              "id": "browser_cache_ttl",
+              "value": 86400
+            },
+            {
+              "id": "minify",
+              "value": {
+                "js": true
+              }
+            }
+          ],
+          "priority": 3,
+          "status": "active"
+        },
+        {
+          "targets": [
+            {
+              "target": "url",
+              "constraint": {
+                "operator": "matches",
+                "value": "gongbu-platform.com/*.css"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "id": "cache_level",
+              "value": "cache_everything"
+            },
+            {
+              "id": "edge_cache_ttl",
+              "value": 86400
+            },
+            {
+              "id": "browser_cache_ttl",
+              "value": 86400
+            },
+            {
+              "id": "minify",
+              "value": {
+                "css": true
+              }
+            }
+          ],
+          "priority": 4,
+          "status": "active"
+        }
+      ],
+      "firewall_rules": [
+        {
+          "action": "block",
+          "priority": 1,
+          "paused": false,
+          "description": "Block known bad IPs",
+          "filter": {
+            "expression": "(ip.src in {1.2.3.4 5.6.7.8})",
+            "paused": false
+          }
+        },
+        {
+          "action": "challenge",
+          "priority": 2,
+          "paused": false,
+          "description": "Challenge suspicious requests",
+          "filter": {
+            "expression": "(http.user_agent contains \"bot\" and not http.user_agent contains \"Googlebot\")",
+            "paused": false
+          }
+        },
+        {
+          "action": "allow",
+          "priority": 3,
+          "paused": false,
+          "description": "Allow legitimate traffic",
+          "filter": {
+            "expression": "(http.host eq \"gongbu-platform.com\" and ssl)",
+            "paused": false
+          }
+        }
+      ],
+      "transform_rules": [
+        {
+          "enabled": true,
+          "rules": [
+            {
+              "expression": "(http.host eq \"gongbu-platform.com\" and http.request.uri.path contains \"/api/\")",
+              "action": {
+                "type": "rewrite",
+                "uri": {
+                  "path": {
+                    "value": "/api/v1{{http.request.uri.path}}"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "origin_rules": [
+        {
+          "enabled": true,
+          "rules": [
+            {
+              "expression": "(http.host eq \"gongbu-platform.com\")",
+              "action": {
+                "type": "route",
+                "origin": {
+                  "host": "origin.gongbu-platform.com",
+                  "port": 443,
+                  "scheme": "https"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "dns_records": [
+    {
+      "type": "A",
+      "name": "gongbu-platform.com",
+      "content": "10.0.0.10",
+      "ttl": 300,
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "www.gongbu-platform.com",
+      "content": "10.0.0.10",
+      "ttl": 300,
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "api.gongbu-platform.com",
+      "content": "10.0.0.10",
+      "ttl": 300,
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "cdn.gongbu-platform.com",
+      "content": "10.0.0.10",
+      "ttl": 300,
+      "proxied": true
+    }
+  ],
+  "workers": [
+    {
+      "name": "gongbu-security-worker",
+      "script": "addEventListener('fetch', event => {\n  event.respondWith(handleRequest(event.request))\n})\n\nasync function handleRequest(request) {\n  const url = new URL(request.url)\n  \n  // Security headers\n  const response = await fetch(request)\n  const newResponse = new Response(response.body, response)\n  \n  newResponse.headers.set('X-Frame-Options', 'DENY')\n  newResponse.headers.set('X-Content-Type-Options', 'nosniff')\n  newResponse.headers.set('X-XSS-Protection', '1; mode=block')\n  newResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')\n  \n  return newResponse\n}",
+      "route": "gongbu-platform.com/*"
+    }
+  ]
+}

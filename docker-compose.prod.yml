@@ -1,226 +1,237 @@
 version: '3.8'
 
 services:
-  # Database
+  # Базы данных и кеширование
   postgres:
     image: postgres:15-alpine
-    container_name: gongbu_postgres
+    container_name: gongbu_postgres_prod
     environment:
-      POSTGRES_DB: gongbu_platform
-      POSTGRES_USER: ${DB_USER:-gongbu_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password}
+      POSTGRES_DB: gongbu_prod
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_prod:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    ports:
-      - "5432:5432"
+    networks:
+      - gongbu_network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-gongbu_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Redis for caching
   redis:
     image: redis:7-alpine
-    container_name: gongbu_redis
-    ports:
-      - "6379:6379"
+    container_name: gongbu_redis_prod
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data_prod:/data
+    networks:
+      - gongbu_network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # API Gateway
+  # ===========================================
+  # 🌐 API GATEWAY - Main Entry Point
+  # ===========================================
+  
   api-gateway:
     build:
       context: ./services/api-gateway
       dockerfile: Dockerfile.prod
-    container_name: gongbu_api_gateway
+    container_name: gongbu_api_gateway_prod
     environment:
-      - NODE_ENV=production
-      - PORT=3007
-      - AUTH_SERVICE_URL=http://auth-service:3001
-      - COURSE_SERVICE_URL=http://course-service:3002
-      - BOT_SERVICE_URL=http://bot-service:3003
-      - PAYMENT_SERVICE_URL=http://payment-service:3004
-      - NOTIFICATION_SERVICE_URL=http://notification-service:3005
-      - ANALYTICS_SERVICE_URL=http://analytics-service:3006
-    ports:
-      - "3007:3007"
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      
+      # Microservices URLs
+      AUTH_SERVICE_URL: http://auth-service:3001
+      COURSE_SERVICE_URL: http://course-service:3002
+      BOT_SERVICE_URL: http://bot-service:3003
+      PAYMENT_SERVICE_URL: http://payment-service:3004
+      NOTIFICATION_SERVICE_URL: http://notification-service:3005
+      ANALYTICS_SERVICE_URL: http://analytics-service:3006
+      PLUGIN_SERVICE_URL: http://plugin-service:3007
+      
+      # Security
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: 0
+      
+      # Logging
+      LOG_LEVEL: info
+      ENABLE_REQUEST_LOGGING: true
+      
+      # API Documentation
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+      SWAGGER_PATH: api
+      
+    networks:
+      - gongbu_network
     depends_on:
-      - auth-service
-      - course-service
-      - bot-service
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3007/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/v1/health/live"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Auth Service
+  # ===========================================
+  # 🔐 AUTH SERVICE
+  # ===========================================
+  
   auth-service:
     build:
       context: ./services/auth-service
       dockerfile: Dockerfile.prod
-    container_name: gongbu_auth_service
+    container_name: gongbu_auth_service_prod
     environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
-      - JWT_SECRET=${JWT_SECRET}
-      - REDIS_URL=redis://redis:6379
-    ports:
-      - "3001:3001"
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/gongbu_prod
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 24h
+    networks:
+      - gongbu_network
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Course Service
+  # ===========================================
+  # 📚 COURSE SERVICE
+  # ===========================================
+  
   course-service:
     build:
       context: ./services/course-service
       dockerfile: Dockerfile.prod
-    container_name: gongbu_course_service
+    container_name: gongbu_course_service_prod
     environment:
-      - NODE_ENV=production
-      - PORT=3002
-      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
-      - REDIS_URL=redis://redis:6379
-    ports:
-      - "3002:3002"
+      NODE_ENV: production
+      PORT: 3002
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/gongbu_prod
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - gongbu_network
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3002/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    volumes:
-      - ./uploads:/app/uploads
 
-  # Bot Service (основной компонент)
+  # ===========================================
+  # 🤖 BOT SERVICE
+  # ===========================================
+  
   bot-service:
     build:
       context: ./services/bot-service
       dockerfile: Dockerfile.prod
-    container_name: gongbu_bot_service
+    container_name: gongbu_bot_service_prod
     environment:
-      - NODE_ENV=production
-      - PORT=3003
-      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}
-      - COURSE_SERVICE_URL=http://course-service:3002
-      - AUTH_SERVICE_URL=http://auth-service:3001
-      - REDIS_URL=redis://redis:6379
-      - WEBAPP_URL=${WEBAPP_URL:-https://yourdomain.com}
-    ports:
-      - "3003:3003"
+      NODE_ENV: production
+      PORT: 3003
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/gongbu_prod
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+    networks:
+      - gongbu_network
     depends_on:
-      - postgres
-      - redis
-      - course-service
-      - auth-service
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3003/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Payment Service
-  payment-service:
+  # ===========================================
+  # 🌐 WEB APPLICATION
+  # ===========================================
+  
+  web-app:
     build:
-      context: ./services/payment-service
+      context: ./apps/web-app
       dockerfile: Dockerfile.prod
-    container_name: gongbu_payment_service
+    container_name: gongbu_web_app_prod
     environment:
-      - NODE_ENV=production
-      - PORT=3004
-      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
-      - REDIS_URL=redis://redis:6379
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - YOOKASSA_SECRET_KEY=${YOOKASSA_SECRET_KEY}
-    ports:
-      - "3004:3004"
+      NODE_ENV: production
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:3000}
+      REACT_APP_WS_URL: ${REACT_APP_WS_URL:-ws://localhost:3000}
+    networks:
+      - gongbu_network
     depends_on:
-      - postgres
-      - redis
+      - api-gateway
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # Notification Service
-  notification-service:
-    build:
-      context: ./services/notification-service
-      dockerfile: Dockerfile.prod
-    container_name: gongbu_notification_service
-    environment:
-      - NODE_ENV=production
-      - PORT=3005
-      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
-      - REDIS_URL=redis://redis:6379
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
+  # ===========================================
+  # 🌐 NGINX REVERSE PROXY
+  # ===========================================
+  
+  nginx:
+    image: nginx:alpine
+    container_name: gongbu_nginx_prod
     ports:
-      - "3005:3005"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./letsencrypt:/etc/letsencrypt
+    networks:
+      - gongbu_network
     depends_on:
-      - postgres
-      - redis
+      - api-gateway
+      - web-app
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Analytics Service
-  analytics-service:
-    build:
-      context: ./services/analytics-service
-      dockerfile: Dockerfile.prod
-    container_name: gongbu_analytics_service
-    environment:
-      - NODE_ENV=production
-      - PORT=3006
-      - DATABASE_URL=postgresql://${DB_USER:-gongbu_user}:${DB_PASSWORD:-secure_password}@postgres:5432/gongbu_platform
-      - REDIS_URL=redis://redis:6379
-    ports:
-      - "3006:3006"
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
 volumes:
-  postgres_data:
-    driver: local
-  uploads:
-    driver: local
+  postgres_data_prod:
+  redis_data_prod:
+  uploads_data:
 
 networks:
-  default:
-    name: gongbu_network
+  gongbu_network:
+    driver: bridge

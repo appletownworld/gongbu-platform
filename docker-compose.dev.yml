@@ -9,12 +9,11 @@ services:
       POSTGRES_DB: gongbu_dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_MULTIPLE_DATABASES: "auth_service,course_service,bot_service,payment_service,plugin_service,notification_service,analytics_service"
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/postgres/init:/docker-entrypoint-initdb.d
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - gongbu_network
     healthcheck:
@@ -27,8 +26,8 @@ services:
     image: redis:7-alpine
     container_name: gongbu_redis
     ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes --requirepass redis_password
+      - "6380:6379"
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     networks:
@@ -38,82 +37,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
-    container_name: gongbu_elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    networks:
-      - gongbu_network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Мониторинг и обсерваемость
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: gongbu_prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-    networks:
-      - gongbu_network
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: gongbu_grafana
-    ports:
-      - "3030:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./infrastructure/monitoring/grafana:/etc/grafana/provisioning
-    networks:
-      - gongbu_network
-
-  # API Gateway
-  api-gateway:
-    build:
-      context: ./services/api-gateway
-      dockerfile: Dockerfile.dev
-    container_name: gongbu_api_gateway
-    ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: development
-      PORT: 3000
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gongbu_dev
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: development-jwt-secret-key-change-in-production
-    volumes:
-      - ./services/api-gateway:/app
-      - /app/node_modules
-      - ./libs:/app/libs
-    networks:
-      - gongbu_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
 
   # ===========================================
   # 🌐 API GATEWAY - Main Entry Point
@@ -125,7 +48,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: gongbu_api_gateway_dev
     ports:
-      - "3000:3000"
+      - "3011:3000"
     environment:
       NODE_ENV: development
       PORT: 3000
@@ -135,9 +58,10 @@ services:
       AUTH_SERVICE_URL: http://auth-service:3001
       COURSE_SERVICE_URL: http://course-service:3002
       BOT_SERVICE_URL: http://bot-service:3003
-      NOTIFICATION_SERVICE_URL: http://notification-service:3006
-      ANALYTICS_SERVICE_URL: http://analytics-service:3007
-      PLUGIN_SERVICE_URL: http://plugin-service:3008
+      PAYMENT_SERVICE_URL: http://payment-service:3004
+      NOTIFICATION_SERVICE_URL: http://notification-service:3005
+      ANALYTICS_SERVICE_URL: http://analytics-service:3006
+      PLUGIN_SERVICE_URL: http://plugin-service:3007
       
       # Security
       JWT_SECRET: development-jwt-secret-key-change-in-production
@@ -149,41 +73,29 @@ services:
       REDIS_DB: 0
       
       # Logging
-      LOG_LEVEL: debug
+      LOG_LEVEL: info
       ENABLE_REQUEST_LOGGING: true
       
-      # Swagger
+      # API Documentation
       SWAGGER_ENABLED: true
       SWAGGER_PATH: api
+      
     volumes:
       - ./services/api-gateway:/app
       - /app/node_modules
     networks:
       - gongbu_network
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
-      auth-service:
-        condition: service_healthy
-      course-service:
-        condition: service_healthy
-      bot-service:
-        condition: service_healthy
-      notification-service:
-        condition: service_healthy
-      analytics-service:
-        condition: service_healthy
-      plugin-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/health/live || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     restart: unless-stopped
 
-  # Auth Service
+  # ===========================================
+  # 🔐 AUTH SERVICE
+  # ===========================================
+  
   auth-service:
     build:
       context: ./services/auth-service
@@ -194,16 +106,13 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3001
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/auth_service
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gongbu_dev
       REDIS_URL: redis://redis:6379
       JWT_SECRET: development-jwt-secret-key-change-in-production
-      JWT_EXPIRES_IN: 15m
-      REFRESH_TOKEN_EXPIRES_IN: 30d
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      JWT_EXPIRES_IN: 24h
     volumes:
       - ./services/auth-service:/app
       - /app/node_modules
-      - ./libs:/app/libs
     networks:
       - gongbu_network
     depends_on:
@@ -213,27 +122,27 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # Course Service
+  # ===========================================
+  # 📚 COURSE SERVICE
+  # ===========================================
+  
   course-service:
     build:
       context: ./services/course-service
       dockerfile: Dockerfile.dev
     container_name: gongbu_course_service
     ports:
-      - "3002:3002"
+      - "3012:3002"
     environment:
       NODE_ENV: development
       PORT: 3002
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/course_service
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gongbu_dev
       REDIS_URL: redis://redis:6379
-      ELASTICSEARCH_URL: http://elasticsearch:9200
-      FILE_STORAGE_TYPE: local
-      FILE_STORAGE_PATH: /app/uploads
+      JWT_SECRET: development-jwt-secret-key-change-in-production
     volumes:
       - ./services/course-service:/app
       - /app/node_modules
-      - ./libs:/app/libs
-      - course_uploads:/app/uploads
+      - ./uploads:/app/uploads
     networks:
       - gongbu_network
     depends_on:
@@ -241,29 +150,29 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
     restart: unless-stopped
 
-  # Bot Service
+  # ===========================================
+  # 🤖 BOT SERVICE
+  # ===========================================
+  
   bot-service:
     build:
       context: ./services/bot-service
       dockerfile: Dockerfile.dev
     container_name: gongbu_bot_service
     ports:
-      - "3003:3003"
+      - "3013:3003"
     environment:
       NODE_ENV: development
       PORT: 3003
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/bot_service
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gongbu_dev
       REDIS_URL: redis://redis:6379
-      WEBHOOK_URL: ${WEBHOOK_URL:-http://localhost:3003}
+      JWT_SECRET: development-jwt-secret-key-change-in-production
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
     volumes:
       - ./services/bot-service:/app
       - /app/node_modules
-      - ./libs:/app/libs
     networks:
       - gongbu_network
     depends_on:
@@ -273,7 +182,10 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # Payment Service
+  # ===========================================
+  # 💳 PAYMENT SERVICE
+  # ===========================================
+  
   payment-service:
     build:
       context: ./services/payment-service
@@ -284,15 +196,12 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3004
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/payment_service
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gongbu_dev
       REDIS_URL: redis://redis:6379
-      TELEGRAM_PAYMENT_TOKEN: ${TELEGRAM_PAYMENT_TOKEN:-}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      JWT_SECRET: development-jwt-secret-key-change-in-production
     volumes:
       - ./services/payment-service:/app
       - /app/node_modules
-      - ./libs:/app/libs
     networks:
       - gongbu_network
     depends_on:
@@ -303,423 +212,25 @@ services:
     restart: unless-stopped
 
   # ===========================================
-  # 📧 NOTIFICATION SERVICE - Multi-channel notifications
+  # 🔔 NOTIFICATION SERVICE
   # ===========================================
   
-  notification-service:
-    build:
-      context: ./services/notification-service
-      dockerfile: Dockerfile.dev
-    container_name: gongbu_notification_service_dev
-    ports:
-      - "3006:3006"
-    environment:
-      NODE_ENV: development
-      PORT: 3006
-      HOST: 0.0.0.0
-      
-      # Database
-      NOTIFICATION_SERVICE_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/notification_service
-      
-      # JWT
-      JWT_SECRET: development-jwt-secret-key-change-in-production
-      
-      # External Services
-      AUTH_SERVICE_URL: http://auth-service:3001
-      COURSE_SERVICE_URL: http://course-service:3002
-      PAYMENT_SERVICE_URL: http://payment-service:3004
-      
-      # Email Configuration (SendGrid as default)
-      EMAIL_PROVIDER: sendgrid
-      EMAIL_FROM: notifications@gongbu.app
-      EMAIL_FROM_NAME: Gongbu Learning Platform
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-SG.test-key-for-development}
-      
-      # Push Notifications (Firebase)
-      PUSH_PROVIDER: firebase
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-gongbu-dev}
-      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
-      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
-      
-      # Telegram
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      
-      # SMS (disabled by default)
-      SMS_PROVIDER: disabled
-      
-      # Redis Configuration
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_DB: 3
-      QUEUE_REDIS_DB: 4
-      
-      # Queue Settings
-      QUEUE_CONCURRENCY: 5
-      QUEUE_MAX_ATTEMPTS: 3
-      QUEUE_RETRY_DELAY: 2000
-      
-      # Security
-      ENCRYPTION_KEY: dev-encryption-key-32-chars-long
-      WEBHOOK_SIGNATURE_SECRET: dev-webhook-signature-secret-32chars
-      
-      # Features
-      ANALYTICS_ENABLED: true
-      TEMPLATE_STORAGE: database
-      ENABLE_EMAIL_TRACKING: true
-      ENABLE_CLICK_TRACKING: true
-      
-      # Test Mode (for development)
-      EMAIL_TEST_MODE: false
-      PUSH_TEST_MODE: false
-      TEST_EMAIL_RECIPIENT: dev@gongbu.app
-      
-      # Logging
-      LOG_LEVEL: debug
-    volumes:
-      - ./services/notification-service:/app
-      - /app/node_modules
-      - ./libs:/app/libs
-      - notification_storage:/app/storage
-    networks:
-      - gongbu_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      auth-service:
-        condition: service_healthy
-      course-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3006/health/live || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-
-  # ===========================================
-  # 📊 ANALYTICS SERVICE - Data processing and business intelligence
-  # ===========================================
-  
-  analytics-service:
-    build:
-      context: ./services/analytics-service
-      dockerfile: Dockerfile.dev
-    container_name: gongbu_analytics_service_dev
-    ports:
-      - "3007:3007"
-    environment:
-      NODE_ENV: development
-      PORT: 3007
-      HOST: 0.0.0.0
-      
-      # Database
-      ANALYTICS_SERVICE_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/analytics_service
-      
-      # JWT
-      JWT_SECRET: development-jwt-secret-key-change-in-production
-      
-      # External Services
-      AUTH_SERVICE_URL: http://auth-service:3001
-      COURSE_SERVICE_URL: http://course-service:3002
-      NOTIFICATION_SERVICE_URL: http://notification-service:3006
-      PAYMENT_SERVICE_URL: http://payment-service:3004
-      
-      # Redis Configuration
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_DB: 5
-      CACHE_TTL: 3600
-      
-      # Data Processing
-      BATCH_SIZE: 1000
-      PROCESSING_INTERVAL: 30000
-      MAX_EVENT_AGE_DAYS: 7
-      ENABLE_REAL_TIME_PROCESSING: true
-      
-      # Analytics Integrations (disabled for dev)
-      MIXPANEL_ENABLED: false
-      GOOGLE_ANALYTICS_ENABLED: false
-      SEGMENT_ENABLED: false
-      INFLUXDB_ENABLED: false
-      CLICKHOUSE_ENABLED: false
-      
-      # A/B Testing
-      ENABLE_AB_TESTING: true
-      AB_TEST_CACHE_TTL: 1800
-      AB_TEST_SAMPLE_SIZE_MIN: 100
-      AB_TEST_CONFIDENCE_LEVEL: 95
-      
-      # Real-time Analytics
-      ENABLE_WEBSOCKET: true
-      REAL_TIME_DASHBOARD_UPDATE_INTERVAL: 5000
-      
-      # Data Retention (shorter for dev)
-      EVENT_RETENTION_DAYS: 90
-      SESSION_RETENTION_DAYS: 60
-      LEARNING_ANALYTICS_RETENTION_DAYS: 180
-      USER_BEHAVIOR_RETENTION_DAYS: 120
-      METRICS_RETENTION_DAYS: 180
-      
-      # Privacy and Compliance
-      ANONYMIZE_IP_ADDRESSES: true
-      GDPR_COMPLIANCE_MODE: true
-      CONSENT_TRACKING_ENABLED: true
-      
-      # Performance
-      MAX_EVENTS_PER_BATCH: 1000
-      MAX_CONCURRENT_JOBS: 5
-      ENABLE_QUERY_CACHING: true
-      QUERY_CACHE_TTL: 900
-      
-      # Feature Flags
-      ENABLE_USER_JOURNEY_TRACKING: true
-      ENABLE_COHORT_ANALYSIS: true
-      ENABLE_FUNNEL_ANALYSIS: true
-      ENABLE_RETENTION_ANALYSIS: true
-      ENABLE_REVENUE_TRACKING: true
-      ENABLE_LEARNING_INSIGHTS: true
-      ENABLE_GEOLOCATION: true
-      
-      # Report Generation
-      REPORT_GENERATION_ENABLED: true
-      PDF_GENERATION_ENABLED: true
-      CHART_GENERATION_TIMEOUT: 30000
-      MAX_REPORT_SIZE_MB: 10
-      
-      # Development/Testing
-      ANALYTICS_TEST_MODE: false
-      FAKE_DATA_GENERATION: false
-      
-      # Logging
-      LOG_LEVEL: debug
-      LOG_ANALYTICS_EVENTS: true
-      LOG_SENSITIVE_DATA: false
-    volumes:
-      - ./services/analytics-service:/app
-      - /app/node_modules
-      - ./libs:/app/libs
-      - analytics_data:/app/data
-    networks:
-      - gongbu_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      auth-service:
-        condition: service_healthy
-      course-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3007/health/live || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-
-  # ===========================================
-  # 🔌 PLUGIN SERVICE - Extensibility and plugin management
-  # ===========================================
-  
-  plugin-service:
-    build:
-      context: ./services/plugin-service
-      dockerfile: Dockerfile.dev
-    container_name: gongbu_plugin_service_dev
-    ports:
-      - "3008:3008"
-    environment:
-      NODE_ENV: development
-      PORT: 3008
-      HOST: 0.0.0.0
-      
-      # Database
-      PLUGIN_SERVICE_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/plugin_service
-      
-      # JWT
-      JWT_SECRET: development-jwt-secret-key-change-in-production
-      
-      # External Services
-      AUTH_SERVICE_URL: http://auth-service:3001
-      COURSE_SERVICE_URL: http://course-service:3002
-      NOTIFICATION_SERVICE_URL: http://notification-service:3006
-      ANALYTICS_SERVICE_URL: http://analytics-service:3007
-      
-      # Redis Configuration
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_DB: 6
-      CACHE_TTL: 3600
-      
-      # Plugin Storage
-      PLUGIN_DIRECTORY: /app/plugins
-      PLUGIN_CDN_URL: http://localhost:3008/api/packages
-      MAX_PLUGIN_SIZE_MB: 50
-      ALLOWED_PLUGIN_TYPES: javascript,typescript,wasm,docker
-      
-      # Plugin Execution
-      PLUGIN_SANDBOX_ENABLED: true
-      PLUGIN_MAX_EXECUTION_TIME: 5000
-      PLUGIN_MAX_MEMORY_MB: 100
-      PLUGIN_ISOLATION_LEVEL: vm
-      
-      # Security (relaxed for dev)
-      ENABLE_PLUGIN_SECURITY_SCAN: false
-      PLUGIN_SIGNATURE_VERIFICATION: false
-      PLUGIN_WHITELIST_MODE: false
-      TRUSTED_PUBLISHERS: "gongbu-team,development"
-      
-      # Marketplace
-      MARKETPLACE_ENABLED: true
-      MARKETPLACE_APPROVAL_REQUIRED: false
-      MARKETPLACE_REVENUE_SHARE: 0.7
-      ALLOW_PAID_PLUGINS: true
-      
-      # Package Management
-      NPM_REGISTRY_URL: https://registry.npmjs.org
-      PACKAGE_VALIDATION_ENABLED: true
-      ALLOW_EXTERNAL_DEPENDENCIES: true
-      DEPENDENCY_SCAN_ENABLED: false
-      
-      # Theme System
-      THEME_SYSTEM_ENABLED: true
-      DEFAULT_THEME: gongbu-default
-      CUSTOM_CSS_ENABLED: true
-      SASS_COMPILATION: true
-      THEME_HOT_RELOAD: true
-      
-      # Hook System
-      HOOK_SYSTEM_ENABLED: true
-      MAX_HOOK_EXECUTION_TIME: 2000
-      HOOK_ERROR_THRESHOLD: 5
-      HOOK_CIRCUIT_BREAKER: true
-      
-      # Development
-      PLUGIN_HOT_RELOAD: true
-      DEVELOPMENT_MODE: true
-      ALLOW_UNSAFE_PLUGINS: true
-      DEBUG_PLUGIN_EXECUTION: true
-      PLUGIN_PROFILING: true
-      
-      # Performance
-      MAX_CONCURRENT_PLUGIN_EXECUTIONS: 5
-      PLUGIN_CACHE_ENABLED: true
-      PLUGIN_CACHE_TTL: 900
-      LAZY_PLUGIN_LOADING: true
-      PLUGIN_PRELOAD_STRATEGY: lazy
-      
-      # Analytics & Monitoring
-      PLUGIN_ANALYTICS_ENABLED: true
-      TRACK_PLUGIN_PERFORMANCE: true
-      ERROR_REPORTING_ENABLED: true
-      PERFORMANCE_MONITORING: true
-      
-      # File System
-      FILE_SYSTEM_ISOLATION: true
-      PLUGIN_TEMP_DIR: /app/tmp/plugins
-      CLEANUP_TEMP_FILES: true
-      MAX_PLUGIN_FILES: 500
-      ALLOWED_FILE_EXTENSIONS: js,ts,json,css,scss,html,md,txt,yml,yaml
-      
-      # Rate Limiting (relaxed for dev)
-      PLUGIN_API_RATE_LIMIT: 5000
-      PLUGIN_API_BURST_LIMIT: 500
-      PLUGIN_INSTALL_RATE_LIMIT: 50
-      
-      # Content Moderation (disabled for dev)
-      CONTENT_MODERATION_ENABLED: false
-      AUTO_APPROVE_VERIFIED_PUBLISHERS: true
-      MANUAL_REVIEW_REQUIRED: false
-      
-      # Internationalization
-      MULTI_LANGUAGE_SUPPORT: true
-      DEFAULT_LANGUAGE: en
-      SUPPORTED_LANGUAGES: en,ru,es,fr,de,zh,ja,ko
-      
-      # WebAssembly & Containers (disabled for dev)
-      WASM_PLUGINS_ENABLED: false
-      DOCKER_PLUGINS_ENABLED: false
-      
-      # Logging
-      LOG_LEVEL: debug
-      LOG_PLUGIN_EXECUTION: true
-      LOG_PLUGIN_ERRORS: true
-      STRUCTURED_LOGGING: true
-    volumes:
-      - ./services/plugin-service:/app
-      - /app/node_modules
-      - ./libs:/app/libs
-      - plugin_storage:/app/plugins
-      - plugin_temp:/app/tmp
-    networks:
-      - gongbu_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      auth-service:
-        condition: service_healthy
-      course-service:
-        condition: service_healthy
-      notification-service:
-        condition: service_healthy
-      analytics-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3008/health/live || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-
-  # Web App Service
-  web-app:
-    ports:
-      - "3005:3005"
-    environment:
-      NODE_ENV: development
-      PORT: 3005
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/plugin_service
-      REDIS_URL: redis://redis:6379
-    volumes:
-      - ./services/plugin-service:/app
-      - /app/node_modules
-      - ./libs:/app/libs
-    networks:
-      - gongbu_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  # Notification Service
   notification-service:
     build:
       context: ./services/notification-service
       dockerfile: Dockerfile.dev
     container_name: gongbu_notification_service
     ports:
-      - "3006:3006"
+      - "3005:3005"
     environment:
       NODE_ENV: development
-      PORT: 3006
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/notification_service
+      PORT: 3005
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gongbu_dev
       REDIS_URL: redis://redis:6379
-      EMAIL_PROVIDER: sendgrid
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
-      EMAIL_FROM: noreply@gongbu.app
+      JWT_SECRET: development-jwt-secret-key-change-in-production
     volumes:
       - ./services/notification-service:/app
       - /app/node_modules
-      - ./libs:/app/libs
     networks:
       - gongbu_network
     depends_on:
@@ -729,24 +240,26 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # Analytics Service
+  # ===========================================
+  # 📊 ANALYTICS SERVICE
+  # ===========================================
+  
   analytics-service:
     build:
       context: ./services/analytics-service
       dockerfile: Dockerfile.dev
     container_name: gongbu_analytics_service
     ports:
-      - "3007:3007"
+      - "3006:3006"
     environment:
       NODE_ENV: development
-      PORT: 3007
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/analytics_service
+      PORT: 3006
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gongbu_dev
       REDIS_URL: redis://redis:6379
-      CLICKHOUSE_URL: ${CLICKHOUSE_URL:-}
+      JWT_SECRET: development-jwt-secret-key-change-in-production
     volumes:
       - ./services/analytics-service:/app
       - /app/node_modules
-      - ./libs:/app/libs
     networks:
       - gongbu_network
     depends_on:
@@ -756,31 +269,110 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # ===========================================
+  # 🔌 PLUGIN SERVICE
+  # ===========================================
+  
+  plugin-service:
+    build:
+      context: ./services/plugin-service
+      dockerfile: Dockerfile.dev
+    container_name: gongbu_plugin_service
+    ports:
+      - "3007:3007"
+    environment:
+      NODE_ENV: development
+      PORT: 3007
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gongbu_dev
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: development-jwt-secret-key-change-in-production
+    volumes:
+      - ./services/plugin-service:/app
+      - /app/node_modules
+    networks:
+      - gongbu_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ===========================================
+  # 🌐 WEB APPLICATION
+  # ===========================================
+  
+  web-app:
+    build:
+      context: ./apps/web-app
+      dockerfile: Dockerfile.dev
+    container_name: gongbu_web_app
+    ports:
+      - "3008:3000"
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:3000
+      REACT_APP_WS_URL: ws://localhost:3000
+    volumes:
+      - ./apps/web-app:/app
+      - /app/node_modules
+    networks:
+      - gongbu_network
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+  # ===========================================
+  # 📱 TELEGRAM MINI APP
+  # ===========================================
+  
+  telegram-mini-app:
+    build:
+      context: ./apps/telegram-mini-app
+      dockerfile: Dockerfile.dev
+    container_name: gongbu_telegram_mini_app
+    ports:
+      - "3009:3000"
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:3000
+      REACT_APP_TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    volumes:
+      - ./apps/telegram-mini-app:/app
+      - /app/node_modules
+    networks:
+      - gongbu_network
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+  # ===========================================
+  # 👨‍🏫 TEACHER DASHBOARD
+  # ===========================================
+  
+  teacher-dashboard:
+    build:
+      context: ./apps/teacher-dashboard
+      dockerfile: Dockerfile.dev
+    container_name: gongbu_teacher_dashboard
+    ports:
+      - "3010:3000"
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:3000
+    volumes:
+      - ./apps/teacher-dashboard:/app
+      - /app/node_modules
+    networks:
+      - gongbu_network
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
 volumes:
   postgres_data:
-    driver: local
   redis_data:
-    driver: local
-  elasticsearch_data:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
-    driver: local
-  course_uploads:
-    driver: local
-  notification_storage:
-    driver: local
-  analytics_data:
-    driver: local
-  plugin_storage:
-    driver: local
-  plugin_temp:
-    driver: local
 
 networks:
   gongbu_network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16

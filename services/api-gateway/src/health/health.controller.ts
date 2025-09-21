@@ -158,8 +158,8 @@ export class HealthController {
       const courseServiceUrl = this.configService.get<string>('COURSE_SERVICE_URL');
 
       await Promise.all([
-        this.httpHealthIndicator.pingCheck('auth-service', `${authServiceUrl}/health`, { timeout: 3000 }),
-        this.httpHealthIndicator.pingCheck('course-service', `${courseServiceUrl}/health`, { timeout: 3000 }),
+        this.httpHealthIndicator.pingCheck('auth-service', `${authServiceUrl}/api/v1/health`, { timeout: 3000 }),
+        this.httpHealthIndicator.pingCheck('course-service', `${courseServiceUrl}/api/v1/health`, { timeout: 3000 }),
       ]);
 
       return {
@@ -227,7 +227,7 @@ export class HealthController {
     const authServiceUrl = this.configService.get<string>('AUTH_SERVICE_URL');
     return this.httpHealthIndicator.pingCheck(
       'auth-service',
-      `${authServiceUrl}/health`,
+      `${authServiceUrl}/api/v1/health`,
       { timeout: 5000 }
     );
   }
@@ -236,7 +236,7 @@ export class HealthController {
     const courseServiceUrl = this.configService.get<string>('COURSE_SERVICE_URL');
     return this.httpHealthIndicator.pingCheck(
       'course-service', 
-      `${courseServiceUrl}/health`,
+      `${courseServiceUrl}/api/v1/health`,
       { timeout: 5000 }
     );
   }
@@ -245,7 +245,7 @@ export class HealthController {
     const botServiceUrl = this.configService.get<string>('BOT_SERVICE_URL');
     return this.httpHealthIndicator.pingCheck(
       'bot-service',
-      `${botServiceUrl}/health`,
+      `${botServiceUrl}/api/v1/health`,
       { timeout: 5000 }
     );
   }

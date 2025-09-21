@@ -4,7 +4,7 @@ const url = require('url')
 
 // Токен бота из .env
 const BOT_TOKEN = '8464711606:AAG3oqGrg3P1_qvqfGFzGSmxlVDjuc9_a9w'
-const WEBAPP_URL = 'http://localhost:3000/student'
+const WEBAPP_URL = 'http://localhost:3001/telegram-mini-app'
 
 const bot = new Telegraf(BOT_TOKEN)
 

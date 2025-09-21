@@ -1,0 +1,45 @@
+# Jaeger Configuration for Distributed Tracing
+collector:
+  grpc:
+    host-port: ":14250"
+  http:
+    host-port: ":14268"
+  zipkin:
+    host-port: ":9411"
+
+query:
+  base-path: "/jaeger"
+  http-port: 16686
+
+agent:
+  http-server:
+    host-port: ":5778"
+  grpc-server:
+    host-port: ":14267"
+  zipkin-thrift-http-port: ":5775"
+
+storage:
+  type: elasticsearch
+  elasticsearch:
+    server-urls: http://elasticsearch:9200
+    username: elastic
+    password: enterprise_elasticsearch_password
+    index-prefix: jaeger
+    tags-as-fields:
+      all: true
+    create-index-templates: true
+
+sampling:
+  strategies:
+    - type: probabilistic
+      param: 0.1
+    - type: rate-limiting
+      param: 100
+    - type: per-operation
+      param: 0.1
+      max-traces-per-second: 10
+
+metrics:
+  backend: prometheus
+  prometheus:
+    server-url: http://prometheus:9090

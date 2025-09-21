@@ -48,6 +48,8 @@ model Course {
   enrollments       Enrollment[]
   reviews           CourseReview[]
   certificates      CourseCertificate[]
+  comments          CourseComment[]
+  likes             CourseLike[]
   
   // File attachments
   files             File[]
@@ -118,6 +120,7 @@ model Lesson {
   // Student interactions
   progress         LessonProgress[]
   assignments      Assignment[]
+  comments         LessonComment[]
   
   // File attachments
   files            File[]
@@ -343,9 +346,27 @@ model CourseReview {
   title         String?
   comment       String?
   
-  // Status
-  isVerified    Boolean     @default(false)
-  isPublic      Boolean     @default(true)
+  // Detailed ratings
+  contentRating     Int?    // 1-5 stars for content quality
+  instructorRating  Int?    // 1-5 stars for instructor
+  difficultyRating  Int?    // 1-5 stars for difficulty level
+  valueRating       Int?    // 1-5 stars for value for money
+  
+  // Social features
+  helpfulVotes      Int     @default(0) // Number of helpful votes
+  totalVotes        Int     @default(0) // Total votes (helpful + not helpful)
+  isVerified        Boolean @default(false)
+  isPublic          Boolean @default(true)
+  
+  // Moderation
+  isModerated       Boolean @default(false)
+  moderatedBy       String? // Moderator user ID
+  moderatedAt       DateTime?
+  moderationReason  String?
+  
+  // Comments on review
+  comments          ReviewComment[]
+  votes             ReviewVote[]
   
   // Timestamps
   createdAt     DateTime    @default(now())
@@ -353,6 +374,129 @@ model CourseReview {
   
   @@unique([userId, courseId])
   @@map("course_reviews")
+}
+
+model ReviewComment {
+  id            String      @id @default(uuid())
+  reviewId      String
+  review        CourseReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  userId        String      // User ID from auth service
+  parentId      String?     // For nested comments
+  
+  content       String
+  isPublic      Boolean     @default(true)
+  
+  // Social features
+  helpfulVotes  Int         @default(0)
+  totalVotes    Int         @default(0)
+  
+  // Moderation
+  isModerated   Boolean     @default(false)
+  moderatedBy   String?
+  moderatedAt   DateTime?
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@map("review_comments")
+}
+
+model CourseComment {
+  id            String      @id @default(uuid())
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  userId        String      // User ID from auth service
+  parentId      String?     // For nested comments
+  
+  content       String
+  isPublic      Boolean     @default(true)
+  
+  // Social features
+  helpfulVotes  Int         @default(0)
+  totalVotes    Int         @default(0)
+  likes         Int         @default(0)
+  
+  // Moderation
+  isModerated   Boolean     @default(false)
+  moderatedBy   String?
+  moderatedAt   DateTime?
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@map("course_comments")
+}
+
+model LessonComment {
+  id            String      @id @default(uuid())
+  lessonId      String
+  lesson        Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  userId        String      // User ID from auth service
+  parentId      String?     // For nested comments
+  
+  content       String
+  isPublic      Boolean     @default(true)
+  
+  // Social features
+  helpfulVotes  Int         @default(0)
+  totalVotes    Int         @default(0)
+  likes         Int         @default(0)
+  
+  // Moderation
+  isModerated   Boolean     @default(false)
+  moderatedBy   String?
+  moderatedAt   DateTime?
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@map("lesson_comments")
+}
+
+model UserFollow {
+  id            String      @id @default(uuid())
+  followerId    String      // User ID who follows
+  followingId   String      // User ID being followed
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  
+  @@unique([followerId, followingId])
+  @@map("user_follows")
+}
+
+model CourseLike {
+  id            String      @id @default(uuid())
+  userId        String      // User ID from auth service
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  
+  @@unique([userId, courseId])
+  @@map("course_likes")
+}
+
+model ReviewVote {
+  id            String      @id @default(uuid())
+  userId        String      // User ID from auth service
+  reviewId      String
+  review        CourseReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  isHelpful     Boolean     // true = helpful, false = not helpful
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  
+  @@unique([userId, reviewId])
+  @@map("review_votes")
 }
 
 model CourseCertificate {

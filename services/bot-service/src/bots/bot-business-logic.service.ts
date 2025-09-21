@@ -3,6 +3,7 @@ import { Context } from 'telegraf';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessageTemplatesService } from './message-templates.service';
 import { BotConfig } from './bot-instance-manager.service';
+import { TelegramPaymentService } from '../telegram/telegram-payment.service';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
@@ -13,6 +14,7 @@ export class BotBusinessLogic {
   constructor(
     private prisma: PrismaService,
     private messageTemplates: MessageTemplatesService,
+    private telegramPaymentService: TelegramPaymentService,
     private httpService: HttpService,
   ) {}
 
@@ -116,8 +118,15 @@ export class BotBusinessLogic {
       // Проверка доступа к уроку
       const hasAccess = await this.checkLessonAccess(botUser.platformUserId, step);
       if (!hasAccess) {
-        await ctx.reply('Урок недоступен. Завершите предыдущие уроки.');
-        return;
+        // Проверяем, является ли урок платным
+        const isPaidLesson = await this.isPaidLesson(step);
+        if (isPaidLesson) {
+          await this.offerPayment(ctx, config, step, botUser);
+          return;
+        } else {
+          await ctx.reply('Урок недоступен. Завершите предыдущие уроки.');
+          return;
+        }
       }
 
       // Обновление состояния пользователя
@@ -490,5 +499,137 @@ export class BotBusinessLogic {
     
     // В реальности - сохранение в Progress Service
     this.logger.log(`Assignment submitted: ${botUser.id}, ${step.id}, ${submission.type}`);
+  }
+
+  // Новые методы для работы с платежами
+
+  private async isPaidLesson(step: any): Promise<boolean> {
+    // Проверяем, является ли урок платным
+    return step?.isPaid || step?.price > 0;
+  }
+
+  private async offerPayment(ctx: Context, config: BotConfig, step: any, botUser: any) {
+    const course = await this.getCourse(config.courseId);
+    
+    const paymentMessage = `💰 *Платный урок*
+
+📚 ${step.title}
+💵 Стоимость: ${step.price} ${step.currency || 'RUB'}
+
+Для доступа к этому уроку необходимо произвести оплату.`;
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: '💳 Оплатить',
+            callback_data: `pay_lesson_${step.id}`,
+          },
+        ],
+        [
+          {
+            text: '📋 Описание урока',
+            callback_data: `lesson_info_${step.id}`,
+          },
+        ],
+        [
+          {
+            text: '🔙 Назад к курсу',
+            callback_data: 'course_menu',
+          },
+        ],
+      ],
+    };
+
+    await ctx.reply(paymentMessage, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard,
+    });
+  }
+
+  async handlePaymentRequest(ctx: Context, config: BotConfig, stepId: string) {
+    const telegramUserId = ctx.from?.id;
+    if (!telegramUserId) return;
+
+    try {
+      const botUser = await this.getBotUser(config.id, BigInt(telegramUserId));
+      if (!botUser?.platformUserId) {
+        await ctx.reply('Необходимо зарегистрироваться в системе.');
+        return;
+      }
+
+      const step = await this.getLesson(stepId);
+      if (!step) {
+        await ctx.reply('Урок не найден.');
+        return;
+      }
+
+      // Создаем платеж через Telegram Payment API
+      const paymentResult = await this.telegramPaymentService.createTelegramPayment({
+        botId: config.id,
+        userId: botUser.platformUserId,
+        courseId: config.courseId,
+        lessonId: stepId,
+        amount: step.price,
+        currency: step.currency || 'RUB',
+        description: `Доступ к уроку: ${step.title}`,
+        providerToken: 'YOUR_PROVIDER_TOKEN', // В реальности - из конфигурации
+        startParameter: `pay_${stepId}`,
+        payload: `lesson_${stepId}`,
+      });
+
+      if (paymentResult.success) {
+        await ctx.reply(
+          '💳 *Платеж создан!*\n\nНажмите на кнопку ниже для оплаты:',
+          {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: '💳 Оплатить',
+                    url: paymentResult.paymentUrl,
+                  },
+                ],
+                [
+                  {
+                    text: '🔙 Отмена',
+                    callback_data: 'course_menu',
+                  },
+                ],
+              ],
+            },
+          }
+        );
+      } else {
+        await ctx.reply(`❌ Ошибка создания платежа: ${paymentResult.error}`);
+      }
+    } catch (error) {
+      this.logger.error(`Ошибка создания платежа: ${error.message}`);
+      await ctx.reply('Произошла ошибка при создании платежа. Попробуйте позже.');
+    }
+  }
+
+  async handleSuccessfulPayment(ctx: Context, config: BotConfig, paymentId: string) {
+    try {
+      await ctx.reply(
+        '✅ *Платеж успешно выполнен!*\n\nТеперь у вас есть доступ к уроку. Используйте кнопки для навигации.',
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '📚 Продолжить обучение',
+                  callback_data: 'course_menu',
+                },
+              ],
+            ],
+          },
+        }
+      );
+    } catch (error) {
+      this.logger.error(`Ошибка обработки успешного платежа: ${error.message}`);
+    }
   }
 }

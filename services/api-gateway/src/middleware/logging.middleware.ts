@@ -30,65 +30,27 @@ export class LoggingMiddleware implements NestMiddleware {
       method,
       url: originalUrl,
       ip,
-      userAgent: userAgent.substring(0, 100), // Limit length
-      contentLength: headers['content-length'] || 0,
+      userAgent: userAgent.substring(0, 100),
       timestamp: new Date().toISOString(),
     });
 
-    // Override res.end to capture response
-    const originalEnd = res.end;
-    const originalWrite = res.write;
-    const chunks: Buffer[] = [];
-
-    res.write = function(chunk: any): boolean {
-      if (chunk) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-      }
-      return originalWrite.apply(res, arguments as any);
-    };
-
-    res.end = function(chunk?: any): Response {
-      if (chunk) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-      }
-
+    // Log response when finished
+    res.on('finish', () => {
       const duration = Date.now() - startTime;
-      const responseBody = Buffer.concat(chunks);
-      const responseSize = responseBody.length;
-
-      // Log response
       const logLevel = res.statusCode >= 400 ? 'error' : 'log';
       const logMessage = `← ${method} ${originalUrl} ${res.statusCode}`;
 
-      const logData = {
+      this.logger[logLevel](logMessage, {
         requestId,
         method,
         url: originalUrl,
         status: res.statusCode,
         duration: `${duration}ms`,
-        responseSize: `${responseSize}b`,
         ip,
         userAgent: userAgent.substring(0, 100),
         timestamp: new Date().toISOString(),
-      };
-
-      // Add error details for 4xx/5xx responses
-      if (res.statusCode >= 400) {
-        try {
-          const responseText = responseBody.toString('utf8');
-          if (responseText.length < 1000) { // Only log small error responses
-            const parsedResponse = JSON.parse(responseText);
-            logData['error'] = parsedResponse.message || parsedResponse.error || responseText;
-          }
-        } catch (e) {
-          // Ignore JSON parsing errors
-        }
-      }
-
-      this.logger[logLevel](logMessage, logData);
-
-      return originalEnd.apply(res, arguments as any);
-    };
+      });
+    });
 
     next();
   }
@@ -105,23 +67,19 @@ export class RequestTimingMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
     const startTime = process.hrtime.bigint();
 
-    res.on('finish', () => {
+    // Set timing header before response is sent
+    const originalEnd = res.end;
+    res.end = function(chunk?: any, encoding?: any, cb?: any): Response {
       const duration = process.hrtime.bigint() - startTime;
-      const durationMs = Number(duration / BigInt(1000000)); // Convert to milliseconds
-
+      const durationMs = Number(duration / BigInt(1000000));
+      
       // Set timing header
-      res.setHeader('X-Response-Time', `${durationMs}ms`);
-
-      // Log slow requests (>1000ms)
-      if (durationMs > 1000) {
-        this.logger.warn(`Slow request detected`, {
-          method: req.method,
-          url: req.originalUrl,
-          duration: `${durationMs}ms`,
-          status: res.statusCode,
-        });
+      if (!res.headersSent) {
+        res.setHeader('X-Response-Time', `${durationMs}ms`);
       }
-    });
+
+      return originalEnd.call(res, chunk, encoding, cb);
+    };
 
     next();
   }

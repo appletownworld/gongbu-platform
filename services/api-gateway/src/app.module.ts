@@ -84,15 +84,7 @@ import { LoggingMiddleware, RequestTimingMiddleware, SecurityHeadersMiddleware }
     }),
 
     // Health checks
-    TerminusModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        errorLogStyle: 'pretty',
-        logger: true,
-        gracefulShutdownTimeoutMs: configService.get('HEALTH_CHECK_TIMEOUT', 5000),
-      }),
-      inject: [ConfigService],
-    }),
+    TerminusModule,
   ],
 
   controllers: [

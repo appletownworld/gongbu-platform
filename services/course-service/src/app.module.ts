@@ -15,6 +15,7 @@ import { HealthModule } from './health/health.module';
 import { CoursesModule } from './courses/courses.module';
 import { LessonsModule } from './lessons/lessons.module';
 import { AssignmentModule } from './assignments/assignment.module';
+import { QuizModule } from './quiz/quiz.module';
 import { ProgressModule } from './progress/progress.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
 import { CertificateModule } from './certificates/certificate.module';
@@ -85,6 +86,7 @@ import { validateEnv } from './config/env.validation';
     CoursesModule,
     LessonsModule,
     AssignmentModule,
+    QuizModule,
     ProgressModule,
     EnrollmentModule,
     CertificateModule,

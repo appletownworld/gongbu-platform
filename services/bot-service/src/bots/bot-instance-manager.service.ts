@@ -173,6 +173,34 @@ export class BotInstanceManager {
       await this.logMessage(ctx, config.id, 'quiz_answer', Date.now() - startTime);
     });
 
+    // Платежи за уроки
+    bot.action(/^pay_lesson_(.+)$/, async (ctx) => {
+      const stepId = ctx.match[1];
+      const startTime = Date.now();
+      try {
+        await this.businessLogic.handlePaymentRequest(ctx, config, stepId);
+        await ctx.answerCbQuery();
+      } catch (error) {
+        this.logger.error(`Error in payment request: ${error.message}`);
+        await ctx.answerCbQuery('Произошла ошибка');
+      }
+      await this.logMessage(ctx, config.id, 'payment_request', Date.now() - startTime);
+    });
+
+    // Успешные платежи
+    bot.action(/^payment_success_(.+)$/, async (ctx) => {
+      const paymentId = ctx.match[1];
+      const startTime = Date.now();
+      try {
+        await this.businessLogic.handleSuccessfulPayment(ctx, config, paymentId);
+        await ctx.answerCbQuery();
+      } catch (error) {
+        this.logger.error(`Error in payment success: ${error.message}`);
+        await ctx.answerCbQuery('Произошла ошибка');
+      }
+      await this.logMessage(ctx, config.id, 'payment_success', Date.now() - startTime);
+    });
+
     // Навигационные кнопки
     bot.action('next_step', async (ctx) => {
       try {

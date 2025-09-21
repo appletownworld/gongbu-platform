@@ -1,13 +1,25 @@
 # 🎓 Gongbu Platform - Telegram-Based Learning Management System
 
 <div align="center">
-  <h3>Полноценная платформа для создания и продажи образовательных курсов через Telegram</h3>
+  <h3>Empowering Creative Minds Through Accessible Education</h3>
+  <p><em>Расширение возможностей творческих умов через доступное образование</em></p>
+  
+  <h4>Полноценная платформа для создания и продажи образовательных курсов через Telegram</h4>
   
   ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue.svg)
   ![Telegram](https://img.shields.io/badge/Telegram-Bot%20API-26A5E4.svg)
+  ![Languages](https://img.shields.io/badge/Languages-EN%20%7C%20KO%20%7C%20RU-blue.svg)
 </div>
+
+## 🌍 Многоязычная поддержка
+
+Платформа поддерживает три основных языка для глобального охвата:
+
+- 🇺🇸 **English** - International audience
+- 🇰🇷 **한국어** - Korean language support  
+- 🇷🇺 **Русский** - Russian language support
 
 ## 🚀 Особенности
 
