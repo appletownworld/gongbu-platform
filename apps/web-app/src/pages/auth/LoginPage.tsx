@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { AcademicCapIcon, EyeIcon, EyeSlashIcon, MessageCircle, Zap, Shield, ArrowRight, CheckCircle, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { AcademicCapIcon, EyeIcon, EyeSlashIcon, ChatBubbleLeftEllipsisIcon, BoltIcon, ShieldCheckIcon, ArrowRightIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -84,7 +84,7 @@ const LoginPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-secondary-900 py-16 flex items-center justify-center">
         <div className="container mx-auto px-6 max-w-2xl">
           <div className="bg-white p-8 md:p-12 rounded-xl shadow-lg border border-secondary-200 text-center animate-fade-in">
-            <MessageCircle className="h-16 w-16 text-primary-500 mx-auto mb-6" />
+            <ChatBubbleLeftEllipsisIcon className="h-16 w-16 text-primary-500 mx-auto mb-6" />
             <h1 className="text-3xl md:text-4xl font-extrabold text-primary-700 mb-6 leading-tight">
               Добро пожаловать в Gongbu!
             </h1>
@@ -94,7 +94,7 @@ const LoginPage: React.FC = () => {
             
             <div className="bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-lg p-6 mb-8">
               <div className="flex items-center justify-center space-x-2 mb-4">
-                <Zap className="h-6 w-6 text-primary-600" />
+                <BoltIcon className="h-6 w-6 text-primary-600" />
                 <h3 className="font-semibold text-primary-800">Автоматический вход</h3>
               </div>
               <p className="text-sm text-primary-700">
@@ -192,7 +192,7 @@ const LoginPage: React.FC = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full shadow-lg text-white bg-primary-600 hover:bg-primary-700 transition-all duration-300 ease-in-out transform hover:scale-105"
             >
-              Перейти к Telegram боту <ArrowRight className="ml-3 h-5 w-5" />
+              Перейти к Telegram боту <ArrowRightIcon className="ml-3 h-5 w-5" />
             </a>
           </div>
 
@@ -201,10 +201,10 @@ const LoginPage: React.FC = () => {
             <h2 className="text-2xl md:text-3xl font-bold text-secondary-800 mb-8">Преимущества входа через Telegram</h2>
             <div className="space-y-6">
               {[
-                { icon: Zap, title: "Мгновенно", description: "Авторизация за менее чем 1 секунду без форм и паролей" },
-                { icon: Shield, title: "Безопасно", description: "Используем официальный Telegram WebApp API для защиты данных" },
-                { icon: CheckCircle, title: "Просто", description: "Один клик в Telegram — и вы уже в системе обучения" },
-                { icon: MessageCircle, title: "Удобно", description: "Все уведомления и материалы прямо в Telegram" }
+                { icon: BoltIcon, title: "Мгновенно", description: "Авторизация за менее чем 1 секунду без форм и паролей" },
+                { icon: ShieldCheckIcon, title: "Безопасно", description: "Используем официальный Telegram WebApp API для защиты данных" },
+                { icon: CheckCircleIcon, title: "Просто", description: "Один клик в Telegram — и вы уже в системе обучения" },
+                { icon: ChatBubbleLeftEllipsisIcon, title: "Удобно", description: "Все уведомления и материалы прямо в Telegram" }
               ].map((benefit, index) => (
                 <div key={index} className="flex items-start space-x-4">
                   <benefit.icon className="w-8 h-8 text-primary-500 flex-shrink-0 mt-1" />

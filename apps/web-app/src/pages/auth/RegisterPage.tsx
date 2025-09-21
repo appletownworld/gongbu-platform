@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, Zap, Shield, Users, BookOpen, CheckCircle, ArrowRight, Smartphone, Clock, Star } from 'lucide-react';
+import { MessageCircle, Zap, Shield, Users, BookOpen, CheckCircle, ArrowRight, Smartphone, Star } from 'lucide-react';
 
 export default function RegisterPage() {
   return (
