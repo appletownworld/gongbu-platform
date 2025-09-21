@@ -1,0 +1,529 @@
+{
+  "timestamp": "2025-09-21T02:10:52.583Z",
+  "baseUrl": "http://localhost:3000",
+  "tests": [
+    {
+      "path": "/",
+      "url": "http://localhost:3000/",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 38,
+        "htmlSize": 900
+      },
+      "issues": [],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/about",
+      "url": "http://localhost:3000/about",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 8,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /about"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/how-it-works",
+      "url": "http://localhost:3000/how-it-works",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 7,
+        "htmlSize": 900
+      },
+      "issues": [],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/pricing",
+      "url": "http://localhost:3000/pricing",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 8,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /pricing"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/faq",
+      "url": "http://localhost:3000/faq",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 6,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /faq"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/courses",
+      "url": "http://localhost:3000/courses",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 6,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /courses"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/categories",
+      "url": "http://localhost:3000/categories",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 7,
+        "htmlSize": 900
+      },
+      "issues": [],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/instructors",
+      "url": "http://localhost:3000/instructors",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 8,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /instructors"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/certificates",
+      "url": "http://localhost:3000/certificates",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 9,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /certificates"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/help",
+      "url": "http://localhost:3000/help",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 14,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /help"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/contact",
+      "url": "http://localhost:3000/contact",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 8,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /contact"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/report",
+      "url": "http://localhost:3000/report",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 8,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /report"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/status",
+      "url": "http://localhost:3000/status",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 6,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /status"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/privacy",
+      "url": "http://localhost:3000/privacy",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 5,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /privacy"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/terms",
+      "url": "http://localhost:3000/terms",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 6,
+        "htmlSize": 900
+      },
+      "issues": [
+        "Отсутствуют ключевые слова для /terms"
+      ],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/login",
+      "url": "http://localhost:3000/login",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 6,
+        "htmlSize": 900
+      },
+      "issues": [],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    },
+    {
+      "path": "/register",
+      "url": "http://localhost:3000/register",
+      "status": "warning",
+      "httpStatus": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "isNotFound": false,
+      "reactComponents": true,
+      "interactiveElements": {
+        "links": 0,
+        "buttons": 0,
+        "forms": 0,
+        "inputs": 0
+      },
+      "contentChecks": {
+        "hasMainContent": false,
+        "hasNavigation": false,
+        "hasFooter": false,
+        "contentWords": 1
+      },
+      "performance": {
+        "loadTime": 8,
+        "htmlSize": 900
+      },
+      "issues": [],
+      "warnings": [
+        "Мало контента на странице"
+      ]
+    }
+  ],
+  "summary": {
+    "total": 17,
+    "passed": 0,
+    "failed": 0,
+    "warnings": 17
+  }
+}
