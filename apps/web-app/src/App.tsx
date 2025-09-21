@@ -21,6 +21,7 @@ import HelpPage from '@/pages/HelpPage'
 import StatusPage from '@/pages/StatusPage'
 import PrivacyPage from '@/pages/legal/PrivacyPage'
 import CookiesPage from '@/pages/legal/CookiesPage'
+import AgreementPage from '@/pages/legal/AgreementPage'
 import InstructorsPage from '@/pages/InstructorsPage'
 import CertificatesPage from '@/pages/CertificatesPage'
 import ReportPage from '@/pages/ReportPage'
@@ -70,6 +71,7 @@ function App() {
                 <Route path="/status" element={<StatusPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/cookies" element={<CookiesPage />} />
+                <Route path="/agreement" element={<AgreementPage />} />
                 <Route path="/terms" element={<TermsPage />} />
             
             {/* Auth routes */}
