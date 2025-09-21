@@ -11,6 +11,13 @@ import HomePage from '@/pages/HomePage'
 import AboutPage from '@/pages/AboutPage'
 import ContactPage from '@/pages/ContactPage'
 import CoursesPage from '@/pages/CoursesPage'
+import HowItWorksPage from '@/pages/HowItWorksPage'
+import PricingPage from '@/pages/PricingPage'
+import FaqPage from '@/pages/FaqPage'
+import CategoriesPage from '@/pages/CategoriesPage'
+import HelpPage from '@/pages/HelpPage'
+import StatusPage from '@/pages/StatusPage'
+import PrivacyPage from '@/pages/legal/PrivacyPage'
 import CourseDetailPage from '@/pages/CourseDetailPage'
 import CreateCoursePage from '@/pages/CreateCoursePage'
 import MyCoursesPage from '@/pages/MyCoursesPage'
@@ -44,6 +51,13 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:slug" element={<CourseDetailPage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/status" element={<StatusPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             
             {/* Auth routes */}
             <Route path="/auth/login" element={<LoginPage />} />
