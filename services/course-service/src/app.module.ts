@@ -7,6 +7,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import * as redisStore from 'cache-manager-redis-store';
 
 // Core modules
+import { SharedModule } from './shared/shared.module';
 import { PrismaModule } from './config/prisma.module';
 import { HealthModule } from './health/health.module';
 
@@ -16,7 +17,7 @@ import { LessonsModule } from './lessons/lessons.module';
 import { AssignmentModule } from './assignments/assignment.module';
 import { ProgressModule } from './progress/progress.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
-// import { CertificateModule } from './certificates/certificate.module';
+import { CertificateModule } from './certificates/certificate.module';
 import { FilesModule } from './files/files.module';
 import { AuthModule } from './auth/auth.module';
 
@@ -25,6 +26,9 @@ import { validateEnv } from './config/env.validation';
 
 @Module({
   imports: [
+    // Core shared dependencies (must be first)
+    SharedModule,
+    
     // Environment configuration
     ConfigModule.forRoot({
       isGlobal: true,
@@ -83,7 +87,7 @@ import { validateEnv } from './config/env.validation';
     AssignmentModule,
     ProgressModule,
     EnrollmentModule,
-    // CertificateModule, // Временно отключен из-за HttpService dependency issue
+    CertificateModule,
     FilesModule,
     AuthModule,
 

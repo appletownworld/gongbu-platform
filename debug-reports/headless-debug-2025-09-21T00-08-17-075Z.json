@@ -1,0 +1,90 @@
+{
+  "timestamp": "2025-09-21T00:08:16.782Z",
+  "success": true,
+  "accessibility": {
+    "missingAlt": 0,
+    "missingLabels": 0,
+    "headingStructure": true,
+    "colorContrast": false,
+    "focusable": 0
+  },
+  "performance": {
+    "htmlSize": 884,
+    "cacheHeaders": true,
+    "scriptCount": 3,
+    "styleCount": 0,
+    "imageCount": 0
+  },
+  "seo": {
+    "title": true,
+    "metaDescription": true,
+    "metaKeywords": false,
+    "ogTags": 0,
+    "canonicalUrl": false,
+    "robotsMeta": false,
+    "structuredData": 0
+  },
+  "errors": [],
+  "html": {
+    "title": "Gongbu - Образовательная платформа",
+    "metaTags": 3,
+    "headings": {
+      "h1": 0,
+      "h2": 0,
+      "h3": 0
+    },
+    "elements": {
+      "total": 12,
+      "buttons": 0,
+      "links": 0,
+      "forms": 0,
+      "images": 0,
+      "inputs": 0
+    },
+    "scripts": [
+      {
+        "src": "inline",
+        "type": "module"
+      },
+      {
+        "src": "/@vite/client",
+        "type": "module"
+      },
+      {
+        "src": "/src/main.tsx",
+        "type": "module"
+      }
+    ],
+    "stylesheets": 0,
+    "react": {
+      "root": true,
+      "viteHMR": true,
+      "reactRefresh": true
+    }
+  },
+  "scripts": [],
+  "apiHealth": {
+    "/api/health": {
+      "status": 200,
+      "healthy": true
+    },
+    "/api/courses": {
+      "status": 404,
+      "healthy": false
+    },
+    "/api/auth/me": {
+      "status": 404,
+      "healthy": false
+    }
+  },
+  "responseHeaders": {
+    "vary": "Origin",
+    "content-type": "text/html",
+    "cache-control": "no-cache",
+    "etag": "W/\"374-ag7olBya6LAKDMOUSxULWvpx4uY\"",
+    "date": "Sun, 21 Sep 2025 00:08:16 GMT",
+    "connection": "keep-alive",
+    "keep-alive": "timeout=5",
+    "content-length": "884"
+  }
+}

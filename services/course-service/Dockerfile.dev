@@ -8,7 +8,9 @@ RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    libc6-compat
+    libc6-compat \
+    openssl-dev \
+    openssl
 
 # Copy package files
 COPY package*.json ./

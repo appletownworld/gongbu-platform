@@ -8,6 +8,8 @@ import Footer from '@/components/layout/Footer'
 
 // Page components
 import HomePage from '@/pages/HomePage'
+import AboutPage from '@/pages/AboutPage'
+import ContactPage from '@/pages/ContactPage'
 import CoursesPage from '@/pages/CoursesPage'
 import CourseDetailPage from '@/pages/CourseDetailPage'
 import CreateCoursePage from '@/pages/CreateCoursePage'
@@ -15,6 +17,7 @@ import MyCoursesPage from '@/pages/MyCoursesPage'
 import CourseEditorPage from '@/pages/CourseEditorPage'
 import StudentApp from '@/pages/StudentApp'
 import LoginPage from '@/pages/auth/LoginPage'
+import RegisterPage from '@/pages/auth/RegisterPage'
 import AccessDeniedPage from '@/pages/auth/AccessDeniedPage'
 import DashboardPage from '@/pages/DashboardPage'
 import ProfilePage from '@/pages/ProfilePage'
@@ -37,12 +40,16 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:slug" element={<CourseDetailPage />} />
             
             {/* Auth routes */}
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} /> {/* Backwards compatibility */}
+            <Route path="/auth/register" element={<RegisterPage />} />
+            <Route path="/register" element={<RegisterPage />} /> {/* Backwards compatibility */}
             <Route path="/access-denied" element={<AccessDeniedPage />} />
             
             {/* Protected routes for all authenticated users */}

@@ -26,6 +26,7 @@
     "@modelcontextprotocol/server-sequential-thinking": "^2025.7.1",
     "@monsoft/mcp-postgres": "^0.6.0",
     "@thgamble/containerization-assist-mcp": "^1.4.2",
+    "axios": "^1.12.2",
     "express": "^5.1.0",
     "jsdom": "^27.0.0",
     "mcp-docker": "^1.0.0",
