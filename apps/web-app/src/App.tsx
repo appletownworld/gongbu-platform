@@ -18,6 +18,10 @@ import CategoriesPage from '@/pages/CategoriesPage'
 import HelpPage from '@/pages/HelpPage'
 import StatusPage from '@/pages/StatusPage'
 import PrivacyPage from '@/pages/legal/PrivacyPage'
+import InstructorsPage from '@/pages/InstructorsPage'
+import CertificatesPage from '@/pages/CertificatesPage'
+import ReportPage from '@/pages/ReportPage'
+import TermsPage from '@/pages/legal/TermsPage'
 import CourseDetailPage from '@/pages/CourseDetailPage'
 import CreateCoursePage from '@/pages/CreateCoursePage'
 import MyCoursesPage from '@/pages/MyCoursesPage'
@@ -55,9 +59,13 @@ function App() {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/instructors" element={<InstructorsPage />} />
+            <Route path="/certificates" element={<CertificatesPage />} />
             <Route path="/help" element={<HelpPage />} />
+            <Route path="/report" element={<ReportPage />} />
             <Route path="/status" element={<StatusPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             
             {/* Auth routes */}
             <Route path="/auth/login" element={<LoginPage />} />
