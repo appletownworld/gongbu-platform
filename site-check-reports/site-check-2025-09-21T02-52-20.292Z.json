@@ -1,0 +1,163 @@
+{
+  "timestamp": "2025-09-21T02:52:19.743Z",
+  "baseUrl": "http://localhost:3000",
+  "pages": {
+    "home": {
+      "success": true,
+      "status": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "data": "<!DOCTYPE html>\n<html lang=\"ru\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Gongbu - Образовательная платформа</title>\n    <meta name=\"description\" content=\"Современная образовательная платформа для изучения программирования, дизайна и других IT-навыков\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx?t=1758421258694\"></script>\n  </body>\n</html>\n"
+    },
+    "about": {
+      "success": true,
+      "status": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "data": "<!DOCTYPE html>\n<html lang=\"ru\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Gongbu - Образовательная платформа</title>\n    <meta name=\"description\" content=\"Современная образовательная платформа для изучения программирования, дизайна и других IT-навыков\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx?t=1758421258694\"></script>\n  </body>\n</html>\n"
+    },
+    "contact": {
+      "success": true,
+      "status": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "data": "<!DOCTYPE html>\n<html lang=\"ru\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Gongbu - Образовательная платформа</title>\n    <meta name=\"description\" content=\"Современная образовательная платформа для изучения программирования, дизайна и других IT-навыков\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx?t=1758421258694\"></script>\n  </body>\n</html>\n"
+    },
+    "courses": {
+      "success": true,
+      "status": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "data": "<!DOCTYPE html>\n<html lang=\"ru\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Gongbu - Образовательная платформа</title>\n    <meta name=\"description\" content=\"Современная образовательная платформа для изучения программирования, дизайна и других IT-навыков\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx?t=1758421258694\"></script>\n  </body>\n</html>\n"
+    },
+    "dashboard": {
+      "success": true,
+      "status": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "data": "<!DOCTYPE html>\n<html lang=\"ru\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Gongbu - Образовательная платформа</title>\n    <meta name=\"description\" content=\"Современная образовательная платформа для изучения программирования, дизайна и других IT-навыков\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx?t=1758421258694\"></script>\n  </body>\n</html>\n"
+    },
+    "profile": {
+      "success": true,
+      "status": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "data": "<!DOCTYPE html>\n<html lang=\"ru\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Gongbu - Образовательная платформа</title>\n    <meta name=\"description\" content=\"Современная образовательная платформа для изучения программирования, дизайна и других IT-навыков\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx?t=1758421258694\"></script>\n  </body>\n</html>\n"
+    },
+    "404_test": {
+      "success": true,
+      "status": 200,
+      "title": "Gongbu - Образовательная платформа",
+      "data": "<!DOCTYPE html>\n<html lang=\"ru\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/logo.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Gongbu - Образовательная платформа</title>\n    <meta name=\"description\" content=\"Современная образовательная платформа для изучения программирования, дизайна и других IT-навыков\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx?t=1758421258694\"></script>\n  </body>\n</html>\n"
+    }
+  },
+  "apis": {
+    "http://localhost:3001/api/v1/health": {
+      "success": true,
+      "status": 200,
+      "data": {
+        "status": "ok",
+        "info": {
+          "database": {
+            "status": "up",
+            "message": "Database connection successful"
+          },
+          "memory_heap": {
+            "status": "up"
+          },
+          "memory_rss": {
+            "status": "up"
+          },
+          "storage": {
+            "status": "up"
+          }
+        },
+        "error": {},
+        "details": {
+          "database": {
+            "status": "up",
+            "message": "Database connection successful"
+          },
+          "memory_heap": {
+            "status": "up"
+          },
+          "memory_rss": {
+            "status": "up"
+          },
+          "storage": {
+            "status": "up"
+          }
+        }
+      }
+    },
+    "http://localhost:3002/api/v1/health": {
+      "success": true,
+      "status": 200,
+      "data": {
+        "status": "ok",
+        "info": {
+          "database": {
+            "status": "up"
+          },
+          "memory_heap": {
+            "status": "up"
+          },
+          "memory_rss": {
+            "status": "up"
+          },
+          "storage": {
+            "status": "up"
+          }
+        },
+        "error": {},
+        "details": {
+          "database": {
+            "status": "up"
+          },
+          "memory_heap": {
+            "status": "up"
+          },
+          "memory_rss": {
+            "status": "up"
+          },
+          "storage": {
+            "status": "up"
+          }
+        }
+      }
+    },
+    "http://localhost:3002/api/v1/courses": {
+      "success": true,
+      "status": 200,
+      "data": {
+        "courses": [],
+        "pagination": {
+          "page": 1,
+          "limit": 20,
+          "totalPages": 0,
+          "totalItems": 0,
+          "hasNext": false,
+          "hasPrev": false
+        }
+      }
+    },
+    "http://localhost:3001/api/v1/auth/me": {
+      "success": true,
+      "status": 401,
+      "data": {
+        "message": "Bearer token required",
+        "error": "Unauthorized",
+        "statusCode": 401
+      }
+    },
+    "http://localhost:3002/api/v1/courses/nonexistent": {
+      "success": true,
+      "status": 404,
+      "data": {
+        "message": "Course with ID nonexistent not found",
+        "error": "Not Found",
+        "statusCode": 404
+      }
+    }
+  },
+  "summary": {
+    "total": 12,
+    "success": 12,
+    "failed": 0
+  },
+  "responseTime": 13
+}

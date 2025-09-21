@@ -20,6 +20,7 @@ import CategoriesPage from '@/pages/CategoriesPage'
 import HelpPage from '@/pages/HelpPage'
 import StatusPage from '@/pages/StatusPage'
 import PrivacyPage from '@/pages/legal/PrivacyPage'
+import CookiesPage from '@/pages/legal/CookiesPage'
 import InstructorsPage from '@/pages/InstructorsPage'
 import CertificatesPage from '@/pages/CertificatesPage'
 import ReportPage from '@/pages/ReportPage'
@@ -66,9 +67,10 @@ function App() {
             <Route path="/certificates" element={<CertificatesPage />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/report" element={<ReportPage />} />
-            <Route path="/status" element={<StatusPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
+                <Route path="/status" element={<StatusPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/cookies" element={<CookiesPage />} />
+                <Route path="/terms" element={<TermsPage />} />
             
             {/* Auth routes */}
             <Route path="/auth/login" element={<LoginPage />} />
