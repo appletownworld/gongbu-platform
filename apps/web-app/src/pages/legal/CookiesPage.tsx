@@ -1,5 +1,4 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 
 /**
  * 🍪 Страница политики использования cookies
@@ -11,13 +10,6 @@ import { Helmet } from 'react-helmet-async';
 const CookiesPage: React.FC = () => {
   return (
     <>
-      <Helmet>
-        <title>Политика использования Cookies - Gongbu</title>
-        <meta 
-          name="description" 
-          content="Узнайте, как платформа Gongbu использует cookies для улучшения пользовательского опыта и аналитики" 
-        />
-      </Helmet>
 
       <div className="min-h-screen bg-secondary-50 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
