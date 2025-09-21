@@ -24,6 +24,9 @@ export interface Course {
   enrollmentCount: number
   averageRating: number
   reviewCount: number
+  duration?: number
+  rating?: number
+  studentCount?: number
   createdAt: string
   updatedAt: string
   creator?: CourseCreator
@@ -47,6 +50,9 @@ export enum CourseCategory {
   BUSINESS = 'BUSINESS',
   MARKETING = 'MARKETING',
   LANGUAGES = 'LANGUAGES',
+  SCIENCE = 'SCIENCE',
+  ARTS = 'ARTS',
+  HEALTH = 'HEALTH',
   OTHER = 'OTHER',
 }
 
@@ -109,6 +115,7 @@ export interface Lesson {
   order: number
   isPublished: boolean
   isFree: boolean
+  isPreview?: boolean
   prerequisites: string[]
   learningObjectives: string[]
   createdAt: string
@@ -119,6 +126,7 @@ export enum LessonContentType {
   TEXT = 'TEXT',
   VIDEO = 'VIDEO',
   AUDIO = 'AUDIO',
+  IMAGE = 'IMAGE',
   INTERACTIVE = 'INTERACTIVE',
   QUIZ = 'QUIZ',
   ASSIGNMENT = 'ASSIGNMENT',

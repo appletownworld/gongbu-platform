@@ -10,9 +10,21 @@ export default function AboutPage() {
             О платформе <span className="text-primary-600">Gongbu</span>
           </h1>
           <p className="text-xl text-secondary-600 mb-8 leading-relaxed">
-            Современная образовательная платформа для изучения корейского языка 
+            Современная многоязычная образовательная платформа 
             с интеграцией Telegram и интерактивными инструментами обучения
           </p>
+          
+          <div className="flex justify-center space-x-6 mb-8">
+            <div className="bg-white rounded-lg px-4 py-2 shadow-md border border-secondary-100">
+              <span className="text-lg font-semibold text-primary-900">🇺🇸 English</span>
+            </div>
+            <div className="bg-white rounded-lg px-4 py-2 shadow-md border border-secondary-100">
+              <span className="text-lg font-semibold text-primary-900">🇰🇷 한국어</span>
+            </div>
+            <div className="bg-white rounded-lg px-4 py-2 shadow-md border border-secondary-100">
+              <span className="text-lg font-semibold text-primary-900">🇷🇺 Русский</span>
+            </div>
+          </div>
           <div className="flex justify-center">
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-secondary-100">
               <div className="flex items-center justify-center space-x-4">
@@ -36,22 +48,34 @@ export default function AboutPage() {
                 Наша миссия
               </h2>
               <p className="text-lg text-secondary-600 mb-6 leading-relaxed">
-                Мы создаем инновационную образовательную среду для изучения корейского языка, 
-                объединяя современные технологии с проверенными методиками обучения.
+                <strong>"Empowering Creative Minds Through Accessible Education"</strong>
+              </p>
+              <p className="text-lg text-secondary-600 mb-6 leading-relaxed">
+                Мы стремимся сделать качественное образование доступным для всех, 
+                предоставляя творческим людям простой и недорогой способ делиться своими знаниями, 
+                позволяя им сосредоточиться на том, что они делают лучше всего - создании увлекательного образовательного контента.
               </p>
               <p className="text-lg text-secondary-600 mb-8 leading-relaxed">
-                Наша цель — сделать изучение корейского языка доступным, увлекательным 
-                и эффективным для каждого студента.
+                Наша цель — убрать все барьеры между экспертом и учеником, 
+                демократизировать обмен знаниями и сделать премиальное образование доступным каждому.
               </p>
               
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex items-center space-x-3">
                   <Target className="w-8 h-8 text-primary-600 flex-shrink-0" />
-                  <span className="text-secondary-700 font-medium">Целенаправленное обучение</span>
+                  <span className="text-secondary-700 font-medium">Доступное образование</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Heart className="w-8 h-8 text-primary-600 flex-shrink-0" />
-                  <span className="text-secondary-700 font-medium">Индивидуальный подход</span>
+                  <span className="text-secondary-700 font-medium">Фокус на творчестве</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Award className="w-8 h-8 text-primary-600 flex-shrink-0" />
+                  <span className="text-secondary-700 font-medium">Качество без компромиссов</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Zap className="w-8 h-8 text-primary-600 flex-shrink-0" />
+                  <span className="text-secondary-700 font-medium">Простота и скорость</span>
                 </div>
               </div>
             </div>

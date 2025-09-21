@@ -42,6 +42,16 @@ import NotFoundPage from '@/pages/NotFoundPage'
 import ProtectedRoute, { StudentRoute, CreatorRoute } from '@/components/auth/ProtectedRoute'
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel'
 
+// Admin components
+import AdminRoute from '@/components/admin/AdminRoute'
+import AdminLayout from '@/components/admin/AdminLayout'
+import AdminDashboard from '@/pages/admin/AdminDashboard'
+import UserManagement from '@/pages/admin/UserManagement'
+import SystemStats from '@/pages/admin/SystemStats'
+import SystemSettings from '@/pages/admin/SystemSettings'
+import CreateFirstAdminPage from '@/pages/admin/CreateFirstAdminPage'
+import AdminLogin from '@/pages/admin/AdminLogin'
+
 // Providers
 import { AuthProvider } from '@/contexts/AuthContext'
 
@@ -134,6 +144,33 @@ function App() {
                 </StudentRoute>
               } 
             />
+            
+            {/* Create first admin route (no auth required) */}
+            <Route 
+              path="/admin/setup" 
+              element={<CreateFirstAdminPage />} 
+            />
+            
+            {/* Admin login route (no auth required) */}
+            <Route 
+              path="/admin/login" 
+              element={<AdminLogin />} 
+            />
+            
+            {/* Admin routes */}
+            <Route 
+              path="/admin" 
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              } 
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="stats" element={<SystemStats />} />
+              <Route path="settings" element={<SystemSettings />} />
+            </Route>
             
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

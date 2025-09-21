@@ -73,6 +73,9 @@ const CoursesPage: React.FC = () => {
     [CourseCategory.BUSINESS]: 'Бизнес',
     [CourseCategory.MARKETING]: 'Маркетинг',
     [CourseCategory.LANGUAGES]: 'Языки',
+    [CourseCategory.SCIENCE]: 'Наука',
+    [CourseCategory.ARTS]: 'Искусство',
+    [CourseCategory.HEALTH]: 'Здоровье',
     [CourseCategory.OTHER]: 'Другое',
   }
 

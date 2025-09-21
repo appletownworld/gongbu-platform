@@ -13,25 +13,28 @@ import {
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTranslation } from '@/hooks/useTranslation'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher'
 import { clsx } from 'clsx'
 
 const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth()
+  const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const navigation = [
-    { name: 'Главная', href: '/' },
-    { name: 'Курсы', href: '/courses' },
-    { name: 'О платформе', href: '/about' },
-    { name: 'Контакты', href: '/contact' },
+    { name: t('navigation.home'), href: '/' },
+    { name: t('navigation.courses'), href: '/courses' },
+    { name: t('navigation.about'), href: '/about' },
+    { name: t('navigation.contact'), href: '/contact' },
   ]
 
   const userNavigation = [
-    { name: 'Панель управления', href: '/dashboard', icon: ChartBarIcon },
-    { name: 'Мои курсы', href: '/my-courses', icon: BookOpenIcon },
-    { name: 'Профиль', href: '/profile', icon: UserCircleIcon },
+    { name: t('navigation.dashboard'), href: '/dashboard', icon: ChartBarIcon },
+    { name: t('course.myCourses'), href: '/my-courses', icon: BookOpenIcon },
+    { name: t('navigation.profile'), href: '/profile', icon: UserCircleIcon },
   ]
 
   const handleLogout = async () => {
@@ -76,6 +79,9 @@ const Header: React.FC = () => {
 
           {/* User Menu / Auth */}
           <div className="flex items-center space-x-4">
+            {/* Language Switcher */}
+            <LanguageSwitcher className="hidden md:block" />
+            
             {isAuthenticated ? (
               <>
                 {/* Create Course Button */}
@@ -84,7 +90,7 @@ const Header: React.FC = () => {
                   className="btn-primary flex items-center space-x-2"
                 >
                   <PlusIcon className="h-4 w-4" />
-                  <span className="hidden sm:block">Создать курс</span>
+                  <span className="hidden sm:block">{t('course.createCourse')}</span>
                 </Link>
               <Menu as="div" className="relative">
                 <Menu.Button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-secondary-100 transition-colors">
@@ -141,7 +147,7 @@ const Header: React.FC = () => {
                             )}
                           >
                             <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                            <span>Выйти</span>
+                            <span>{t('navigation.logout')}</span>
                           </button>
                         )}
                       </Menu.Item>
@@ -156,13 +162,13 @@ const Header: React.FC = () => {
                   to="/login"
                   className="btn-ghost"
                 >
-                  Войти
+                  {t('navigation.login')}
                 </Link>
                 <Link
                   to="/register"
                   className="btn-primary"
                 >
-                  Регистрация
+                  {t('navigation.register')}
                 </Link>
               </div>
             )}
@@ -186,6 +192,12 @@ const Header: React.FC = () => {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-secondary-200 py-4">
             <div className="space-y-1">
+              {/* Mobile Language Switcher */}
+              <div className="px-4 py-2">
+                <LanguageSwitcher variant="buttons" showLabel={true} />
+              </div>
+              <hr className="my-2 border-secondary-200" />
+              
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -211,7 +223,7 @@ const Header: React.FC = () => {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <PlusIcon className="h-5 w-5" />
-                    <span>Создать курс</span>
+                    <span>{t('course.createCourse')}</span>
                   </Link>
                   <hr className="my-2 border-secondary-200" />
                   {userNavigation.map((item) => (
@@ -233,7 +245,7 @@ const Header: React.FC = () => {
                     className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-error-600 hover:bg-error-50 transition-colors w-full text-left"
                   >
                     <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                    <span>Выйти</span>
+                    <span>{t('navigation.logout')}</span>
                   </button>
                 </>
               )}

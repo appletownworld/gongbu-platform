@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { coursesApi } from '@/services/api'
 import { Lesson, LessonContentType } from '@/types/course'
+import { useTranslation } from '@/hooks/useTranslation'
 // useAuth import removed - not used
 
 interface CreateLessonDto {
@@ -35,6 +36,7 @@ interface CreateLessonDto {
 
 const CourseEditorPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
+  const { t } = useTranslation()
   // const navigate = useNavigate() // Unused
   const queryClient = useQueryClient()
   // const { user } = useAuth() // Unused
@@ -72,13 +74,13 @@ const CourseEditorPage: React.FC = () => {
   const createLessonMutation = useMutation({
     mutationFn: (lessonData: CreateLessonDto) => coursesApi.createLesson(lessonData),
     onSuccess: () => {
-      toast.success('Урок создан!')
+      toast.success(t('lesson.lessons') + ' ' + t('common.success').toLowerCase() + '!')
       queryClient.invalidateQueries({ queryKey: ['course-lessons'] })
       setShowLessonModal(false)
       resetLessonForm()
     },
     onError: (error: any) => {
-      toast.error(`Ошибка создания урока: ${error.message}`)
+      toast.error(`${t('errors.unknownError')}: ${error.message}`)
     }
   })
 
@@ -118,7 +120,7 @@ const CourseEditorPage: React.FC = () => {
 
   const handleCreateLesson = () => {
     if (!course || !lessonForm.title.trim()) {
-      toast.error('Укажите название урока')
+      toast.error(t('validation.required'))
       return
     }
 

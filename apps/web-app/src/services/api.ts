@@ -7,6 +7,7 @@ import {
   UserSession,
   UserStats 
 } from '@/types/auth'
+import { mockApi } from './mockApi'
 import { 
   Course, 
   CourseFilters, 
@@ -128,12 +129,75 @@ export const authApi = {
 
   // Admin endpoints
   getUsers: async (params?: any): Promise<any> => {
+    // В режиме разработки используем mock API
+    if (import.meta.env.DEV) {
+      return mockApi.getUsers(params)
+    }
+    
     const response = await apiClient.get('/api/auth/users', { params })
     return response.data
   },
 
   getUserStats: async (): Promise<UserStats> => {
+    // В режиме разработки используем mock API
+    if (import.meta.env.DEV) {
+      return mockApi.getUserStats()
+    }
+    
     const response = await apiClient.get<UserStats>('/api/auth/users/stats')
+    return response.data
+  },
+
+  updateUserRole: async (userId: string, role: string): Promise<User> => {
+    // В режиме разработки используем mock API
+    if (import.meta.env.DEV) {
+      return await mockApi.updateUserRole(userId, role as any)
+    }
+    
+    const response = await apiClient.put<User>(`/api/auth/users/${userId}/role`, { role })
+    return response.data
+  },
+
+  banUser: async (userId: string, reason?: string): Promise<User> => {
+    // В режиме разработки используем mock API
+    if (import.meta.env.DEV) {
+      return await mockApi.banUser(userId, reason)
+    }
+    
+    const response = await apiClient.put<User>(`/api/auth/users/${userId}/ban`, { reason })
+    return response.data
+  },
+
+  unbanUser: async (userId: string): Promise<User> => {
+    // В режиме разработки используем mock API
+    if (import.meta.env.DEV) {
+      return await mockApi.unbanUser(userId)
+    }
+    
+    const response = await apiClient.delete<User>(`/api/auth/users/${userId}/ban`)
+    return response.data
+  },
+
+  generateServiceToken: async (serviceName: string, permissions: string[]): Promise<{ token: string; expiresIn: number }> => {
+    // В режиме разработки используем mock API
+    if (import.meta.env.DEV) {
+      return mockApi.generateServiceToken(serviceName, permissions)
+    }
+    
+    const response = await apiClient.post<{ token: string; expiresIn: number }>('/api/auth/service-token', {
+      serviceName,
+      permissions,
+    })
+    return response.data
+  },
+
+  cleanupExpiredSessions: async (): Promise<{ deletedSessions: number }> => {
+    // В режиме разработки используем mock API
+    if (import.meta.env.DEV) {
+      return mockApi.cleanupExpiredSessions()
+    }
+    
+    const response = await apiClient.post<{ deletedSessions: number }>('/api/auth/cleanup')
     return response.data
   },
 }

@@ -6,7 +6,7 @@ import {
   CheckBadgeIcon,
   DocumentTextIcon,
   ShareIcon,
-  DownloadIcon,
+  ArrowDownTrayIcon,
   StarIcon,
   ClockIcon,
   UserGroupIcon

@@ -14,11 +14,13 @@ import {
 } from '@heroicons/react/24/outline'
 import { coursesApi } from '@/services/api'
 import { autoAuthWithTelegram, getTelegramUser, isTelegramWebApp, setupTokenRefresh } from '@/services/telegramAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 
 // Типы Telegram определены в types/telegram.d.ts
 
 const StudentApp: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
+  const { t } = useTranslation()
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0)
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set())
   const [authUser, setAuthUser] = useState<any>(null)
@@ -136,7 +138,7 @@ const StudentApp: React.FC = () => {
     // Main button
     if (isCurrentLessonCompleted) {
       if (currentLessonIndex < (lessons?.length || 0) - 1) {
-        tg.MainButton.setText('Следующий урок →')
+        tg.MainButton.setText(t('common.next') + ' ' + t('lesson.lesson').toLowerCase() + ' →')
         const nextHandler = () => {
           setCurrentLessonIndex(prev => prev + 1)
           // setIsLessonCompleted(false) // Unused function
@@ -148,7 +150,7 @@ const StudentApp: React.FC = () => {
           tg.MainButton.offClick(nextHandler)
         }
       } else {
-        tg.MainButton.setText('🎉 Курс завершен!')
+        tg.MainButton.setText('🎉 ' + t('course.completed') + '!')
         const finishHandler = () => tg.close()
         tg.MainButton.onClick(finishHandler)
         tg.MainButton.show()
@@ -158,7 +160,7 @@ const StudentApp: React.FC = () => {
         }
       }
     } else {
-      tg.MainButton.setText('✅ Завершить урок')
+      tg.MainButton.setText('✅ ' + t('common.finish') + ' ' + t('lesson.lesson').toLowerCase())
       const completeHandler = () => {
         completeLessonMutation.mutate(currentLesson.id)
       }

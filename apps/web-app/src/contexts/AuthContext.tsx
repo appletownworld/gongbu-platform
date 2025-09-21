@@ -15,6 +15,7 @@ interface AuthContextType {
   refreshToken: () => Promise<void>
   hasRole: (role: UserRole | UserRole[]) => boolean
   isTelegramWebApp: () => boolean
+  loadMockAdmin: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -38,6 +39,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initializeAuth = async () => {
     try {
       console.log('🔐 Инициализация системы авторизации...')
+      
+      // В режиме разработки проверяем mock данные
+      if (import.meta.env.DEV) {
+        const mockAdmin = localStorage.getItem('mockAdmin')
+        if (mockAdmin) {
+          const adminData = JSON.parse(mockAdmin)
+          setUser(adminData)
+          setAuthSource('stored_tokens')
+          console.log('✅ Mock администратор загружен')
+          setIsLoading(false)
+          return
+        }
+      }
       
       // Настройка автоматического обновления токенов
       autoAuthService.setupTokenRefresh()
@@ -83,6 +97,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (initData: string) => {
     try {
       setIsLoading(true)
+      
+      // В режиме разработки используем mock авторизацию
+      if (import.meta.env.DEV) {
+        const mockAdmin = localStorage.getItem('mockAdmin')
+        if (mockAdmin) {
+          const adminData = JSON.parse(mockAdmin)
+          setUser(adminData)
+          setAuthSource('stored_tokens')
+          toast.success('🚀 Добро пожаловать в админ панель!', {
+            duration: 3000,
+            icon: '👋'
+          })
+          return
+        }
+      }
       
       const response = await authApi.login({
         initData,
@@ -219,6 +248,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return autoAuthService.isTelegramWebApp()
   }
 
+  // Загрузка mock администратора
+  const loadMockAdmin = () => {
+    if (import.meta.env.DEV) {
+      const mockAdmin = localStorage.getItem('mockAdmin')
+      if (mockAdmin) {
+        const adminData = JSON.parse(mockAdmin)
+        setUser(adminData)
+        setAuthSource('stored_tokens')
+        
+        // Сохраняем токены для совместимости
+        localStorage.setItem('gongbu_user_data', JSON.stringify(adminData))
+        localStorage.setItem('gongbu_access_token', 'mock_access_token')
+        localStorage.setItem('gongbu_refresh_token', 'mock_refresh_token')
+        
+        toast.success('Администратор загружен!')
+      }
+    }
+  }
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -230,6 +278,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshToken,
     hasRole,
     isTelegramWebApp,
+    loadMockAdmin,
   }
 
   return (
