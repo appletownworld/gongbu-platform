@@ -35,6 +35,8 @@
     "telegraf": "^4.16.3"
   },
   "devDependencies": {
+    "@agentdeskai/browser-tools-mcp": "^1.2.1",
+    "@agentdeskai/browser-tools-server": "^1.2.1",
     "puppeteer-mcp-server": "^0.7.2"
   }
 }

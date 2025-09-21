@@ -46,9 +46,9 @@
       "args": ["simple-terminal-mcp.js"],
       "cwd": "/home/zebracoder/projects/gongbu_app"
     },
-    "puppeteer": {
+    "browser-tools": {
       "command": "npx",
-      "args": ["puppeteer-mcp-server"],
+      "args": ["@agentdeskai/browser-tools-mcp"],
       "cwd": "/home/zebracoder/projects/gongbu_app"
     }
   }
