@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { coursesApi } from '@/services/api'
 import { Course, CourseCategory, CourseDifficulty } from '@/types/course'
+import { demoCourses } from '@/data/demo-courses'
 // clsx import removed - not used
 
 const CoursesPage: React.FC = () => {
@@ -85,17 +86,37 @@ const CoursesPage: React.FC = () => {
   const hasActiveFilters = filters.search || filters.category || filters.difficulty || 
     filters.minPrice || filters.maxPrice || filters.isPremium
 
+  // Используем демо-курсы если API вернул пустой результат
+  const displayCourses = data?.courses && data.courses.length > 0 ? data.courses : demoCourses as Course[]
+  const displayTotalItems = data?.courses && data.courses.length > 0 ? data.pagination.totalItems : demoCourses.length
+
   return (
     <div className="min-h-screen bg-secondary-50">
       <div className="container-custom py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-4">
-            Каталог курсов
+            Каталог курсов корейского языка
           </h1>
-          <p className="text-xl text-secondary-600">
-            Найдите идеальный курс для изучения новых навыков
+          <p className="text-xl text-secondary-600 mb-4">
+            Найдите идеальный курс для изучения корейского языка
           </p>
+          
+          {/* Demo Notice */}
+          {!(data?.courses && data.courses.length > 0) && (
+            <div className="bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <BookOpenIcon className="h-5 w-5 text-primary-600 flex-shrink-0" />
+                <div className="text-sm">
+                  <span className="font-semibold text-primary-800">Демо-версия:</span>
+                  <span className="text-primary-700 ml-1">
+                    Представлены примеры курсов корейского языка. 
+                    Для доступа к реальным курсам зарегистрируйтесь через Telegram.
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -245,8 +266,13 @@ const CoursesPage: React.FC = () => {
               {/* Results Count */}
               <div className="flex items-center justify-between mb-6">
                 <p className="text-secondary-600">
-                  Найдено {data?.pagination.totalItems || 0} курсов
+                  Найдено {displayTotalItems} курсов
                   {hasActiveFilters && ' по вашим фильтрам'}
+                  {!(data?.courses && data.courses.length > 0) && (
+                    <span className="text-primary-600 font-medium ml-2">
+                      (демо-версия)
+                    </span>
+                  )}
                 </p>
                 
                 {/* Sort Options */}
@@ -263,9 +289,9 @@ const CoursesPage: React.FC = () => {
               </div>
 
               {/* Course Grid */}
-              {data?.courses && data.courses.length > 0 ? (
+              {displayCourses && displayCourses.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {data.courses.map((course: Course) => (
+                  {displayCourses.map((course: Course) => (
                     <CourseCard key={course.id} course={course} />
                   ))}
                 </div>
