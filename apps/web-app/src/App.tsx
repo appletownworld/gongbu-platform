@@ -5,6 +5,8 @@ import { Toaster } from 'react-hot-toast'
 // Layout components
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import ScrollToTop from '@/components/layout/ScrollToTop'
+import BackToTop from '@/components/layout/BackToTop'
 
 // Page components
 import HomePage from '@/pages/HomePage'
@@ -45,6 +47,7 @@ function App() {
   return (
     <AuthProvider>
       <div className="min-h-screen flex flex-col bg-secondary-50">
+        <ScrollToTop />
         <Header />
         
         <main className="flex-1">
@@ -134,6 +137,9 @@ function App() {
         </main>
         
         <Footer />
+        
+        {/* Back to Top Button */}
+        <BackToTop />
         
         {/* Toast notifications */}
         <Toaster
