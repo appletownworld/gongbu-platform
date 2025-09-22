@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { WebApp } from '@twa-dev/types';
 import { CourseEditor } from './components/CourseEditor';
 import { CourseViewer } from './components/CourseViewer';
-import { LoginScreen } from './components/LoginScreen';
 import { LoadingScreen } from './components/LoadingScreen';
+import { WelcomeScreen } from './components/WelcomeScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import SettingsScreen from './components/SettingsScreen';
 import LanguageSelector from './components/LanguageSelector';
@@ -28,6 +28,8 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentScreen, setCurrentScreen] = useState<'main' | 'settings' | 'payment'>('main');
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeShown, setWelcomeShown] = useState(false);
   const [paymentCourse, setPaymentCourse] = useState<any>(null);
   
   const { webApp, isReady } = useTelegramWebApp();
@@ -55,7 +57,31 @@ const App: React.FC = () => {
 
         // Проверка аутентификации
         if (webApp?.initData) {
+          console.log('🔄 Начинаем автоматическую аутентификацию...');
           await login(webApp.initData);
+          
+          // Check URL parameters for direct navigation
+          const urlParams = new URLSearchParams(window.location.search);
+          const action = urlParams.get('action');
+          
+          // Check if we should show welcome screen
+          const userData = JSON.parse(localStorage.getItem('gongbu_user') || '{}');
+          
+          if (action === 'my_courses' || action === 'courses') {
+            // Direct navigation to courses - skip welcome screen
+            console.log('🎯 Прямой переход к курсам - пропускаем Welcome Screen');
+            setShowWelcome(false);
+            setCurrentScreen('main');
+          } else if (userData && !welcomeShown) {
+            console.log('👋 Показываем Welcome Screen для пользователя:', userData.first_name);
+            setShowWelcome(true);
+            setWelcomeShown(true);
+          } else {
+            console.log('🏠 Переход к главному экрану');
+            setCurrentScreen('main');
+          }
+        } else {
+          console.warn('⚠️ WebApp initData недоступен - возможно тестируется в браузере');
         }
 
         setIsLoading(false);
@@ -120,7 +146,7 @@ const App: React.FC = () => {
     }
   }, [webApp, courses, setCurrentCourse]);
 
-  if (isLoading) {
+  if (isLoading || !isAuthenticated) {
     return <LoadingScreen />;
   }
 
@@ -130,10 +156,6 @@ const App: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <LoginScreen onLogin={login} />;
-  }
-
   // Определяем режим работы приложения
   const isEditMode = (webApp as any)?.startParam === 'create_course' || (webApp as any)?.startParam?.startsWith('edit_');
   const isViewMode = (webApp as any)?.startParam?.startsWith('view_');
@@ -141,7 +163,16 @@ const App: React.FC = () => {
   return (
     <div className="telegram-mini-app">
       <ErrorBoundary>
-        {currentScreen === 'settings' ? (
+        {showWelcome && user ? (
+          <WelcomeScreen
+            user={user}
+            isNewUser={user.isNewUser || false}
+            onContinue={() => {
+              setShowWelcome(false);
+              setCurrentScreen('main');
+            }}
+          />
+        ) : currentScreen === 'settings' ? (
           <SettingsScreen onBack={() => setCurrentScreen('main')} />
         ) : currentScreen === 'payment' && paymentCourse ? (
           <PaymentScreen

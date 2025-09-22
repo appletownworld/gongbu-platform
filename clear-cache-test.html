@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧹 Очистка кеша Mini App</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        button { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 15px 25px; 
+            font-size: 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin: 10px 5px;
+        }
+        button:hover { background: #45a049; }
+        .link { 
+            background: #2196F3; 
+            color: white; 
+            padding: 10px 15px; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            display: inline-block;
+            margin: 5px;
+        }
+        .status { 
+            background: rgba(0,0,0,0.3); 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 15px 0;
+        }
+        pre { background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Тест очистки кеша Mini App</h1>
+        
+        <div class="status">
+            <h3>📊 Статус:</h3>
+            <div id="status">Загружается...</div>
+        </div>
+
+        <h3>🔧 Действия:</h3>
+        <button onclick="clearAll()">🗑️ Очистить все данные</button>
+        <button onclick="checkMiniApp()">🔍 Проверить Mini App</button>
+        
+        <h3>🧪 Тестовые ссылки:</h3>
+        <a href="http://localhost:3001/telegram-mini-app/?user_id=111111&first_name=Test1&username=test1&fresh=true" class="link" target="_blank">
+            🧹 С автоочисткой #1
+        </a>
+        <a href="http://localhost:3001/telegram-mini-app/?user_id=222222&first_name=Test2&username=test2&action=my_courses&fresh=true" class="link" target="_blank">
+            📚 Прямо к курсам + очистка #2
+        </a>
+        <a href="http://localhost:3001/telegram-mini-app/?user_id=333333&first_name=Test3&username=test3" class="link" target="_blank">
+            👤 Без очистки #3
+        </a>
+        <a href="http://localhost:3001/telegram-mini-app/?user_id=444444&first_name=Test4&username=test4&fresh=true" class="link" target="_blank">
+            🆕 С автоочисткой #4
+        </a>
+
+        <div class="status">
+            <h3>📋 Инструкции:</h3>
+            <ol>
+                <li>Нажмите "🗑️ Очистить все данные"</li>
+                <li>Откройте любую тестовую ссылку</li>
+                <li>Откройте DevTools (F12) → Console</li>
+                <li>Должны увидеть логи автоматической регистрации</li>
+                <li>БЕЗ форм входа/регистрации!</li>
+            </ol>
+        </div>
+
+        <div class="status">
+            <h3>✅ Ожидаемые логи С АВТООЧИСТКОЙ:</h3>
+            <pre>🧹 Параметр fresh=true - очищаем все данные для нового сеанса
+✅ Данные очищены, готов к новой регистрации
+🔍 Сохраненный пользователь не найден
+📋 Данные пользователя получены: {id: 111111, ...}
+🔍 Проверка пользователя: {userId: "111111", isNewUser: true}
+🆕 Новый пользователь! Регистрируем: Test1
+✅ Пользователь успешно зарегистрирован!</pre>
+
+            <h3>✅ Ожидаемые логи БЕЗ АВТООЧИСТКИ:</h3>
+            <pre>👤 Найден сохраненный пользователь: Test3 333333
+👋 Добро пожаловать обратно: Test3
+✅ Пользователь успешно вошел в систему!</pre>
+        </div>
+    </div>
+
+    <script>
+        function clearAll() {
+            try {
+                // Очистка всех данных
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Очистка кеша (если поддерживается)
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => {
+                            caches.delete(name);
+                        });
+                    });
+                }
+                
+                document.getElementById('status').innerHTML = `
+                    <div style="color: #4CAF50;">
+                        ✅ Все данные очищены!<br>
+                        ✅ localStorage очищен<br>
+                        ✅ sessionStorage очищен<br>
+                        ✅ Кеш очищен<br>
+                        🔄 Теперь откройте тестовую ссылку!
+                    </div>
+                `;
+                
+                console.clear();
+                console.log('🧹 Все данные Mini App очищены!');
+                console.log('🔄 Готово к тестированию автоматической регистрации!');
+                
+            } catch (error) {
+                document.getElementById('status').innerHTML = `
+                    <div style="color: #f44336;">
+                        ❌ Ошибка очистки: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function checkMiniApp() {
+            fetch('http://localhost:3001/telegram-mini-app/')
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById('status').innerHTML = `
+                            <div style="color: #4CAF50;">
+                                ✅ Mini App работает на порту 3001!<br>
+                                🚀 Готов к тестированию!
+                            </div>
+                        `;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('status').innerHTML = `
+                        <div style="color: #f44336;">
+                            ❌ Mini App недоступен: ${error.message}<br>
+                            🔄 Убедитесь что запущен: npm run dev
+                        </div>
+                    `;
+                });
+        }
+
+        // Автоматическая проверка при загрузке
+        window.onload = function() {
+            checkMiniApp();
+        };
+    </script>
+</body>
+</html>

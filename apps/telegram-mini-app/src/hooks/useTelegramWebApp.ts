@@ -47,20 +47,40 @@ export const useTelegramWebApp = (): UseTelegramWebAppReturn => {
         setWebApp(tgWebApp);
         setIsReady(true);
       } else {
-        // Fallback for development
-        console.warn('Telegram WebApp not available, using mock data');
+        // Fallback for development - read user data from URL params
+        console.warn('Telegram WebApp not available, using mock data from URL params');
+        
+        // Read URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id') || '123456789';
+        const firstName = urlParams.get('first_name') || 'Test';
+        const lastName = urlParams.get('last_name') || 'User';
+        const username = urlParams.get('username') || 'testuser';
+        const langCode = urlParams.get('lang') || 'en';
+        
+        // Create mock initData string for authentication
+        const mockInitData = `user=${encodeURIComponent(JSON.stringify({
+          id: parseInt(userId),
+          first_name: firstName,
+          last_name: lastName,
+          username: username,
+          language_code: langCode
+        }))}`;
+        
+        console.log('🔄 Mock user data:', { userId, firstName, lastName, username, langCode });
+        
         setWebApp({
           ready: () => {},
           expand: () => {},
           close: () => {},
-          initData: '',
+          initData: mockInitData,
           initDataUnsafe: {
             user: {
-              id: 123456789,
-              first_name: 'Test',
-              last_name: 'User',
-              username: 'testuser',
-              language_code: 'en'
+              id: parseInt(userId),
+              first_name: firstName,
+              last_name: lastName,
+              username: username,
+              language_code: langCode
             }
           },
           version: '6.0',

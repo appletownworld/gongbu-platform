@@ -144,7 +144,7 @@ app.get('/', (req, res) => {
                         <strong>${user.first_name} ${user.last_name}</strong><br>
                         <small>@${user.username} (${user.language_code})</small>
                     </div>
-                    <a href="${MINI_APP_URL}/?user_id=${user.id}&first_name=${user.first_name}&last_name=${user.last_name}&username=${user.username}" 
+                    <a href="${MINI_APP_URL}/?user_id=${user.id}&first_name=${user.first_name}&last_name=${user.last_name}&username=${user.username}&fresh=true" 
                        class="btn success" target="_blank">
                         🚀 Открыть Mini App
                     </a>
@@ -154,13 +154,13 @@ app.get('/', (req, res) => {
         
         <div class="iframe-container">
             <h3>📱 Предварительный просмотр Mini App:</h3>
-            <iframe src="${MINI_APP_URL}/" title="Telegram Mini App Preview"></iframe>
+            <iframe src="${MINI_APP_URL}/?fresh=true" title="Telegram Mini App Preview"></iframe>
         </div>
         
         <div style="margin-top: 30px;">
             <a href="/api/status" class="btn">📊 API Status</a>
             <a href="/api/webhook" class="btn">🔗 Webhook Info</a>
-            <a href="${MINI_APP_URL}/" class="btn success" target="_blank">📱 Open Mini App</a>
+            <a href="${MINI_APP_URL}/?fresh=true" class="btn success" target="_blank">📱 Open Mini App</a>
         </div>
         
         <div style="margin-top: 20px; font-size: 14px; opacity: 0.8;">

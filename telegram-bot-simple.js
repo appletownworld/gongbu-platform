@@ -107,11 +107,11 @@ function handleMessage(message) {
         inline_keyboard: [
           [{
             text: '🚀 Открыть курс Python',
-            web_app: { url: `${WEBAPP_URL}/python-for-beginners` }
+            web_app: { url: `${WEBAPP_URL}/?action=my_courses` }
           }],
           [{
             text: '📋 Каталог всех курсов', 
-            web_app: { url: 'http://localhost:3000/courses' }
+            web_app: { url: 'http://localhost:3001/telegram-mini-app' }
           }]
         ]
       }

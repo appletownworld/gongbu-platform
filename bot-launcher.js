@@ -133,7 +133,7 @@ ${mockCourse.description}
     const keyboard = {
       inline_keyboard: [
         [{ text: '🚀 Начать обучение', callback_data: 'start_course' }],
-        [{ text: '🌐 Открыть в WebApp', web_app: { url: `${WEBAPP_URL}/${mockCourse.slug}` } }],
+        [{ text: '📱 Открыть Mini App', web_app: { url: `${WEBAPP_URL}/${mockCourse.slug}` } }],
         [
           { text: '📊 Мой прогресс', callback_data: 'show_progress' },
           { text: '❓ Помощь', callback_data: 'help' }
@@ -157,7 +157,7 @@ ${mockCourse.description}
     
     const keyboard = {
       inline_keyboard: [
-        [{ text: '🚀 Открыть каталог', web_app: { url: 'http://localhost:3000/courses' } }],
+        [{ text: '🚀 Открыть каталог', web_app: { url: 'http://localhost:3001/telegram-mini-app' } }],
         [{ text: '📱 Python курс', web_app: { url: `${WEBAPP_URL}/${mockCourse.slug}` } }]
       ]
     };
@@ -347,7 +347,7 @@ ${lesson.content.text}
           { text: '📊 Мой прогресс', callback_data: 'show_progress' },
           { text: '⚙️ Настройки', callback_data: 'settings' }
         ],
-        [{ text: '🌐 Открыть в WebApp', web_app: { url: `${WEBAPP_URL}/${mockCourse.slug}` } }]
+        [{ text: '📱 Открыть Mini App', web_app: { url: `${WEBAPP_URL}/${mockCourse.slug}` } }]
       ]
     };
     
